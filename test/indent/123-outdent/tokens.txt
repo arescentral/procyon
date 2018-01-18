@@ -1,0 +1,7 @@
+1:1	LINE+
+1:1	INT	"1"
+2:1	LINE+
+2:3	INT	"2"
+3:1	LINE-
+3:1	ERROR	3:2:unindent does not match any outer indentation level	"\t3"
+4:1	LINE-

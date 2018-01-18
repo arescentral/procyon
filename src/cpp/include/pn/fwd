@@ -1,0 +1,110 @@
+// -*- mode: C++ -*-
+// Copyright 2017 The Procyon Authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+#ifndef PN_FWD_
+#define PN_FWD_
+
+#include <procyon.h>
+#include <initializer_list>
+#include <iterator>
+#include <type_traits>
+
+namespace pn {
+
+class value;
+class value_ref;
+class value_cref;
+class data_;
+using data = data_;
+class data_ref;
+class data_view;
+class string;
+class string_ref;
+class string_view;
+class array;
+class array_ref;
+class array_cref;
+class key_value;
+class key_value_ref;
+class key_value_cref;
+class map;
+class map_ref;
+class map_cref;
+class file;
+class file_view;
+
+template <typename P>
+class byte_iterator;
+class rune_iterator;
+class file;
+
+using type = pn_type_t;
+
+namespace internal {
+
+template <typename Container>
+class iterator {
+    friend Container;
+
+    using _is_const = std::is_const<Container>;
+    using _val      = typename Container::value_type;
+    using _ref      = typename Container::reference;
+    using _cref     = typename Container::const_reference;
+
+  public:
+    using iterator_category = std::random_access_iterator_tag;
+    using size_type         = int;
+    using difference_type   = std::ptrdiff_t;
+    using value_type        = typename std::conditional<_is_const::value, const _val, _val>::type;
+    using reference         = typename std::conditional<_is_const::value, _cref, _ref>::type;
+    using const_reference   = _ref;
+    using pointer           = reference*;
+    using const_pointer     = const_reference*;
+
+    iterator(const iterator<typename std::remove_const<Container>::type>& it) : _it{*it} {}
+    constexpr explicit iterator(typename reference::c_obj_type* it) : _it{it} {}
+
+    reference       operator*() { return _it; }
+    const_reference operator*() const { return _it; }
+    pointer         operator->() { return &_it; }
+    const_pointer   operator->() const { return &_it; }
+
+    iterator        operator+(difference_type n) { return iterator{_it.c_obj() + n}; }
+    iterator&       operator+=(difference_type n) { return _it.c_obj() += n, *this; }
+    iterator        operator-(difference_type n) { return iterator{_it.c_obj() - n}; }
+    iterator&       operator-=(difference_type n) { return _it.c_obj() -= n, *this; }
+    difference_type operator-(iterator other) { return _it.c_obj() - other._it.c_obj(); }
+
+    iterator& operator++() { return *this += 1; }
+    iterator  operator++(int) { return _it++; }
+    iterator& operator--() { return *this -= 1; }
+    iterator  operator--(int) { return _it--; }
+
+    bool operator==(iterator other) const { return _it.c_obj() == other._it.c_obj(); }
+    bool operator!=(iterator other) const { return _it.c_obj() != other._it.c_obj(); }
+    bool operator<(iterator other) const { return _it.c_obj() < other._it.c_obj(); }
+    bool operator<=(iterator other) const { return _it.c_obj() <= other._it.c_obj(); }
+    bool operator>(iterator other) const { return _it.c_obj() > other._it.c_obj(); }
+    bool operator>=(iterator other) const { return _it.c_obj() >= other._it.c_obj(); }
+
+  private:
+    reference _it;
+};
+
+}  // namespace internal
+
+}  // namespace pn
+
+#endif  // PN_FWD_

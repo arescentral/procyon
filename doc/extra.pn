@@ -1,0 +1,56 @@
+chrono:
+	duration:
+		*	{duration: {s: 86400}}
+		*	{duration: {s: 86400, us: 0}}
+		*	{duration: {s: 86400, us: 0.000}}
+	period:
+		*	{period: {d: 1}}
+	interval:
+		*	{from: "1969-07-20T20:17:40Z", to: "1969-07-21T17:54Z"}
+	datetime:
+		*	"1969-07-21T02:56:15.000Z"
+		*	"1969-07-20T21:56:15-0500"
+	instant:
+		*	{s: -14159025}
+		*	{s: -14159025, us: 0}
+		*	{s: -14159025, us: 0, tz: -18000}
+
+color:
+	red:
+		*	"red"
+		*	$ff0000
+		*	{r: 255, g: 0, b: 0}
+	pantone-2617-c:
+		*	$470a68
+		*	$470a68ff
+		*	{r: 71, g: 10, b: 104}
+		*	{r: 71, g: 10, b: 104, a: 255}
+		*	{h: 279, s: 0.82, l: 0.22}
+		*	{h: 279, s: 0.82, l: 0.22, a: 1.0}
+		*	{h: 279, s: 0.90, b: 0.41}
+		*	{h: 279, s: 0.90, b: 0.41, a: 1.0}
+		*	{c: 84, m: 99, y: 0, k: 12}
+
+geometry:
+	angle:
+		*	{deg: 45}
+		*	{rad: 0.7854}
+	point:
+		*	{x: 0.7071, y: 0.7071}
+		*	{x: 0.7071, y: 0.7071, z: 0.0}
+		*	{r: 1.0, theta: {deg: 45}}
+		*	{r: 1.0, theta: {rad: 0.7854}, phi: 0}
+	size:
+		*	{width: 10, height: 20}
+		*	{width: 10, height: 20, depth: 0}
+	line:
+		*	[{x: 0, y: 0}, {r: 1, theta: 0}]
+		*	[{x: 0, y: 0, z: 0}, {x: 1, y: 0, z: 0}]
+	rectangle:
+		*	{left: 10, top: 20, right: 30, bottom: 40}
+		*	{left: 10, top: 20, size: {width: 10, height: 20}}
+		*	{top: 20, right: 30, size: {width: 10, height: 20}}
+		*	{origin: {x: 10, y: 20}, size: {width: 10, height: 20}}
+	ellipse:
+		*	{center: {x: 100, y: 200}, r: 50}
+		*	{center: {x: 100, y: 200}, r: {width: 50, height: 50}}

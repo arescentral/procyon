@@ -1,0 +1,322 @@
+#!/usr/bin/env vroom --neovim
+
+  :source $VROOMDIR/setup.vim
+
+The simplest valid procyon file is a single null.
+  % null
+  :Highlight
+  & nnnn
+
+
+
+The boolean constants. This is not really a valid file, because bools
+can't be siblings, but the highlighter deals with lines in isolation.
+  % true<CR>
+  % false<CR>
+  % maybe
+  :Highlight
+  & bbbb
+  & bbbbb
+  & EEEEE
+
+
+
+A few integers. No leading zeroes allowed.
+  % [0, 1, -1]<CR>
+  % 999999999999999999999999<CR>
+  % 00
+  :Highlight
+  & [i, i, ii]
+  & iiiiiiiiiiiiiiiiiiiiiiii
+  & EE
+
+
+
+Various ways of writing "0" as a floating-point number. No leading
+zeroes allowed in the first component, but they're fine elsewhere
+  % [0.0, -0.0, +0.0]<CR>
+  % [0e0, -0e0, +0e0]<CR>
+  % [0e+0, -0e+0, +0e+0]<CR>
+  % [0e-0, -0e-0, +0e-0]<CR>
+  % [00.0e0, 0.00e0, 0.0e00]
+  :Highlight
+  & [fff, ffff, ffff]
+  & [fff, ffff, ffff]
+  & [ffff, fffff, fffff]
+  & [ffff, fffff, fffff]
+  & [EEEEEE, ffffff, ffffff]
+
+
+
+Empty vector values.
+  % $<CR>
+  % ""<CR>
+  % !<CR>
+  % []<CR>
+  % {}
+  :Highlight
+  & $
+  & ""
+  & !
+  & []
+  & {}
+
+
+
+String escape sequences.
+  % "\\, \", \/, \', \!"<CR>
+  % "\b, \f, \n, \r, \t"<CR>
+  % "\u, \u00, \u0000, \uFFFFFF"
+  :Highlight
+  & "\\""\\""\\""EE""EE"
+  & "\\""\\""\\""\\""\\"
+  & "EE""EEEE""\\\\\\""\\\\\\"""
+
+
+
+String escape sequences in block maps.
+  % "\t": "\t"<CR>
+  % "\n": "\n"<CR>
+  % "\\": "\\"<CR>
+  % "\"": "\""<CR>
+  % "\uFFFF": "\uFFFF"
+  :Highlight
+  & Q\\Q: "\\"
+  & Q\\Q: "\\"
+  & Q\\Q: "\\"
+  & Q\\Q: "\\"
+  & Q\\\\\\Q: "\\\\\\"
+
+
+
+String escape sequences in short maps.
+  % {"\t": "\t"}<CR>
+  % {"\n": "\n"}<CR>
+  % {"\\": "\\"}<CR>
+  % {"\"": "\""}<CR>
+  % {"\uFFFF": "\uFFFF"}<CR>
+  :Highlight
+  & {q\\q: "\\"}
+  & {q\\q: "\\"}
+  & {q\\q: "\\"}
+  & {q\\q: "\\"}
+  & {q\\\\\\q: "\\\\\\"}
+
+
+
+Hard-wrapped poetry (from Shelley's Ozymandias).
+  % |	'My name is Ozymandias, king of kings:<CR>
+  % |	Look on my works, ye Mighty, and despair!'
+  :Highlight
+  & | ......................................
+  & | ..........................................
+
+
+
+Keys that could be interpreted as other types. If there's a colon
+following a word, that word is a key, even if the word looks like a
+number or a constant.
+  % null: {null: null}<CR>
+  % true: {true: true}<CR>
+  % false: {false: false}<CR>
+  % inf: {inf: inf}<CR>
+  % -inf: {-inf: -inf}<CR>
+  % +inf: {+inf: +inf}<CR>
+  % nan: {nan: nan}<CR>
+  % 0: {0: 0}<CR>
+  % 1.0: {1.0: 1.0}<CR>
+  % 1e3: {1e3: 1e3}
+  :Highlight
+  & KKKK: {kkkk: nnnn}
+  & KKKK: {kkkk: bbbb}
+  & KKKKK: {kkkkk: bbbbb}
+  & KKK: {kkk: fff}
+  & KKKK: {kkkk: ffff}
+  & KKKK: {kkkk: ffff}
+  & KKK: {kkk: fff}
+  & K: {k: i}
+  & KKK: {kkk: fff}
+  & KKK: {kkk: fff}
+
+
+
+Furthermore, if there's a bad suffix, that should be a valid key, but an
+error otherwise.
+  % 1+: {1+: 1+}<CR>
+  % 1.0+: {1.0+: 1.0+}
+  :Highlight
+  & KK: {kk: EE}
+  & KKKK: {kkkk: EEEE}
+
+
+
+Certain special characters are valid keys when bare.
+  % : {: ""}<CR>
+  % _: {_: ""}<CR>
+  % .: {.: ""}<CR>
+  % /: {/: ""}<CR>
+  % -: {-: ""}<CR>
+  % +: {+: ""}
+  :Highlight
+  & : {: ""}
+  & K: {k: ""}
+  & K: {k: ""}
+  & K: {k: ""}
+  & K: {k: ""}
+  & K: {k: ""}
+
+
+
+Others are not valid. The first line is a little weird: the ":" at the
+beginning is valid because this is an empty key, but the second is
+invalid. The second line starts with an empty data element, which can't
+be followed by anything else on the line.
+  % ::<CR>
+  % $:<CR>
+  % @:<CR>
+  % #:<CR>
+  % {:: ""}<CR>
+  % {$: ""}<CR>
+  % {@: ""}<CR>
+  % {#: ""}
+  :Highlight
+  & :E
+  & $E
+  & EE
+  & ##
+  & {:EEEE}
+  & {EEEEE}
+  & {EEEEE}
+  & {EEEEE}
+
+
+
+The previous values are all fine if quoted, however.
+  % ":": {":": ""}<CR>
+  % "$": {"$": ""}<CR>
+  % "@": {"@": ""}<CR>
+  % "#": {"#": ""}
+  :Highlight
+  & QQQ: {qqq: ""}
+  & QQQ: {qqq: ""}
+  & QQQ: {qqq: ""}
+  & QQQ: {qqq: ""}
+
+
+
+Brackets and braces within strings. It shouldn't be possible for an
+array or map to start or end within one. This sure does confuse vim's
+'%' operator, though.
+  % "array[":  ["]value"]<CR>
+  % "map{":    {key: "}value"}
+  :Highlight
+  & QQQQQQQQ:  [""""""""]
+  & QQQQQQ:    {kkk: """"""""}
+
+
+
+Resynchronize arrays and maps at commas and the end of the object.
+  % [1, , , 2, 3 4, 5, ]<CR>
+  % {a: 1, , , b: 2, c: 3 d: 4, e: 5, }
+  :Highlight
+  & [i, EE, i, i E, iE ]
+  & {k: i, EE, k: i, k: i EEEE, k: iE }
+
+
+
+Highlight array and map elements at the proper boundaries, even in the
+presence of extra spaces.
+  % [null,1,2.0,$,"",[],{}]<CR>
+  % [ null , 1 , 2.0 , $ , "" , [ ] , { } ]<CR>
+  % [  null  ,  1  ,  2.0  ,  $  ,  ""  ,  [  ]  ,  {  }  ]
+  :Highlight
+  & [nnnn,i,fff,$,"",[],{}]
+  & [ nnnn , i , fff , $ , "" , [ ] , { } ]
+  & [  nnnn  ,  i  ,  fff  ,  $  ,  ""  ,  [  ]  ,  {  }  ]
+
+
+
+Comments
+  % # Ignore me!<CR>
+  % # FIXME: this is broken<CR>
+  %   # TODO(sfiera): unbreak
+  :Highlight
+  & ############
+  & ##XXXXX################
+  &   ##XXXX#################
+
+
+
+Trailing comments
+  % null   # null<CR>
+  % false  # bool<CR>
+  % 0      # int<CR>
+  % 0.0    # float<CR>
+  % $      # data<CR>
+  % ""     # string<CR>
+  % []     # array<CR>
+  % {}     # map
+  :Highlight
+  & nnnn   ######
+  & bbbbb  ######
+  & i      #####
+  & fff    #######
+  & $      ######
+  & ""     ########
+  & []     #######
+  & {}     #####
+
+
+
+Highlight the whole doc/lang.pn file.
+  :e $VROOMDIR/lang.pn
+  :Highlight
+  & KKKKKKK:
+  &  > ....................................................................
+  &  > ......................................................................
+  &  > .......................................................................
+  &  > ..........................................
+  & KKKKK:
+  &  KKKKKK:
+  &   KKKK:   nnnn
+  &   KKKK:   [bbbb, bbbbb]
+  &   KKK:    [i, ii, ii, iii]
+  &   KKKKK:  [fff, ffff, ffff, ffffffff, fff, ffff, ffff, fff]
+  &  KKKKKK:
+  &   KKKK:
+  &    KKKKK:  $xxxxxxxx
+  &    KKKK:
+  &     $ xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx
+  &     $ xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx
+  &     $ xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx
+  &     $ xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx
+  &   KKKKKK:
+  &    KKKKK:  """""""""""\\\\\\""""""""""""
+  &    KKKK:
+  &     > .....................................................................
+  &     > ...................................................................
+  &     > .......................................................................
+  &     > ......................................................................
+  &     > .........
+  &     >
+  &     > .....................................................................
+  &     > ........................................................................
+  &     > ...........................................
+  &     !
+  &   KKKKK:
+  &    KKKKK:  [i, i, i]
+  &    KKKK:
+  &     * """""""""""""""""""
+  &     * """""""""""
+  &   KKKK:
+  &    KKKKK:  {kkkkkkkkkk: bbbb, kkkkkkkkkk: bbbb, qqqqqqqqqqqqqqqqqqqqqq: bbbb}
+  &    KKKK:
+  &     KKKKKKKKKK:     """"""
+  &     KKK:            """"""""
+  &     QQQQQQQQQQQQQ:  """"""""
+  &  #################################################
+  &  ####################################################################
+  & KKKKK:
+  &  > .......................................................................
+  &  > ........................................................................
+  &  > .............................

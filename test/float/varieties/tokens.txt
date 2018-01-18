@@ -1,0 +1,214 @@
+1:1	LINE+
+1:1	*	"*"
+1:1	LINE+
+1:3	*	"*"
+1:3	LINE+
+1:5	INT	"1"
+2:1	LINE-
+2:1	LINE=
+2:2	*	"*"
+2:2	LINE+
+2:4	ERROR	2:4:unknown word	"1."
+3:1	LINE-
+3:1	LINE=
+3:2	*	"*"
+3:2	LINE+
+3:4	FLOAT	"1.1"
+4:1	LINE-
+4:1	LINE=
+4:2	*	"*"
+4:2	LINE+
+4:4	ERROR	4:4:unknown word	"1.1e"
+5:1	LINE-
+5:1	LINE=
+5:2	*	"*"
+5:2	LINE+
+5:4	FLOAT	"1.1e1"
+6:1	LINE-
+6:1	LINE=
+6:2	*	"*"
+6:2	LINE+
+6:4	ERROR	6:4:unknown word	"1.e1"
+7:1	LINE-
+7:1	LINE=
+7:2	*	"*"
+7:2	LINE+
+7:4	FLOAT	"1e1"
+8:1	LINE-
+8:1	LINE=
+8:2	*	"*"
+8:2	LINE+
+8:4	ERROR	8:4:unknown word	"1e"
+10:1	LINE-
+10:1	LINE-
+10:1	LINE=
+10:1	*	"*"
+10:1	LINE+
+10:3	*	"*"
+10:3	LINE+
+10:5	INT	"+1"
+11:1	LINE-
+11:1	LINE=
+11:2	*	"*"
+11:2	LINE+
+11:4	ERROR	11:4:unknown word	"+1."
+12:1	LINE-
+12:1	LINE=
+12:2	*	"*"
+12:2	LINE+
+12:4	FLOAT	"+1.1"
+13:1	LINE-
+13:1	LINE=
+13:2	*	"*"
+13:2	LINE+
+13:4	ERROR	13:4:unknown word	"+1.1e"
+14:1	LINE-
+14:1	LINE=
+14:2	*	"*"
+14:2	LINE+
+14:4	FLOAT	"+1.1e1"
+15:1	LINE-
+15:1	LINE=
+15:2	*	"*"
+15:2	LINE+
+15:4	ERROR	15:4:unknown word	"+1.e1"
+16:1	LINE-
+16:1	LINE=
+16:2	*	"*"
+16:2	LINE+
+16:4	FLOAT	"+1e1"
+17:1	LINE-
+17:1	LINE=
+17:2	*	"*"
+17:2	LINE+
+17:4	ERROR	17:4:unknown word	"+1e"
+19:1	LINE-
+19:1	LINE-
+19:1	LINE=
+19:1	*	"*"
+19:1	LINE+
+19:3	*	"*"
+19:3	LINE+
+19:5	INT	"-1"
+20:1	LINE-
+20:1	LINE=
+20:2	*	"*"
+20:2	LINE+
+20:4	ERROR	20:4:unknown word	"-1."
+21:1	LINE-
+21:1	LINE=
+21:2	*	"*"
+21:2	LINE+
+21:4	FLOAT	"-1.1"
+22:1	LINE-
+22:1	LINE=
+22:2	*	"*"
+22:2	LINE+
+22:4	ERROR	22:4:unknown word	"-1.1e"
+23:1	LINE-
+23:1	LINE=
+23:2	*	"*"
+23:2	LINE+
+23:4	FLOAT	"-1.1e1"
+24:1	LINE-
+24:1	LINE=
+24:2	*	"*"
+24:2	LINE+
+24:4	ERROR	24:4:unknown word	"-1.e1"
+25:1	LINE-
+25:1	LINE=
+25:2	*	"*"
+25:2	LINE+
+25:4	FLOAT	"-1e1"
+26:1	LINE-
+26:1	LINE=
+26:2	*	"*"
+26:2	LINE+
+26:4	ERROR	26:4:unknown word	"-1e"
+28:1	LINE-
+28:1	LINE-
+28:1	LINE=
+28:1	*	"*"
+28:1	LINE+
+28:3	*	"*"
+28:3	LINE+
+28:5	ERROR	28:5:unknown word	"1.1e+"
+29:1	LINE-
+29:1	LINE=
+29:2	*	"*"
+29:2	LINE+
+29:4	FLOAT	"1.1e+1"
+30:1	LINE-
+30:1	LINE=
+30:2	*	"*"
+30:2	LINE+
+30:4	ERROR	30:4:unknown word	"1.e+1"
+31:1	LINE-
+31:1	LINE=
+31:2	*	"*"
+31:2	LINE+
+31:4	FLOAT	"1e+1"
+32:1	LINE-
+32:1	LINE=
+32:2	*	"*"
+32:2	LINE+
+32:4	ERROR	32:4:unknown word	"1e+"
+34:1	LINE-
+34:1	LINE-
+34:1	LINE=
+34:1	*	"*"
+34:1	LINE+
+34:3	*	"*"
+34:3	LINE+
+34:5	ERROR	34:5:unknown word	"+1.1e+"
+35:1	LINE-
+35:1	LINE=
+35:2	*	"*"
+35:2	LINE+
+35:4	FLOAT	"+1.1e+1"
+36:1	LINE-
+36:1	LINE=
+36:2	*	"*"
+36:2	LINE+
+36:4	ERROR	36:4:unknown word	"+1.e+1"
+37:1	LINE-
+37:1	LINE=
+37:2	*	"*"
+37:2	LINE+
+37:4	FLOAT	"+1e+1"
+38:1	LINE-
+38:1	LINE=
+38:2	*	"*"
+38:2	LINE+
+38:4	ERROR	38:4:unknown word	"+1e+"
+40:1	LINE-
+40:1	LINE-
+40:1	LINE=
+40:1	*	"*"
+40:1	LINE+
+40:3	*	"*"
+40:3	LINE+
+40:5	ERROR	40:5:unknown word	"-1.1e+"
+41:1	LINE-
+41:1	LINE=
+41:2	*	"*"
+41:2	LINE+
+41:4	FLOAT	"-1.1e+1"
+42:1	LINE-
+42:1	LINE=
+42:2	*	"*"
+42:2	LINE+
+42:4	ERROR	42:4:unknown word	"-1.e+1"
+43:1	LINE-
+43:1	LINE=
+43:2	*	"*"
+43:2	LINE+
+43:4	FLOAT	"-1e+1"
+44:1	LINE-
+44:1	LINE=
+44:2	*	"*"
+44:2	LINE+
+44:4	ERROR	44:4:unknown word	"-1e+"
+45:1	LINE-
+45:1	LINE-
+45:1	LINE-

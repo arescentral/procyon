@@ -1,0 +1,180 @@
+1:1	LINE+
+1:1	KEY	"general:"
+2:1	LINE+
+2:2	STR>	">\tIndentation starts a block. Tabs are preferred, and are equal to two"
+3:1	LINE=
+3:2	STR>	">\tspaces. (Valid) UTF-8 is allowed inside strings and comments. ASCII is"
+4:1	LINE=
+4:2	STR>	">\tallowed everywhere, except for control characters, which aren't allowed"
+5:1	LINE=
+5:2	STR>	">\tanywhere. Whitespace means tabs or spaces."
+7:1	LINE-
+7:1	LINE=
+7:1	KEY	"types:"
+8:1	LINE+
+8:2	KEY	"scalar:"
+9:1	LINE+
+9:3	KEY	"null:"
+9:11	NULL	"null"
+10:1	LINE=
+10:3	KEY	"bool:"
+10:11	[	"["
+10:12	TRUE	"true"
+10:16	,	","
+10:18	FALSE	"false"
+10:23	]	"]"
+11:1	LINE=
+11:3	KEY	"int:"
+11:11	[	"["
+11:12	INT	"0"
+11:13	,	","
+11:15	INT	"20"
+11:17	,	","
+11:19	INT	"+1"
+11:21	,	","
+11:23	INT	"-40"
+11:26	]	"]"
+12:1	LINE=
+12:3	KEY	"float:"
+12:11	[	"["
+12:12	FLOAT	"0.0"
+12:15	,	","
+12:17	FLOAT	"+0.0"
+12:21	,	","
+12:23	FLOAT	"-0.0"
+12:27	,	","
+12:29	FLOAT	"+6.02e23"
+12:37	,	","
+12:39	INF	"inf"
+12:42	,	","
+12:44	INF	"+inf"
+12:48	,	","
+12:50	-INF	"-inf"
+12:54	,	","
+12:56	NAN	"nan"
+12:59	]	"]"
+13:1	LINE-
+13:1	LINE=
+13:2	KEY	"vector:"
+14:1	LINE+
+14:3	KEY	"data:"
+15:1	LINE+
+15:4	KEY	"short:"
+15:12	DATA	"$0f1e2d3c"
+16:1	LINE=
+16:4	KEY	"long:"
+17:1	LINE+
+17:5	DATA	"$\t0000 0000 0000 0000 1111 1111 1111 1111"
+18:1	LINE=
+18:5	DATA	"$\t2222 2222 2222 2222 3333 3333 3333 3333"
+19:1	LINE=
+19:5	DATA	"$\t4444 4444 4444 4444 5555 5555 5555 5555"
+20:1	LINE=
+20:5	DATA	"$\t6666 6666 6666 6666 7777 7777 7777 7777"
+21:1	LINE=
+21:5	DATA	"$\t8888 8888 8888 8888 9999 9999 9999 9999"
+22:1	LINE=
+22:5	DATA	"$\taaaa aaaa aaaa aaaa bbbb bbbb bbbb bbbb"
+23:1	LINE=
+23:5	DATA	"$\tcccc cccc cccc cccc dddd dddd dddd dddd"
+24:1	LINE=
+24:5	DATA	"$\teeee eeee eeee eeee ffff ffff ffff ffff"
+25:1	LINE-
+25:1	LINE-
+25:1	LINE=
+25:3	KEY	"string:"
+26:1	LINE+
+26:4	KEY	"short:"
+26:12	STR	"\"use quotes\\u0000use escapes\""
+27:1	LINE=
+27:4	KEY	"long:"
+28:1	LINE+
+28:5	STR>	">\tMulti-line literals use \">\", \"|\", and \"!\". One tab or space character"
+29:1	LINE=
+29:5	STR>	">\tmay follow them and is ignored. With \">\", non-empty input lines are"
+30:1	LINE=
+30:5	STR>	">\tjoined to previous non-empty lines by a space. With \"|\" (always) or \">\""
+31:1	LINE=
+31:5	STR>	">\t(when the current or previous line is empty), each input line begins a"
+32:1	LINE=
+32:5	STR>	">\tnew line."
+33:1	LINE=
+33:5	>	">"
+34:1	LINE=
+34:5	STR>	">\tA trailing newline is added unless the last line uses \"!\". A \"!\" ends"
+35:1	LINE=
+35:5	STR>	">\tthe string: no text may occur after the \"!\" (except an optional space or"
+36:1	LINE=
+36:5	STR>	">\ttab) and no \">\" or \"!\" lines may follow it."
+37:1	LINE=
+37:5	!	"!"
+38:1	LINE-
+38:1	LINE-
+38:1	LINE=
+38:3	KEY	"array:"
+39:1	LINE+
+39:4	KEY	"short:"
+39:12	[	"["
+39:13	INT	"1"
+39:14	,	","
+39:16	INT	"2"
+39:17	,	","
+39:19	INT	"3"
+39:20	]	"]"
+40:1	LINE=
+40:4	KEY	"long:"
+41:1	LINE+
+41:5	*	"*"
+41:5	LINE+
+41:7	STR	"\"multi-line arrays\""
+42:1	LINE-
+42:1	LINE=
+42:5	*	"*"
+42:5	LINE+
+42:7	STR	"\"use stars\""
+43:1	LINE-
+43:1	LINE-
+43:1	LINE-
+43:1	LINE=
+43:3	KEY	"dict:"
+44:1	LINE+
+44:4	KEY	"short:"
+44:12	{	"{"
+44:13	KEY	"use-braces:"
+44:25	TRUE	"true"
+44:29	,	","
+44:31	KEY	"use-colons:"
+44:43	TRUE	"true"
+44:47	,	","
+44:49	QKEY	"\"and sometimes quotes\":"
+44:73	TRUE	"true"
+44:77	}	"}"
+45:1	LINE=
+45:4	KEY	"long:"
+46:1	LINE+
+46:5	KEY	"multi-line:"
+46:21	STR	"\"maps\""
+47:1	LINE=
+47:5	KEY	"use:"
+47:21	STR	"\"colons\""
+48:1	LINE=
+48:5	QKEY	"\"quoted keys\":"
+48:21	STR	"\"OK too\""
+50:1	LINE-
+50:1	LINE-
+50:1	LINE-
+50:1	LINE=
+50:2	COMMENT	"#\tThere are comments too, but they aren't a type."
+51:1	LINE=
+51:2	COMMENT	"#\tThey have to follow the same indentation rules as everything else."
+53:1	LINE-
+53:1	LINE=
+53:1	KEY	"notes:"
+54:1	LINE+
+54:2	STR>	">\tShort vector literals must always fit on one line. They are essentially"
+55:1	LINE=
+55:2	STR>	">\tthe same as JSON, except that dict keys do not have to be quoted if they"
+56:1	LINE=
+56:2	STR>	">\tcontain only [0-9A-Za-z./+-]."
+57:1	LINE-
+57:1	LINE-

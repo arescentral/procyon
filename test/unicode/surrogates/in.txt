@@ -1,0 +1,19 @@
+#	Unescaped surrogates
+*	"íŸ¿"
+*	"í €"
+*	"í ½"
+*	"íº€"
+*	"í¿¿"
+*	"î€€"
+
+#	Escaped surrogates
+*	"\uD7FF"
+*	"\uD800"
+*	"\uD83d"
+*	"\uDE80"
+*	"\uDFFF"
+*	"\uE000"
+
+#	UTF-16
+*	"í ½íº€"
+*	"\uD83d\uDE80"

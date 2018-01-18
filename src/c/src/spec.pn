@@ -1,0 +1,637 @@
+errors:
+	*	"INTERNAL"
+	*	"SYSTEM"
+
+	*	"OUTDENT"
+
+	*	"CHILD"
+	*	"SIBLING"
+	*	"SUFFIX"
+	*	"LONG"
+	*	"SHORT"
+	*	"ARRAY_END"
+	*	"MAP_KEY"
+	*	"MAP_END"
+
+	*	"CTRL"
+	*	"NONASCII"
+	*	"UTF8_HEAD"
+	*	"UTF8_TAIL"
+	*	"BADCHAR"
+	*	"DATACHAR"
+	*	"PARTIAL"
+	*	"BADWORD"
+	*	"BADESC"
+	*	"BADUESC"
+	*	"STREOL"
+	*	"BANG_SUFFIX"
+	*	"BANG_LAST"
+
+	*	"INT_OVERFLOW"
+	*	"INVALID_INT"
+
+	*	"FLOAT_OVERFLOW"
+	*	"INVALID_FLOAT"
+
+	*	"RECURSION"
+
+tokens:
+	*	"LINE_IN"
+	*	"LINE_EQ"
+	*	"LINE_OUT"
+
+	#	Fixed sequences
+	*	"STAR"
+	*	"ARRAY_IN"
+	*	"ARRAY_OUT"
+	*	"MAP_IN"
+	*	"MAP_OUT"
+	*	"COMMA"
+	*	"STR_WRAP_EMPTY" #	>
+	*	"STR_PIPE_EMPTY" #	|
+	*	"STR_BANG" #	!
+	*	"NULL" #	null
+	*	"TRUE" #	true
+	*	"FALSE" #	false
+	*	"INF" #	inf
+	*	"NEG_INF" #	-inf
+	*	"NAN" #	nan
+
+	#	Matched sequences
+	*	"KEY" #	key:    hi:     0:      -/.+:
+	*	"QKEY" #	"key":  "hi":   "0":    "\\\"":
+	*	"INT" #	0       1       -1
+	*	"FLOAT" #	0.0     1e100   -0.5
+	*	"DATA" #	$       $01     $ 01234567 89abcdef
+	*	"STR" #	""      "str"   "\n\\\0"
+	*	"STR_WRAP" #	> string line
+	*	"STR_PIPE" #	| string line
+	*	"COMMENT" #	# comment
+
+lex:
+	start:
+		"\t -~":         "BADCHAR"
+		0-9A-Za-z._/+-:  "word"
+		"\n":            "INTERNAL"
+		+:               "+"
+		-:               "-"
+		0:               "int-0"
+		1-9:             "int-n"
+		":":             "key"
+		n:               "n"
+		t:               "t"
+		f:               "f"
+		i:               "+i"
+		"\"":            "str-quote"
+		">":             ">"
+		"|":             "|"
+		"!":             "!"
+		"$":             "$"
+		"#":             "#"
+		"*":             "*"
+		"[":             "["
+		"]":             "]"
+		"{":             "{"
+		"}":             "}"
+		",":             ","
+
+	word:
+		#	(no longer possible to match keyword, int, or float)
+		:                "BADWORD"
+		0-9A-Za-z._/+-:  "word"
+		":":             "key"
+
+	+:
+		:             "BADWORD"
+		A-Za-z._/+-:  "word"
+		0:            "int-0"
+		1-9:          "int-n"
+		i:            "+i"
+		":":          "key"
+
+	-:
+		:             "BADWORD"
+		A-Za-z._/+-:  "word"
+		0:            "int-0"
+		1-9:          "int-n"
+		i:            "-i"
+		":":          "key"
+
+	int-0:
+		:                "INT"
+		0-9A-Za-z._/+-:  "word"
+		.:               "float-n."
+		Ee:              "float-ne"
+		":":             "key"
+
+	int-n:
+		:             "INT"
+		A-Za-z._/+-:  "word"
+		0-9:          "int-n"
+		.:            "float-n."
+		Ee:           "float-ne"
+		":":          "key"
+
+	float-n.:
+		:             "BADWORD"
+		A-Za-z._/+-:  "word"
+		0-9:          "float-n.n"
+		":":          "key"
+
+	float-n.n:
+		:             "FLOAT"
+		A-Za-z._/+-:  "word"
+		0-9:          "float-n.n"
+		Ee:           "float-ne"
+		":":          "key"
+
+	float-ne:
+		:             "BADWORD"
+		A-Za-z._/+-:  "word"
+		+:            "float-ne+"
+		-:            "float-ne+"
+		0-9:          "float-nen"
+		":":          "key"
+
+	float-ne+:
+		:             "BADWORD"
+		A-Za-z._/+-:  "word"
+		0-9:          "float-nen"
+		":":          "key"
+
+	float-nen:
+		:                "FLOAT"
+		0-9A-Za-z._/+-:  "word"
+		0-9:             "float-nen"
+		":":             "key"
+
+	key:   "KEY"
+
+	n:
+		:                "BADWORD"
+		0-9A-Za-z._/+-:  "word"
+		":":             "key"
+		u:               "nu"
+		a:               "na"
+	nu:
+		:                "BADWORD"
+		0-9A-Za-z._/+-:  "word"
+		":":             "key"
+		l:               "nul"
+	nul:
+		:                "BADWORD"
+		0-9A-Za-z._/+-:  "word"
+		":":             "key"
+		l:               "null"
+	null:
+		:                "NULL"
+		0-9A-Za-z._/+-:  "word"
+		":":             "key"
+
+	t:
+		:                "BADWORD"
+		0-9A-Za-z._/+-:  "word"
+		":":             "key"
+		r:               "tr"
+	tr:
+		:                "BADWORD"
+		0-9A-Za-z._/+-:  "word"
+		":":             "key"
+		u:               "tru"
+	tru:
+		:                "BADWORD"
+		0-9A-Za-z._/+-:  "word"
+		":":             "key"
+		e:               "true"
+	true:
+		:                "TRUE"
+		0-9A-Za-z._/+-:  "word"
+		":":             "key"
+
+	f:
+		:                "BADWORD"
+		0-9A-Za-z._/+-:  "word"
+		":":             "key"
+		a:               "fa"
+	fa:
+		:                "BADWORD"
+		0-9A-Za-z._/+-:  "word"
+		":":             "key"
+		l:               "fal"
+	fal:
+		:                "BADWORD"
+		0-9A-Za-z._/+-:  "word"
+		":":             "key"
+		s:               "fals"
+	fals:
+		:                "BADWORD"
+		0-9A-Za-z._/+-:  "word"
+		":":             "key"
+		e:               "false"
+	false:
+		:                "FALSE"
+		0-9A-Za-z._/+-:  "word"
+		":":             "key"
+
+	+i:
+		:                "BADWORD"
+		0-9A-Za-z._/+-:  "word"
+		":":             "key"
+		n:               "+in"
+	+in:
+		:                "BADWORD"
+		0-9A-Za-z._/+-:  "word"
+		":":             "key"
+		f:               "+inf"
+	+inf:
+		:                "INF"
+		0-9A-Za-z._/+-:  "word"
+		":":             "key"
+
+	-i:
+		:                "BADWORD"
+		0-9A-Za-z._/+-:  "word"
+		":":             "key"
+		n:               "-in"
+	-in:
+		:                "BADWORD"
+		0-9A-Za-z._/+-:  "word"
+		":":             "key"
+		f:               "-inf"
+	-inf:
+		:                "NEG_INF"
+		0-9A-Za-z._/+-:  "word"
+		":":             "key"
+
+	na:
+		:                "BADWORD"
+		0-9A-Za-z._/+-:  "word"
+		":":             "key"
+		n:               "nan"
+	nan:
+		:                "NAN"
+		0-9A-Za-z._/+-:  "word"
+		":":             "key"
+
+	str-quote:
+		"\t -~":  "str-quote"
+		"\n":     "STREOL"
+		"\"":     "str-quote-end"
+		"\\":     "str-esc"
+		utf8:     "str-quote"
+
+	str-esc:
+		:              "BADESC"
+		"\n":          "STREOL"
+		"\\\"/bfnrt":  "str-quote"
+		U:             "str-esc-U"
+		u:             "str-esc-u"
+
+	str-esc-U:
+		:      "BADUESC"
+		0:     "str-esc-U0"
+		"\n":  "STREOL"
+	str-esc-U0:
+		:      "BADUESC"
+		0:     "str-esc-U00"
+		"\n":  "STREOL"
+	str-esc-U00:
+		:      "BADUESC"
+		0:     "str-esc-U000"
+		1:     "str-esc-U001"
+		"\n":  "STREOL"
+	str-esc-U001:
+		:      "BADUESC"
+		0:     "str-esc-U00XX"
+		"\n":  "STREOL"
+	str-esc-U000:
+		:           "BADUESC"
+		0-9A-Fa-f:  "str-esc-U00XX"
+		0:          "str-esc-u"
+		"\n":       "STREOL"
+	str-esc-U00XX:
+		:           "BADUESC"
+		0-9A-Fa-f:  "str-esc-uX"
+		"\n":       "STREOL"
+	str-esc-u:
+		:           "BADUESC"
+		0-9A-Fa-f:  "str-esc-uX"
+		Dd:         "str-esc-uD"
+		"\n":       "STREOL"
+	str-esc-uX:
+		:           "BADUESC"
+		0-9A-Fa-f:  "str-esc-uXX"
+		"\n":       "STREOL"
+	str-esc-uXX:
+		:           "BADUESC"
+		0-9A-Fa-f:  "str-esc-uXXX"
+		"\n":       "STREOL"
+	str-esc-uXXX:
+		:           "BADUESC"
+		0-9A-Fa-f:  "str-quote"
+		"\n":       "STREOL"
+	str-esc-uD:
+		:      "BADUESC"
+		0-7:   "str-esc-uXX"
+		"\n":  "STREOL"
+
+	str-quote-end:
+		:     "STR"
+		":":  "qkey"
+	qkey:  "QKEY"
+
+	">":
+		"!-~":  ">…"
+		"\n":   "STR_WRAP_EMPTY"
+		"\t ":  "> "
+		utf8:   ">…"
+	"> ":
+		"\t -~":  ">…"
+		"\n":     "STR_WRAP_EMPTY"
+		utf8:     ">…"
+	">…":
+		"\t -~":  ">…"
+		"\n":     "STR_WRAP"
+		utf8:     ">…"
+
+	"|":
+		"!-~":  "|…"
+		"\n":   "STR_PIPE_EMPTY"
+		"\t ":  "| "
+		utf8:   "|…"
+	"| ":
+		"\t -~":  "|…"
+		"\n":     "STR_PIPE_EMPTY"
+		utf8:     "|…"
+	"|…":
+		"\t -~":  "|…"
+		"\n":     "STR_PIPE"
+		utf8:     "|…"
+
+	"!":
+		:       "BANG_SUFFIX"
+		"\t ":  "! "
+		"\n":   "STR_BANG"
+	"! ":
+		"\t -~":  "BANG_SUFFIX"
+		"\n":     "STR_BANG"
+
+	"$":
+		:             "DATA"
+		"\t ":        "$"
+		0-9A-Fa-f:    "$x"
+		G-Zg-z._/+-:  "DATACHAR"
+
+	"$x":
+		:             "PARTIAL"
+		"\n":         "PARTIAL"
+		G-Zg-z._/+-:  "DATACHAR"
+		0-9A-Fa-f:    "$"
+
+	"*":   "STAR"
+	"[":   "ARRAY_IN"
+	"]":   "ARRAY_OUT"
+	"{":   "MAP_IN"
+	"}":   "MAP_OUT"
+	",":   "COMMA"
+
+	"#":
+		"\t -~":  "#"
+		"\n":     "COMMENT"
+		utf8:     "#"
+
+parse:
+	#	Long-form values.
+
+	EXPECTING_BLOCK:
+		:          {error: "LONG"}
+		LINE_IN:   {extend: ["BLOCK_START_NEXT"]}
+
+		NULL:      {emit: "NULL"}
+		TRUE:      {emit: "TRUE"}
+		FALSE:     {emit: "FALSE"}
+		INF:       {emit: "INF"}
+		NEG_INF:   {emit: "NEG_INF"}
+		NAN:       {emit: "NAN"}
+
+		INT:       {emit: "INT"}
+		FLOAT:     {emit: "FLOAT"}
+		STR:       {emit: "STRING"}
+		DATA:      {emit: "DATA"}
+
+		ARRAY_IN:  {emit: "SHORT_ARRAY_IN", extend: ["SHORT_ARRAY_START"]}
+		MAP_IN:    {emit: "SHORT_MAP_IN", extend: ["SHORT_MAP_START"]}
+
+	BLOCK_START_NEXT:
+		:                {error: "LONG"}
+		LINE_OUT:        {error: "LONG"}
+		COMMENT:         {extend: ["BLOCK_START_LINE"]}
+
+		NULL:            {emit: "NULL", extend: ["BLOCK_SIMPLE_LINE"]}
+		TRUE:            {emit: "TRUE", extend: ["BLOCK_SIMPLE_LINE"]}
+		FALSE:           {emit: "FALSE", extend: ["BLOCK_SIMPLE_LINE"]}
+		INF:             {emit: "INF", extend: ["BLOCK_SIMPLE_LINE"]}
+		NEG_INF:         {emit: "NEG_INF", extend: ["BLOCK_SIMPLE_LINE"]}
+		NAN:             {emit: "NAN", extend: ["BLOCK_SIMPLE_LINE"]}
+
+		INT:             {emit: "INT", extend: ["BLOCK_SIMPLE_LINE"]}
+		FLOAT:           {emit: "FLOAT", extend: ["BLOCK_SIMPLE_LINE"]}
+		STR:             {emit: "STRING", extend: ["BLOCK_SIMPLE_LINE"]}
+
+		DATA:            {acc: ["DATA"], extend: ["BLOCK_DATA_LINE"]}
+
+		STR_WRAP:        {acc: ["STRING"], extend: ["BLOCK_STRING_WRAP_LINE"]}
+		STR_PIPE:        {acc: ["STRING"], extend: ["BLOCK_STRING_WRAP_LINE"]}
+		STR_WRAP_EMPTY:  {extend: ["BLOCK_STRING_LINE"]}
+		STR_PIPE_EMPTY:  {extend: ["BLOCK_STRING_LINE"]}
+		STR_BANG:        {extend: ["BLOCK_STRING_BANG_LINE"]}
+
+		ARRAY_IN:        {emit: "SHORT_ARRAY_IN", extend: ["BLOCK_SIMPLE_LINE", "SHORT_ARRAY_START"]}
+		STAR:            {emit: "LONG_ARRAY_IN", extend: ["BLOCK_ARRAY_LINE", "EXPECTING_BLOCK"]}
+		MAP_IN:          {emit: "SHORT_MAP_IN", extend: ["BLOCK_SIMPLE_LINE", "SHORT_MAP_START"]}
+		KEY:             {emit: "LONG_MAP_IN", key: "UNQUOTED", extend: ["BLOCK_MAP_LINE", "EXPECTING_BLOCK"]}
+		QKEY:            {emit: "LONG_MAP_IN", key: "QUOTED", extend: ["BLOCK_MAP_LINE", "EXPECTING_BLOCK"]}
+
+	BLOCK_START_LINE:
+		:          {error: "SUFFIX"}
+		LINE_IN:   {extend: ["BLOCK_START_LINE", "BLOCK_COMMENT_NEXT"]}
+		LINE_EQ:   {extend: ["BLOCK_START_NEXT"]}
+		LINE_OUT:  {error: "LONG"}
+
+	BLOCK_SIMPLE_LINE:
+		:          {error: "SUFFIX"}
+		LINE_IN:   {extend: ["BLOCK_SIMPLE_LINE", "BLOCK_COMMENT_NEXT"]}
+		LINE_EQ:   {extend: ["BLOCK_SIMPLE_NEXT"]}
+		LINE_OUT:  {}
+		COMMENT:   {extend: ["BLOCK_SIMPLE_LINE"]}
+
+	BLOCK_SIMPLE_NEXT:
+		:          {error: "SIBLING"}
+		LINE_OUT:  {error: "LONG"}
+		COMMENT:   {extend: ["BLOCK_SIMPLE_LINE"]}
+
+	#	Comment blocks.
+
+	BLOCK_COMMENT_NEXT:
+		:          {error: "CHILD"}
+		LINE_OUT:  {error: "LONG"}
+		COMMENT:   {extend: ["BLOCK_COMMENT_LINE"]}
+
+	BLOCK_COMMENT_LINE:
+		:          {error: "SUFFIX"}
+		LINE_IN:   {extend: ["BLOCK_COMMENT_LINE", "BLOCK_COMMENT_NEXT"]}
+		LINE_EQ:   {extend: ["BLOCK_COMMENT_LINE"]}
+		LINE_OUT:  {}
+
+	#	Short-form values.
+
+	EXPECTING_SHORT:
+		:          {error: "SHORT"}
+		NULL:      {emit: "NULL"}
+		TRUE:      {emit: "TRUE"}
+		FALSE:     {emit: "FALSE"}
+		INF:       {emit: "INF"}
+		NEG_INF:   {emit: "NEG_INF"}
+		NAN:       {emit: "NAN"}
+
+		INT:       {emit: "INT"}
+		FLOAT:     {emit: "FLOAT"}
+		STR:       {emit: "STRING"}
+		DATA:      {emit: "DATA"}
+
+		ARRAY_IN:  {emit: "SHORT_ARRAY_IN", extend: ["SHORT_ARRAY_START"]}
+		MAP_IN:    {emit: "SHORT_MAP_IN", extend: ["SHORT_MAP_START"]}
+
+	#	Long-form data.
+
+	BLOCK_DATA_NEXT:
+		:         {error: "SIBLING"}
+		COMMENT:  {extend: ["BLOCK_DATA_LINE"]}
+		DATA:     {acc: ["DATA"], extend: ["BLOCK_DATA_LINE"]}
+
+	BLOCK_DATA_LINE:
+		:          {error: "SUFFIX"}
+		LINE_IN:   {extend: ["BLOCK_DATA_LINE", "BLOCK_COMMENT_NEXT"]}
+		LINE_EQ:   {extend: ["BLOCK_DATA_NEXT"]}
+		LINE_OUT:  {emit: "ACC_DATA"}
+		COMMENT:   {extend: ["BLOCK_DATA_LINE"]}
+
+	#	Long-form strings.
+
+	BLOCK_STRING_NEXT:
+		:                {error: "SIBLING"}
+		COMMENT:         {extend: ["BLOCK_STRING_LINE"]}
+		STR_WRAP:        {acc: ["NL", "STRING"], extend: ["BLOCK_STRING_WRAP_LINE"]}
+		STR_PIPE:        {acc: ["NL", "STRING"], extend: ["BLOCK_STRING_WRAP_LINE"]}
+		STR_WRAP_EMPTY:  {acc: ["NL"], extend: ["BLOCK_STRING_LINE"]}
+		STR_PIPE_EMPTY:  {acc: ["NL"], extend: ["BLOCK_STRING_LINE"]}
+		STR_BANG:        {extend: ["BLOCK_STRING_BANG_LINE"]}
+
+	BLOCK_STRING_LINE:
+		:          {error: "SUFFIX"}
+		LINE_IN:   {extend: ["BLOCK_STRING_LINE", "BLOCK_COMMENT_NEXT"]}
+		LINE_EQ:   {extend: ["BLOCK_STRING_NEXT"]}
+		LINE_OUT:  {acc: ["NL"], emit: "ACC_STRING"}
+
+	BLOCK_STRING_WRAP_NEXT:
+		:                {error: "SIBLING"}
+		COMMENT:         {extend: ["BLOCK_STRING_WRAP_LINE"]}
+		STR_WRAP:        {acc: ["SP", "STRING"], extend: ["BLOCK_STRING_WRAP_LINE"]}
+		STR_PIPE:        {acc: ["NL", "STRING"], extend: ["BLOCK_STRING_WRAP_LINE"]}
+		STR_WRAP_EMPTY:  {acc: ["NL"], extend: ["BLOCK_STRING_LINE"]}
+		STR_PIPE_EMPTY:  {acc: ["NL"], extend: ["BLOCK_STRING_LINE"]}
+		STR_BANG:        {extend: ["BLOCK_STRING_BANG_LINE"]}
+
+	BLOCK_STRING_WRAP_LINE:
+		:          {error: "SUFFIX"}
+		LINE_IN:   {extend: ["BLOCK_STRING_WRAP_LINE", "BLOCK_COMMENT_NEXT"]}
+		LINE_EQ:   {extend: ["BLOCK_STRING_WRAP_NEXT"]}
+		LINE_OUT:  {acc: ["NL"], emit: "ACC_STRING"}
+
+	BLOCK_STRING_BANG_NEXT:
+		:                {error: "SIBLING"}
+		COMMENT:         {extend: ["BLOCK_STRING_BANG_LINE"]}
+		STR_WRAP:        {error: "BANG_LAST"}
+		STR_PIPE:        {error: "BANG_LAST"}
+		STR_WRAP_EMPTY:  {error: "BANG_LAST"}
+		STR_PIPE_EMPTY:  {error: "BANG_LAST"}
+		STR_BANG:        {error: "BANG_LAST"}
+
+	BLOCK_STRING_BANG_LINE:
+		:          {error: "SUFFIX"}
+		LINE_IN:   {extend: ["BLOCK_STRING_BANG_LINE", "BLOCK_COMMENT_NEXT"]}
+		LINE_EQ:   {extend: ["BLOCK_STRING_BANG_NEXT"]}
+		LINE_OUT:  {emit: "ACC_STRING"}
+
+	#	Short-form arrays.
+
+	SHORT_ARRAY:
+		:           {error: "ARRAY_END"}
+		COMMA:      {extend: ["SHORT_ARRAY", "EXPECTING_SHORT"]}
+		ARRAY_OUT:  {emit: "SHORT_ARRAY_OUT"}
+
+	SHORT_ARRAY_START:
+		:           {error: "SHORT"}
+		NULL:       {emit: "NULL", extend: ["SHORT_ARRAY"]}
+		TRUE:       {emit: "TRUE", extend: ["SHORT_ARRAY"]}
+		FALSE:      {emit: "FALSE", extend: ["SHORT_ARRAY"]}
+		INF:        {emit: "INF", extend: ["SHORT_ARRAY"]}
+		NEG_INF:    {emit: "NEG_INF", extend: ["SHORT_ARRAY"]}
+		NAN:        {emit: "NAN", extend: ["SHORT_ARRAY"]}
+
+		INT:        {emit: "INT", extend: ["SHORT_ARRAY"]}
+		FLOAT:      {emit: "FLOAT", extend: ["SHORT_ARRAY"]}
+		STR:        {emit: "STRING", extend: ["SHORT_ARRAY"]}
+		DATA:       {emit: "DATA", extend: ["SHORT_ARRAY"]}
+
+		ARRAY_IN:   {emit: "SHORT_ARRAY_IN", extend: ["SHORT_ARRAY", "SHORT_ARRAY_START"]}
+		MAP_IN:     {emit: "SHORT_MAP_IN", extend: ["SHORT_ARRAY", "SHORT_MAP_START"]}
+
+		ARRAY_OUT:  {emit: "SHORT_ARRAY_OUT"}
+
+	#	Long-form arrays.
+
+	BLOCK_ARRAY_NEXT:
+		:         {error: "SIBLING"}
+		COMMENT:  {extend: ["BLOCK_ARRAY_LINE"]}
+		STAR:     {extend: ["BLOCK_ARRAY_LINE", "EXPECTING_BLOCK"]}
+
+	BLOCK_ARRAY_LINE:
+		:          {error: "SUFFIX"}
+		LINE_IN:   {extend: ["BLOCK_ARRAY_LINE", "BLOCK_COMMENT_NEXT"]}
+		LINE_EQ:   {extend: ["BLOCK_ARRAY_NEXT"]}
+		LINE_OUT:  {emit: "LONG_ARRAY_OUT"}
+		COMMENT:   {extend: ["BLOCK_ARRAY_LINE"]}
+
+	#	Short-form maps.
+
+	SHORT_MAP:
+		:         {error: "MAP_END"}
+		COMMA:    {extend: ["SHORT_MAP", "SHORT_MAP_KEY"]}
+		MAP_OUT:  {emit: "SHORT_MAP_OUT"}
+
+	SHORT_MAP_START:
+		:         {error: "MAP_KEY"}
+		MAP_OUT:  {emit: "SHORT_MAP_OUT"}
+		KEY:      {key: "UNQUOTED", extend: ["SHORT_MAP", "EXPECTING_SHORT"]}
+		QKEY:     {key: "QUOTED", extend: ["SHORT_MAP", "EXPECTING_SHORT"]}
+
+	SHORT_MAP_KEY:
+		:      {error: "MAP_KEY"}
+		KEY:   {key: "UNQUOTED", extend: ["EXPECTING_SHORT"]}
+		QKEY:  {key: "QUOTED", extend: ["EXPECTING_SHORT"]}
+
+	#	Long-form maps.
+
+	BLOCK_MAP_NEXT:
+		:         {error: "SIBLING"}
+		COMMENT:  {extend: ["BLOCK_MAP_LINE"]}
+		KEY:      {key: "UNQUOTED", extend: ["BLOCK_MAP_LINE", "EXPECTING_BLOCK"]}
+		QKEY:     {key: "QUOTED", extend: ["BLOCK_MAP_LINE", "EXPECTING_BLOCK"]}
+
+	BLOCK_MAP_LINE:
+		:          {error: "SUFFIX"}
+		LINE_IN:   {extend: ["BLOCK_MAP_LINE", "BLOCK_COMMENT_NEXT"]}
+		LINE_EQ:   {extend: ["BLOCK_MAP_NEXT"]}
+		LINE_OUT:  {emit: "LONG_MAP_OUT"}
+		COMMENT:   {extend: ["BLOCK_MAP_LINE"]}

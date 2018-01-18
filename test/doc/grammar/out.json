@@ -1,0 +1,38 @@
+{
+	"nonterminals": {
+		"file": "block",
+		"block": "LINE+ bvalue LINE-",
+		"bvalue": "( COMMENT LINE= )* xvalue ( LINE= COMMENT )*",
+		"xvalue": "( word | xdata | string | xstring | array | xarray | map | xmap )",
+		"value": "word | data | string",
+		"word": "KEYWORD | INT | FLOAT | FLOATE",
+		"data": "`$` HEX",
+		"xdata": "data ( LINE= ( COMMENT | data ) )*",
+		"string": "STR",
+		"xstring": "XSTR ( LINE= ( COMMENT | XSTR ) )*",
+		"array": "`[` ( value  ( `,` value )* )? `]`",
+		"xarray": "`*` block ( `*` block | COMMENT LINE= )* COMMENT?",
+		"key": "KEY | QKEY",
+		"kvalue": "key value",
+		"map": "`{` ( kvalue ( `,` kvalue )* )? `}`",
+		"kblock": "key block",
+		"xmap": "kblock ( kblock | COMMENT LINE= )* COMMENT?"
+	},
+	"terminals": {
+		"KEYWORD": "`null` | `true` | `false` | `inf` | `-inf` | `nan`",
+		"INT": "[+-]?(0|[1-9][0-9]*)",
+		"FLOAT": "[+-]?(0|[1-9][0-9]*)([.][0-9]+)",
+		"FLOATE": "[+-]?(0|[1-9][0-9]*)([.][0-9]+)?([Ee][+-]?[0-9]+)",
+		"HEX": "([ \t]*[0-9A-Za-z]{2})*",
+		"STR": "\"([^\"\\\\]|\\\\[bfnrt'\"\\\\]|\\\\u[0-9a-zA-Z]{4})*\"",
+		"XSTR": "[>|!]([ \t].*)?",
+		"KEY": "[0-9A-Za-z./+-]+:",
+		"QKEY": "\"([^\"\\\\]|\\\\[bfnrt'\"\\\\]|\\\\u[0-9a-zA-Z]{4})*\":",
+		"COMMENT": "#.*"
+	},
+	"specials": {
+		"LINE+": "Generated when a non-empty line starts with deeper indentation than the previous line.\n",
+		"LINE=": "Generated when a non-empty line starts with the same indentation as the previous line.\n",
+		"LINE-": "Generated when a non-empty line starts with shallower indentation than the previous line. One token is generated for each level outdented, or an error if the indentation does not match a previous level.\n"
+	}
+}

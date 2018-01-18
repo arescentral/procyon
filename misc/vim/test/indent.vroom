@@ -1,0 +1,98 @@
+#!/usr/bin/env vroom --neovim
+
+  :source $VROOMDIR/setup.vim
+
+First non-empty line should have no indentation.
+  :set filetype=procyon
+  > i<Tab>"root"<Esc>
+  & 	"root"
+  > gg=G
+  & "root"
+
+
+
+Indent after colons.
+  :set filetype=procyon
+  > i1:<CR>2:<CR>3<CR><Backspace>4:<CR>5<Esc>
+  & 1:
+  & 	2:
+  & 		3
+  & 	4:
+  & 		5
+
+
+
+Indent after asterisks.
+  :set filetype=procyon
+  > i*<Tab>a: 1<CR>b: 2<CR>c: 3<Esc>
+  & *	a: 1
+  & 	b: 2
+  & 	c: 3
+
+
+
+Indent twice after colons and asterisks.
+  :set filetype=procyon
+  > i*<Tab>key:<CR>"value"<Esc>
+  & *	key:
+  & 		"value"
+
+
+
+Indent multiply after a combination of colons and asterisks.
+  :set filetype=procyon
+  > i*<Tab>:<Tab>*<Tab>key:<CR>"value"<Esc>
+  & *	:	*	key:
+  & 				"value"
+
+
+
+But don't consider the last key if it's followed by something else.
+  :set filetype=procyon
+  > i*<Tab>:<Tab>*<Tab>1: 1<CR>2: 2<Esc>
+  & *	:	*	1: 1
+  & 			2: 2
+
+
+
+Don’t interpret colons within comments or strings as needing indent.
+  :set filetype=procyon
+  > i# comment:<CR>same<CR><Esc>cc> string:<CR>same<Esc>
+  & # comment:
+  & # same
+  & > string:
+  & > same
+
+
+
+Same, when string is within a 
+  :set filetype=procyon
+  > i*<Tab>> string:<CR>> same<Esc>
+  & *	> string:
+  & 	> same
+
+
+
+Reindent excessive indentation.
+  :set filetype=procyon
+  > ione:<CR>> two<Esc>>>othree<Esc>>>
+  & one:
+  & 		> two
+  & 			> three
+  > gg=G
+  & one:
+  & 	> two
+  & 	> three
+
+
+
+Don’t touch outdents.
+  :set filetype=procyon
+  > i*<Tab>a:<CR>*<Tab>null<CR><Backspace><Backspace>b: null<Esc>
+  & *	a:
+  & 		*	null
+  & 	b: null
+  > gg=G
+  & *	a:
+  & 		*	null
+  & 	b: null

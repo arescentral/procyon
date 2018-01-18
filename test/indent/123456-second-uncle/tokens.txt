@@ -1,0 +1,16 @@
+1:1	LINE+
+1:1	INT	"1"
+2:1	LINE+
+2:2	INT	"2"
+3:1	LINE+
+3:3	INT	"3"
+4:1	LINE-
+4:1	LINE-
+4:1	LINE=
+4:1	INT	"4"
+5:1	LINE=
+5:1	INT	"5"
+6:1	LINE+
+6:2	INT	"6"
+7:1	LINE-
+7:1	LINE-

@@ -1,0 +1,9 @@
+1:1	LINE+
+1:1	STR>	">\tone"
+2:1	LINE=
+2:1	STR|	"|\ttwo"
+3:1	LINE=
+3:1	STR|	"|\tthree"
+4:1	LINE=
+4:1	!	"!"
+5:1	LINE-

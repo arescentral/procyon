@@ -1,0 +1,10 @@
+[
+	"Join these lines.\n",
+	"Leave this line alone.\n",
+	"Wrap this very very very very very very very very very very very very very very very very very very very very very very very very very very very very very long line.\n",
+	"Don't join these lines.\n\nThere's a blank line between them.\n",
+	"Join these lines.\n\nAlso join these lines.\n\nWrap this very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very long line.\n",
+	"Wait for it…\n\n\n\n…\n\n\n\n…space!\n",
+	"ThisIsJustOneWordSoItIsUnfortunatelyImpossibleToWrapAndNothingShouldBeDoneToIt.\n",
+	"EvenIfTheFirstWordIsSoLongThatItIsImpossibleToWrapTheNextWordShouldTriggerWrapping as soon as it can\n"
+]

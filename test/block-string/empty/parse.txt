@@ -1,0 +1,11 @@
+[
+	STRING("\n")
+	STRING("\n")
+	STRING("")
+	STRING("\n")
+	STRING("\n")
+	STRING("")
+	STRING("\n")
+	STRING("\n")
+	STRING("")
+]

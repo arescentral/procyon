@@ -1,0 +1,81 @@
+# Copyright 2017 The Procyon Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+static_library("procyon") {
+  sources = [
+    "$target_gen_dir/gen_table.c",
+    "include/procyon.h",
+    "src/common.c",
+    "src/common.h",
+    "src/dtoa.c",
+    "src/dump.c",
+    "src/error.c",
+    "src/file.c",
+    "src/format.c",
+    "src/gen_table.h",
+    "src/io.c",
+    "src/lex.c",
+    "src/lex.h",
+    "src/numeric.c",
+    "src/numeric.h",
+    "src/parse.c",
+    "src/parse.h",
+    "src/procyon.c",
+    "src/utf8.c",
+    "src/utf8.h",
+    "src/vector.h",
+  ]
+
+  if (target_os == "mac") {
+    sources += [ "src/file_mac.c" ]
+  } else if (target_os == "linux") {
+    sources += [ "src/file_linux.c" ]
+  }
+
+  deps = [
+    ":gen_from_spec",
+  ]
+
+  public_configs = [ ":procyon_public" ]
+  configs += [ ":procyon_private" ]
+}
+
+action("gen_from_spec") {
+  script = "scripts/gen.py"
+  gen_table = "$target_gen_dir/gen_table.c"
+
+  args = [ "--c=" + rebase_path(gen_table, root_build_dir) ]
+  inputs = [
+    "src/spec.pn",
+  ]
+  outputs = [
+    gen_table,
+  ]
+}
+
+config("procyon_public") {
+  include_dirs = [ "include" ]
+  libs = [ "-lm" ]
+}
+
+config("procyon_private") {
+  include_dirs = [ "src" ]
+  cflags = [
+    "-Wall",
+    "-Wextra",
+    "-Wsign-compare",
+    "-Werror",
+    "-Wno-initializer-overrides",
+  ]
+}

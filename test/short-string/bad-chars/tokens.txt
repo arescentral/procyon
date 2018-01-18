@@ -1,0 +1,31 @@
+1:1	LINE+
+1:1	*	"*"
+1:1	LINE+
+1:3	ERROR	1:4:invalid control character	"\"\u0000\""
+2:1	LINE-
+2:1	LINE=
+2:1	*	"*"
+2:1	LINE+
+2:3	ERROR	2:4:invalid control character	"\"\u001f\""
+3:1	LINE-
+3:1	LINE=
+3:1	*	"*"
+3:1	LINE+
+3:3	ERROR	3:4:invalid control character	"\"\u007f\""
+4:1	LINE-
+4:1	LINE=
+4:1	*	"*"
+4:1	LINE+
+4:3	ERROR	4:4:invalid UTF-8 start byte	$228022
+5:1	LINE-
+5:1	LINE=
+5:1	*	"*"
+5:1	LINE+
+5:3	ERROR	5:4:invalid UTF-8 start byte	$22ff22
+6:1	LINE-
+6:1	LINE=
+6:1	*	"*"
+6:1	LINE+
+6:3	ERROR	6:5:invalid UTF-8 continuation byte	$22c24122
+7:1	LINE-
+7:1	LINE-

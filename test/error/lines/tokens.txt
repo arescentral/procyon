@@ -1,0 +1,20 @@
+1:1	LINE+
+1:1	INT	"1"
+1:3	INT	"2"
+1:5	INT	"3"
+1:7	INT	"4"
+1:9	INT	"5"
+2:1	LINE=
+2:1	]	"]"
+2:3	INT	"6"
+2:5	INT	"7"
+2:7	DATA	"$ "
+2:9	[	"["
+3:1	LINE=
+3:1	FALSE	"false"
+3:7	INT	"8"
+3:9	INT	"9"
+4:1	LINE=
+4:1	NULL	"null"
+4:6	TRUE	"true"
+5:1	LINE-

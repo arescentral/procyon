@@ -1,0 +1,9 @@
+bad:   true
+null
+true
+false
+*	1
+	#	and
+	2
+k:     null
+what:  null

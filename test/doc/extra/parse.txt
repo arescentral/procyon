@@ -1,0 +1,230 @@
+{
+	KEY("chrono") {
+		KEY("duration") [
+			{
+				KEY("duration") {
+					KEY("s") INT(86400)
+				}
+			}
+			{
+				KEY("duration") {
+					KEY("s") INT(86400)
+					KEY("us") INT(0)
+				}
+			}
+			{
+				KEY("duration") {
+					KEY("s") INT(86400)
+					KEY("us") FLOAT(0.0)
+				}
+			}
+		]
+		KEY("period") [
+			{
+				KEY("period") {
+					KEY("d") INT(1)
+				}
+			}
+		]
+		KEY("interval") [
+			{
+				KEY("from") STRING("1969-07-20T20:17:40Z")
+				KEY("to") STRING("1969-07-21T17:54Z")
+			}
+		]
+		KEY("datetime") [
+			STRING("1969-07-21T02:56:15.000Z")
+			STRING("1969-07-20T21:56:15-0500")
+		]
+		KEY("instant") [
+			{
+				KEY("s") INT(-14159025)
+			}
+			{
+				KEY("s") INT(-14159025)
+				KEY("us") INT(0)
+			}
+			{
+				KEY("s") INT(-14159025)
+				KEY("us") INT(0)
+				KEY("tz") INT(-18000)
+			}
+		]
+	}
+	KEY("color") {
+		KEY("red") [
+			STRING("red")
+			DATA($ff0000)
+			{
+				KEY("r") INT(255)
+				KEY("g") INT(0)
+				KEY("b") INT(0)
+			}
+		]
+		KEY("pantone-2617-c") [
+			DATA($470a68)
+			DATA($470a68ff)
+			{
+				KEY("r") INT(71)
+				KEY("g") INT(10)
+				KEY("b") INT(104)
+			}
+			{
+				KEY("r") INT(71)
+				KEY("g") INT(10)
+				KEY("b") INT(104)
+				KEY("a") INT(255)
+			}
+			{
+				KEY("h") INT(279)
+				KEY("s") FLOAT(0.82)
+				KEY("l") FLOAT(0.22)
+			}
+			{
+				KEY("h") INT(279)
+				KEY("s") FLOAT(0.82)
+				KEY("l") FLOAT(0.22)
+				KEY("a") FLOAT(1.0)
+			}
+			{
+				KEY("h") INT(279)
+				KEY("s") FLOAT(0.9)
+				KEY("b") FLOAT(0.41)
+			}
+			{
+				KEY("h") INT(279)
+				KEY("s") FLOAT(0.9)
+				KEY("b") FLOAT(0.41)
+				KEY("a") FLOAT(1.0)
+			}
+			{
+				KEY("c") INT(84)
+				KEY("m") INT(99)
+				KEY("y") INT(0)
+				KEY("k") INT(12)
+			}
+		]
+	}
+	KEY("geometry") {
+		KEY("angle") [
+			{
+				KEY("deg") INT(45)
+			}
+			{
+				KEY("rad") FLOAT(0.7854)
+			}
+		]
+		KEY("point") [
+			{
+				KEY("x") FLOAT(0.7071)
+				KEY("y") FLOAT(0.7071)
+			}
+			{
+				KEY("x") FLOAT(0.7071)
+				KEY("y") FLOAT(0.7071)
+				KEY("z") FLOAT(0.0)
+			}
+			{
+				KEY("r") FLOAT(1.0)
+				KEY("theta") {
+					KEY("deg") INT(45)
+				}
+			}
+			{
+				KEY("r") FLOAT(1.0)
+				KEY("theta") {
+					KEY("rad") FLOAT(0.7854)
+				}
+				KEY("phi") INT(0)
+			}
+		]
+		KEY("size") [
+			{
+				KEY("width") INT(10)
+				KEY("height") INT(20)
+			}
+			{
+				KEY("width") INT(10)
+				KEY("height") INT(20)
+				KEY("depth") INT(0)
+			}
+		]
+		KEY("line") [
+			[
+				{
+					KEY("x") INT(0)
+					KEY("y") INT(0)
+				}
+				{
+					KEY("r") INT(1)
+					KEY("theta") INT(0)
+				}
+			]
+			[
+				{
+					KEY("x") INT(0)
+					KEY("y") INT(0)
+					KEY("z") INT(0)
+				}
+				{
+					KEY("x") INT(1)
+					KEY("y") INT(0)
+					KEY("z") INT(0)
+				}
+			]
+		]
+		KEY("rectangle") [
+			{
+				KEY("left") INT(10)
+				KEY("top") INT(20)
+				KEY("right") INT(30)
+				KEY("bottom") INT(40)
+			}
+			{
+				KEY("left") INT(10)
+				KEY("top") INT(20)
+				KEY("size") {
+					KEY("width") INT(10)
+					KEY("height") INT(20)
+				}
+			}
+			{
+				KEY("top") INT(20)
+				KEY("right") INT(30)
+				KEY("size") {
+					KEY("width") INT(10)
+					KEY("height") INT(20)
+				}
+			}
+			{
+				KEY("origin") {
+					KEY("x") INT(10)
+					KEY("y") INT(20)
+				}
+				KEY("size") {
+					KEY("width") INT(10)
+					KEY("height") INT(20)
+				}
+			}
+		]
+		KEY("ellipse") [
+			{
+				KEY("center") {
+					KEY("x") INT(100)
+					KEY("y") INT(200)
+				}
+				KEY("r") INT(50)
+			}
+			{
+				KEY("center") {
+					KEY("x") INT(100)
+					KEY("y") INT(200)
+				}
+				KEY("r") {
+					KEY("width") INT(50)
+					KEY("height") INT(50)
+				}
+			}
+		]
+	}
+}

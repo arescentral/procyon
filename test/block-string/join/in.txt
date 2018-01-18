@@ -1,0 +1,27 @@
+*	>	Join
+	>	these
+	>	lines.
+*	>	Leave this line alone.
+*	>	Wrap this very very very very very very very very very very very very very very very very very very very very very very very very very very very very very long line.
+*	>	Don't join these lines.
+	>
+	>	There's a blank line between them.
+*	>	Join these
+	>	lines.
+	>
+	>	Also
+	>	join
+	>	these lines.
+	>
+	>	Wrap this very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very long line.
+*	>	Wait for it…
+	>
+	>
+	>
+	>	…
+	>
+	>
+	>
+	>	…space!
+*	>	ThisIsJustOneWordSoItIsUnfortunatelyImpossibleToWrapAndNothingShouldBeDoneToIt.
+*	>	EvenIfTheFirstWordIsSoLongThatItIsImpossibleToWrapTheNextWordShouldTriggerWrapping as soon as it can

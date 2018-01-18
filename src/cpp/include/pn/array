@@ -1,0 +1,218 @@
+// -*- mode: C++ -*-
+// Copyright 2017 The Procyon Authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+#ifndef PN_ARRAY_
+#define PN_ARRAY_
+
+#include <procyon.h>
+#include <initializer_list>
+#include <pn/fwd>
+#include <pn/value>
+#include <type_traits>
+
+namespace pn {
+
+class array {
+  public:
+    using c_obj_type       = pn_array_t*;
+    using c_obj_const_type = const pn_array_t*;
+    using size_type        = int;
+    using value_type       = value;
+    using reference        = value_ref;
+    using const_reference  = value_cref;
+    using iterator         = internal::iterator<array>;
+    using const_iterator   = internal::iterator<const array>;
+
+    array();
+    explicit array(std::initializer_list<value> a);
+    explicit array(c_obj_type s) : _c_obj{s} {}
+
+    array(array&& s) : _c_obj{} { swap(s); }
+    array& operator     =(array&& s) { return swap(s), *this; }
+    array(const array&) = delete;
+    array& operator=(const array& s) = delete;
+
+    ~array();
+
+    bool              empty() const { return size() == 0; }
+    size_type         size() const { return (*c_obj())->count; }
+    pn_value_t*       data() { return &(*c_obj())->values[0]; }
+    pn_value_t const* data() const { return &(*c_obj())->values[0]; }
+    array             copy() const { return array(pn_arraydup(*c_obj())); }
+    int               compare(array_cref other) const;
+
+    void clear() { resize(0); }
+    void insert(const_iterator at, value x) { pn_arrayins(c_obj(), at - begin(), 'X', x.c_obj()); }
+    void erase(const_iterator at);
+    void push_back(value x) { insert(end(), std::move(x)); }
+    value pop_back() { return value{data()[--(*c_obj())->count]}; }
+    void  resize(size_type n) { pn_arrayresize(c_obj(), n); }
+
+    void reserve(size_type n);
+    void shrink_to_fit();
+
+    reference       operator[](size_type index) { return reference{data() + index}; }
+    const_reference operator[](size_type index) const { return const_reference{data() + index}; }
+
+    reference       front() { return operator[](0); }
+    const_reference front() const { return operator[](0); }
+    reference       back() { return operator[](size() - 1); }
+    const_reference back() const { return operator[](size() - 1); }
+
+    size_type capacity() const {
+        return ((*c_obj())->size - sizeof(pn_array_t)) / sizeof(pn_value_t);
+    }
+
+    iterator       begin() { return iterator{data()}; }
+    const_iterator begin() const { return const_iterator{data()}; }
+    iterator       end() { return iterator{data() + size()}; }
+    const_iterator end() const { return const_iterator{data() + size()}; }
+
+    void swap(array& other) { std::swap(*c_obj(), *other.c_obj()); }
+    void swap(array&& other) { std::swap(*c_obj(), *other.c_obj()); }
+
+    c_obj_type*             c_obj() { return &_c_obj; }
+    c_obj_const_type const* c_obj() const { return &_c_obj; }
+
+  private:
+    c_obj_type _c_obj;
+};
+
+class array_ref {
+  public:
+    using c_obj_type       = pn_array_t*;
+    using c_obj_const_type = const pn_array_t*;
+    using size_type        = int;
+    using value_type       = value;
+    using reference        = value_ref;
+    using const_reference  = value_cref;
+    using iterator         = internal::iterator<array>;
+    using const_iterator   = internal::iterator<const array>;
+
+    constexpr explicit array_ref(c_obj_type* x) noexcept : _c_obj{x} {}
+    array_ref(array& x) noexcept : array_ref{x.c_obj()} {}
+
+    array_ref(const array_ref&) = default;
+    array_ref(array_ref&&)      = default;
+    array_ref& operator=(const array_ref&) = delete;
+    array_ref& operator=(array_ref&&) = delete;
+
+    array_ref& operator=(array x) { return std::swap(*c_obj(), *x.c_obj()), *this; }
+
+    bool              empty() const { return size() == 0; }
+    size_type         size() const { return (*c_obj())->count; }
+    pn_value_t*       data() { return &(*c_obj())->values[0]; }
+    pn_value_t const* data() const { return &(*c_obj())->values[0]; }
+    array             copy() const { return array(pn_arraydup(*c_obj())); }
+    int               compare(array_cref other) const;
+
+    void clear() { resize(0); }
+    void insert(const_iterator at, value x) { pn_arrayins(c_obj(), at - begin(), 'X', x.c_obj()); }
+    void erase(const_iterator at);
+    void push_back(value x) { insert(end(), std::move(x)); }
+    value pop_back() { return value{data()[--(*c_obj())->count]}; }
+    void  resize(size_type n) { pn_arrayresize(c_obj(), n); }
+
+    void reserve(size_type n);
+    void shrink_to_fit();
+
+    reference       operator[](size_type index) { return reference{data() + index}; }
+    const_reference operator[](size_type index) const { return const_reference{data() + index}; }
+
+    reference       front() { return operator[](0); }
+    const_reference front() const { return operator[](0); }
+    reference       back() { return operator[](size() - 1); }
+    const_reference back() const { return operator[](size() - 1); }
+
+    size_type capacity() const {
+        return ((*c_obj())->size - sizeof(pn_array_t)) / sizeof(pn_value_t);
+    }
+
+    iterator       begin() { return iterator{data()}; }
+    const_iterator begin() const { return const_iterator{data()}; }
+    iterator       end() { return iterator{data() + size()}; }
+    const_iterator end() const { return const_iterator{data() + size()}; }
+
+    c_obj_type*&            c_obj() { return _c_obj; }
+    c_obj_const_type const* c_obj() const { return _c_obj; }
+
+  private:
+    c_obj_type* _c_obj;
+};
+
+class array_cref {
+  public:
+    using c_obj_type       = const pn_array_t*;
+    using c_obj_const_type = const pn_array_t*;
+    using size_type        = int;
+    using value_type       = const value;
+    using reference        = value_cref;
+    using const_reference  = value_cref;
+    using iterator         = internal::iterator<const array>;
+    using const_iterator   = internal::iterator<const array>;
+
+    constexpr explicit array_cref(const c_obj_type* x) noexcept : _c_obj{x} {}
+    array_cref(const array& x) noexcept : array_cref{x.c_obj()} {}
+    array_cref(array_ref x) noexcept : array_cref{x.c_obj()} {}
+
+    array_cref(const array_cref&) = default;
+    array_cref(array_cref&&)      = default;
+    array_cref& operator=(const array_cref&) = delete;
+    array_cref& operator=(array_cref&&) = delete;
+
+    bool              empty() const { return size() == 0; }
+    size_type         size() const { return (*c_obj())->count; }
+    pn_value_t const* data() const { return &(*c_obj())->values[0]; }
+    array             copy() const { return array(pn_arraydup(*c_obj())); }
+    int               compare(array_cref other) const;
+
+    const_reference operator[](size_type index) const { return const_reference{data() + index}; }
+
+    const_reference front() const { return operator[](0); }
+    const_reference back() const { return operator[](size() - 1); }
+
+    size_type capacity() const {
+        return ((*c_obj())->size - sizeof(pn_array_t)) / sizeof(pn_value_t);
+    }
+
+    const_iterator begin() const { return const_iterator{data()}; }
+    const_iterator end() const { return const_iterator{data() + size()}; }
+
+    c_obj_type const*&      c_obj() { return _c_obj; }
+    c_obj_const_type const* c_obj() const { return _c_obj; }
+
+  private:
+    const c_obj_type* _c_obj;
+};
+
+inline void array::erase(const_iterator at) {
+    size_type index = at - begin();
+    pn_arraydel(c_obj(), index);
+}
+inline void array_ref::erase(const_iterator at) {
+    size_type index = at - begin();
+    pn_arraydel(c_obj(), index);
+}
+
+inline bool operator==(array_cref x, array_cref y) { return x.compare(y) == 0; }
+inline bool operator!=(array_cref x, array_cref y) { return x.compare(y) != 0; }
+inline bool operator<(array_cref x, array_cref y) { return x.compare(y) < 0; }
+inline bool operator<=(array_cref x, array_cref y) { return x.compare(y) <= 0; }
+inline bool operator>(array_cref x, array_cref y) { return x.compare(y) > 0; }
+inline bool operator>=(array_cref x, array_cref y) { return x.compare(y) >= 0; }
+
+}  // namespace pn
+
+#endif  // PN_ARRAY_

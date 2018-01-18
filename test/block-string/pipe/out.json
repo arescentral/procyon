@@ -1,0 +1,4 @@
+[
+	"void do_thing(int repetitions, bool safe, bool really_safe, float discard_fraction) {\n\tfor (int i = 0; i < repetitions; ++i) {\n\t\tint x = do_inner_thing(\"something\", really_safe ? global_ptr : random_pointer(safe));\n\t\tif (rand_float() >= discard_fraction) {\n\t\t\trecord(x);\n\t\t}\n\t}\n}\n",
+	"void do_thing(\n\t\tint repetitions, bool safe, bool really_safe,\n\t\tfloat discard_fraction) {\n\tfor (int i = 0; i < repetitions; ++i) {\n\t\tint x = do_inner_thing(\n\t\t\t\t\"something\", really_safe ? global_ptr : random_pointer(safe));\n\t\tif (rand_float() >= discard_fraction) {\n\t\t\trecord(x);\n\t\t}\n\t}\n}\n"
+]

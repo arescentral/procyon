@@ -1,0 +1,81 @@
+1:1	LINE+
+1:1	*	"*"
+1:1	LINE+
+1:3	STR	"\"\""
+2:1	LINE-
+2:1	LINE=
+2:1	*	"*"
+2:1	LINE+
+2:3	ERROR	2:6:eol while scanning string	"\"\\\""
+3:1	LINE-
+3:1	LINE=
+3:1	*	"*"
+3:1	LINE+
+3:3	ERROR	3:4:invalid \uXXXX escape	"\"\\u\""
+4:1	LINE-
+4:1	LINE=
+4:1	*	"*"
+4:1	LINE+
+4:3	ERROR	4:4:invalid \uXXXX escape	"\"\\u0\""
+5:1	LINE-
+5:1	LINE=
+5:1	*	"*"
+5:1	LINE+
+5:3	ERROR	5:4:invalid \uXXXX escape	"\"\\u01\""
+6:1	LINE-
+6:1	LINE=
+6:1	*	"*"
+6:1	LINE+
+6:3	ERROR	6:4:invalid \uXXXX escape	"\"\\u012\""
+7:1	LINE-
+7:1	LINE=
+7:1	*	"*"
+7:1	LINE+
+7:3	STR	"\"\\u0123\""
+8:1	LINE-
+8:1	LINE=
+8:1	*	"*"
+8:1	LINE+
+8:3	STR	"\"\\u01234\""
+9:1	LINE-
+9:1	LINE=
+9:1	*	"*"
+9:1	LINE+
+9:3	ERROR	9:11:eol while scanning string	"\"\\u01234"
+10:1	LINE-
+10:1	LINE=
+10:1	*	"*"
+10:1	LINE+
+10:3	ERROR	10:10:eol while scanning string	"\"\\u0123"
+11:1	LINE-
+11:1	LINE=
+11:1	*	"*"
+11:1	LINE+
+11:3	ERROR	11:9:eol while scanning string	"\"\\u012"
+12:1	LINE-
+12:1	LINE=
+12:1	*	"*"
+12:1	LINE+
+12:3	ERROR	12:8:eol while scanning string	"\"\\u01"
+13:1	LINE-
+13:1	LINE=
+13:1	*	"*"
+13:1	LINE+
+13:3	ERROR	13:7:eol while scanning string	"\"\\u0"
+14:1	LINE-
+14:1	LINE=
+14:1	*	"*"
+14:1	LINE+
+14:3	ERROR	14:6:eol while scanning string	"\"\\u"
+15:1	LINE-
+15:1	LINE=
+15:1	*	"*"
+15:1	LINE+
+15:3	ERROR	15:5:eol while scanning string	"\"\\"
+16:1	LINE-
+16:1	LINE=
+16:1	*	"*"
+16:1	LINE+
+16:3	ERROR	16:4:eol while scanning string	"\""
+17:1	LINE-
+17:1	LINE-

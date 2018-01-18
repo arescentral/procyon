@@ -1,0 +1,325 @@
+// -*- mode: C++ -*-
+// Copyright 2017 The Procyon Authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+#ifndef PN_MAP_
+#define PN_MAP_
+
+#include <procyon.h>
+#include <initializer_list>
+#include <pn/string>
+#include <pn/value>
+#include <type_traits>
+
+namespace pn {
+
+namespace internal {
+
+void       map_set(pn_map_t** m, string key, value x);
+value_ref  map_force(pn_map_t** m, string key);
+value_ref  map_force(pn_map_t** m, const char* data, int size);
+value_cref map_get(const pn_map_t* m, const char* data, int size);
+void       map_clear(pn_map_t* m);
+
+}  // namespace internal
+
+class key_value {
+  public:
+    using c_obj_type            = pn_kv_pair_t;
+    using c_obj_const_type      = pn_kv_pair_t const;
+    using key_type              = string;
+    using key_reference         = string_ref;
+    using key_const_reference   = string_view;
+    using mapped_type           = value;
+    using value_reference       = value_ref;
+    using value_const_reference = value_cref;
+
+    explicit constexpr key_value(pn_kv_pair_t kv) : _c_obj{kv} {}
+
+    key_value(key_value&& kv) : _c_obj{} { swap(kv); }
+    key_value& operator            =(key_value&& kv) { return swap(kv), *this; }
+    key_value(const key_value& kv) = delete;
+    key_value& operator=(const key_value& kv) = delete;
+
+    ~key_value();
+
+    key_reference       key() { return key_reference{&c_obj()->key}; }
+    key_const_reference key() const {
+        return key_const_reference{c_obj()->key->values,
+                                   static_cast<int>(c_obj()->key->count) - 1};
+    }
+    value_reference       value() { return value_reference{&c_obj()->value}; }
+    value_const_reference value() const { return value_const_reference{&c_obj()->value}; }
+
+    void swap(key_value& other) { std::swap(_c_obj, other._c_obj); }
+    void swap(key_value&& other) { std::swap(_c_obj, other._c_obj); }
+
+    c_obj_type*             c_obj() { return &_c_obj; }
+    c_obj_const_type const* c_obj() const { return &_c_obj; }
+
+  private:
+    c_obj_type _c_obj;
+};
+
+class key_value_ref {
+  public:
+    using c_obj_type            = pn_kv_pair_t;
+    using c_obj_const_type      = pn_kv_pair_t const;
+    using key_type              = string;
+    using key_reference         = string_ref;
+    using key_const_reference   = string_view;
+    using mapped_type           = value;
+    using value_reference       = value_ref;
+    using value_const_reference = value_cref;
+
+    explicit key_value_ref(c_obj_type* x) : _c_obj{x} {}
+    key_value_ref(key_value& x) : key_value_ref{x.c_obj()} {}
+
+    key_value_ref(const key_value_ref&) = default;
+    key_value_ref(key_value_ref&&)      = default;
+    key_value_ref& operator=(const key_value_ref&) = delete;
+    key_value_ref& operator=(key_value_ref&&) = delete;
+
+    key_value_ref& operator=(key_value x) { return std::swap(*c_obj(), *x.c_obj()), *this; }
+
+    key_reference       key() { return key_reference{&c_obj()->key}; }
+    key_const_reference key() const {
+        return key_const_reference{c_obj()->key->values,
+                                   static_cast<int>(c_obj()->key->count) - 1};
+    }
+    value_reference       value() { return value_reference{&c_obj()->value}; }
+    value_const_reference value() const { return value_const_reference{&c_obj()->value}; }
+
+    c_obj_type*&            c_obj() { return _c_obj; }
+    c_obj_const_type const* c_obj() const { return _c_obj; }
+
+  private:
+    c_obj_type* _c_obj;
+};
+
+class key_value_cref {
+  public:
+    using c_obj_type            = pn_kv_pair_t const;
+    using c_obj_const_type      = pn_kv_pair_t const;
+    using key_type              = string;
+    using key_reference         = string_view;
+    using key_const_reference   = string_view;
+    using mapped_type           = value;
+    using value_reference       = value_cref;
+    using value_const_reference = value_cref;
+
+    explicit key_value_cref(const c_obj_type* x) : _c_obj{x} {}
+    key_value_cref(const key_value& x) : key_value_cref{x.c_obj()} {}
+    key_value_cref(key_value_ref x) : key_value_cref{x.c_obj()} {}
+
+    key_value_cref(const key_value_cref&) = default;
+    key_value_cref(key_value_cref&&)      = default;
+    key_value_cref&     operator=(const key_value_cref&) = delete;
+    key_value_cref&     operator=(key_value_cref&&) = delete;
+    key_const_reference key() const {
+        return key_const_reference{c_obj()->key->values,
+                                   static_cast<int>(c_obj()->key->count) - 1};
+    }
+    value_const_reference value() const { return value_const_reference{&c_obj()->value}; }
+
+    c_obj_type const*&      c_obj() { return _c_obj; }
+    c_obj_const_type const* c_obj() const { return _c_obj; }
+
+  private:
+    const c_obj_type* _c_obj;
+};
+
+class map {
+  public:
+    using c_obj_type       = pn_map_t*;
+    using c_obj_const_type = pn_map_t const*;
+    using size_type        = int;
+    using key_type         = string;
+    using mapped_type      = value;
+    using value_type       = key_value;
+    using reference        = key_value_ref;
+    using const_reference  = key_value_cref;
+    using iterator         = internal::iterator<map>;
+    using const_iterator   = internal::iterator<const map>;
+
+    map();
+    explicit map(std::initializer_list<std::pair<string, value>> m);
+    explicit map(pn_map_t* m) : _c_obj{m} {}
+
+    map(map&& m) : _c_obj{} { swap(m); }
+    map& operator     =(map&& m) { return swap(m), *this; }
+    map(const map& m) = delete;
+    map& operator=(const map& m) = delete;
+
+    ~map();
+
+    bool                                  empty() const { return size() == 0; }
+    size_type                             size() const { return (*c_obj())->count; }
+    typename reference::c_obj_type*       data() { return (*c_obj())->values; }
+    typename reference::c_obj_const_type* data() const { return (*c_obj())->values; }
+    map                                   copy() const { return map(pn_mapdup(*c_obj())); }
+    int                                   compare(map_cref other) const;
+
+    value_ref operator[](string_view k) {
+        return internal::map_force(c_obj(), k.data(), k.size());
+    }
+    bool has(string_view k) const { return pn_mapget_const(*c_obj(), 'S', k.data(), k.size()); }
+    value_cref get(string_view k) const { return internal::map_get(*c_obj(), k.data(), k.size()); }
+    void       set(string_view k, value x) {
+        pn_mapset(c_obj(), 'S', 'X', k.data(), k.size(), x.c_obj());
+    }
+    void del(string_view k) { pn_mapdel(c_obj(), 'S', k.data(), k.size()); }
+    bool pop(string_view k, value_ref x) {
+        return pn_mappop(c_obj(), x.c_obj(), 'S', k.data(), k.size());
+    }
+
+    void clear() { internal::map_clear(*c_obj()); }
+
+    size_type capacity() const;
+    void      reserve(size_type n);
+    void      shrink_to_fit();
+
+    iterator       begin() { return iterator{data()}; }
+    iterator       end() { return iterator{data() + size()}; }
+    const_iterator begin() const { return const_iterator{data()}; }
+    const_iterator end() const { return const_iterator{data() + size()}; }
+
+    void swap(map& other) { std::swap(_c_obj, other._c_obj); }
+
+    pn_map_t**             c_obj() { return &_c_obj; }
+    const pn_map_t* const* c_obj() const { return &_c_obj; }
+
+  private:
+    pn_map_t* _c_obj;
+};
+
+class map_ref {
+  public:
+    using c_obj_type       = pn_map_t*;
+    using c_obj_const_type = pn_map_t const*;
+    using size_type        = int;
+    using key_type         = string;
+    using mapped_type      = value;
+    using value_type       = key_value;
+    using reference        = key_value_ref;
+    using const_reference  = key_value_cref;
+    using iterator         = internal::iterator<map>;
+    using const_iterator   = internal::iterator<const map>;
+
+    explicit map_ref(c_obj_type* x) : _c_obj{x} {}
+    map_ref(map& x) : _c_obj{x.c_obj()} {}
+
+    map_ref(const map_ref&) = default;
+    map_ref(map_ref&&)      = default;
+    map_ref& operator=(const map_ref&) = delete;
+    map_ref& operator=(map_ref&&) = delete;
+
+    map_ref& operator=(map x) { return std::swap(*c_obj(), *x.c_obj()), *this; }
+
+    bool                                  empty() const { return size() == 0; }
+    size_type                             size() const { return (*c_obj())->count; }
+    typename reference::c_obj_type*       data() { return (*c_obj())->values; }
+    typename reference::c_obj_const_type* data() const { return (*c_obj())->values; }
+    map                                   copy() const { return map(pn_mapdup(*c_obj())); }
+    int                                   compare(map_cref other) const;
+
+    value_ref operator[](string_view k) {
+        return internal::map_force(c_obj(), k.data(), k.size());
+    }
+    bool has(string_view k) const { return pn_mapget_const(*c_obj(), 'S', k.data(), k.size()); }
+    value_cref get(string_view k) const { return internal::map_get(*c_obj(), k.data(), k.size()); }
+    void       set(string_view k, value x) {
+        pn_mapset(c_obj(), 'S', 'X', k.data(), k.size(), x.c_obj());
+    }
+    void del(string_view k) { pn_mapdel(c_obj(), 'S', k.data(), k.size()); }
+    bool pop(string_view k, value_ref x) {
+        return pn_mappop(c_obj(), x.c_obj(), 'S', k.data(), k.size());
+    }
+
+    void clear() { internal::map_clear(*c_obj()); }
+
+    size_type capacity() const;
+    void      reserve(size_type n);
+    void      shrink_to_fit();
+
+    iterator       begin() { return iterator{data()}; }
+    iterator       end() { return iterator{data() + size()}; }
+    const_iterator begin() const { return const_iterator{data()}; }
+    const_iterator end() const { return const_iterator{data() + size()}; }
+
+    c_obj_type*&            c_obj() { return _c_obj; }
+    c_obj_const_type const* c_obj() const { return _c_obj; }
+
+  private:
+    c_obj_type* _c_obj;
+};
+
+class map_cref {
+  public:
+    using c_obj_type       = pn_map_t const*;
+    using c_obj_const_type = pn_map_t const*;
+    using size_type        = int;
+    using key_type         = string;
+    using mapped_type      = value;
+    using value_type       = key_value;
+    using reference        = key_value_cref;
+    using const_reference  = key_value_cref;
+    using iterator         = internal::iterator<map>;
+    using const_iterator   = internal::iterator<const map>;
+
+    explicit map_cref(const c_obj_type* x) : _c_obj{x} {}
+    map_cref(const map& x) : _c_obj{x.c_obj()} {}
+    map_cref(map_ref x) : _c_obj{x.c_obj()} {}
+
+    map_cref(const map_cref&) = default;
+    map_cref(map_cref&&)      = default;
+    map_cref& operator=(const map_cref&) = delete;
+    map_cref& operator=(map_cref&&) = delete;
+
+    bool                                  empty() const { return size() == 0; }
+    size_type                             size() const { return (*c_obj())->count; }
+    typename reference::c_obj_type*       data() { return (*c_obj())->values; }
+    typename reference::c_obj_const_type* data() const { return (*c_obj())->values; }
+    map                                   copy() const { return map(pn_mapdup(*c_obj())); }
+    int                                   compare(map_cref other) const;
+
+    bool has(string_view k) const { return pn_mapget_const(*c_obj(), 'S', k.data(), k.size()); }
+    value_cref get(string_view k) const { return internal::map_get(*c_obj(), k.data(), k.size()); }
+
+    size_type capacity() const;
+
+    const_iterator begin() const { return const_iterator{data()}; }
+    const_iterator end() const { return const_iterator{data() + size()}; }
+
+    c_obj_type const*&      c_obj() { return _c_obj; }
+    c_obj_const_type const* c_obj() const { return _c_obj; }
+
+  private:
+    const c_obj_type* _c_obj;
+};
+
+inline int map::compare(map_cref other) const { return pn_mapcmp(*c_obj(), *other.c_obj()); }
+inline int map_ref::compare(map_cref other) const { return pn_mapcmp(*c_obj(), *other.c_obj()); }
+inline int map_cref::compare(map_cref other) const { return pn_mapcmp(*c_obj(), *other.c_obj()); }
+
+inline bool operator==(map_cref x, map_cref y) { return x.compare(y) == 0; }
+inline bool operator!=(map_cref x, map_cref y) { return x.compare(y) != 0; }
+inline bool operator<(map_cref x, map_cref y) { return x.compare(y) < 0; }
+inline bool operator<=(map_cref x, map_cref y) { return x.compare(y) <= 0; }
+inline bool operator>(map_cref x, map_cref y) { return x.compare(y) > 0; }
+inline bool operator>=(map_cref x, map_cref y) { return x.compare(y) >= 0; }
+
+}  // namespace pn
+
+#endif  // PN_MAP_

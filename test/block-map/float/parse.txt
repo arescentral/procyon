@@ -1,0 +1,53 @@
+[
+	{
+		KEY("1") NULL
+		KEY("1.") NULL
+		KEY("1.1") NULL
+		KEY("1.1e") NULL
+		KEY("1.1e1") NULL
+		KEY("1.e1") NULL
+		KEY("1e1") NULL
+		KEY("1e") NULL
+	}
+	{
+		KEY("+1") NULL
+		KEY("+1.") NULL
+		KEY("+1.1") NULL
+		KEY("+1.1e") NULL
+		KEY("+1.1e1") NULL
+		KEY("+1.e1") NULL
+		KEY("+1e1") NULL
+		KEY("+1e") NULL
+	}
+	{
+		KEY("-1") NULL
+		KEY("-1.") NULL
+		KEY("-1.1") NULL
+		KEY("-1.1e") NULL
+		KEY("-1.1e1") NULL
+		KEY("-1.e1") NULL
+		KEY("-1e1") NULL
+		KEY("-1e") NULL
+	}
+	{
+		KEY("1.1e+") NULL
+		KEY("1.1e+1") NULL
+		KEY("1.e+1") NULL
+		KEY("1e+1") NULL
+		KEY("1e+") NULL
+	}
+	{
+		KEY("+1.1e+") NULL
+		KEY("+1.1e+1") NULL
+		KEY("+1.e+1") NULL
+		KEY("+1e+1") NULL
+		KEY("+1e+") NULL
+	}
+	{
+		KEY("-1.1e+") NULL
+		KEY("-1.1e+1") NULL
+		KEY("-1.e+1") NULL
+		KEY("-1e+1") NULL
+		KEY("-1e+") NULL
+	}
+]

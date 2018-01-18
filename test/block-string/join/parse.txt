@@ -1,0 +1,10 @@
+[
+	STRING("Join these lines.\n")
+	STRING("Leave this line alone.\n")
+	STRING("Wrap this very very very very very very very very very very very very very very very very very very very very very very very very very very very very very long line.\n")
+	STRING("Don't join these lines.\n\nThere's a blank line between them.\n")
+	STRING("Join these lines.\n\nAlso join these lines.\n\nWrap this very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very long line.\n")
+	STRING("Wait for it…\n\n\n\n…\n\n\n\n…space!\n")
+	STRING("ThisIsJustOneWordSoItIsUnfortunatelyImpossibleToWrapAndNothingShouldBeDoneToIt.\n")
+	STRING("EvenIfTheFirstWordIsSoLongThatItIsImpossibleToWrapTheNextWordShouldTriggerWrapping as soon as it can\n")
+]

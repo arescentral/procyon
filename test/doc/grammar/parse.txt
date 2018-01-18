@@ -1,0 +1,38 @@
+{
+	KEY("nonterminals") {
+		KEY("file") STRING("block")
+		KEY("block") STRING("LINE+ bvalue LINE-")
+		KEY("bvalue") STRING("( COMMENT LINE= )* xvalue ( LINE= COMMENT )*")
+		KEY("xvalue") STRING("( word | xdata | string | xstring | array | xarray | map | xmap )")
+		KEY("value") STRING("word | data | string")
+		KEY("word") STRING("KEYWORD | INT | FLOAT | FLOATE")
+		KEY("data") STRING("`$` HEX")
+		KEY("xdata") STRING("data ( LINE= ( COMMENT | data ) )*")
+		KEY("string") STRING("STR")
+		KEY("xstring") STRING("XSTR ( LINE= ( COMMENT | XSTR ) )*")
+		KEY("array") STRING("`[` ( value  ( `,` value )* )? `]`")
+		KEY("xarray") STRING("`*` block ( `*` block | COMMENT LINE= )* COMMENT?")
+		KEY("key") STRING("KEY | QKEY")
+		KEY("kvalue") STRING("key value")
+		KEY("map") STRING("`{` ( kvalue ( `,` kvalue )* )? `}`")
+		KEY("kblock") STRING("key block")
+		KEY("xmap") STRING("kblock ( kblock | COMMENT LINE= )* COMMENT?")
+	}
+	KEY("terminals") {
+		KEY("KEYWORD") STRING("`null` | `true` | `false` | `inf` | `-inf` | `nan`")
+		KEY("INT") STRING("[+-]?(0|[1-9][0-9]*)")
+		KEY("FLOAT") STRING("[+-]?(0|[1-9][0-9]*)([.][0-9]+)")
+		KEY("FLOATE") STRING("[+-]?(0|[1-9][0-9]*)([.][0-9]+)?([Ee][+-]?[0-9]+)")
+		KEY("HEX") STRING("([ \t]*[0-9A-Za-z]{2})*")
+		KEY("STR") STRING("\"([^\"\\\\]|\\\\[bfnrt'\"\\\\]|\\\\u[0-9a-zA-Z]{4})*\"")
+		KEY("XSTR") STRING("[>|!]([ \t].*)?")
+		KEY("KEY") STRING("[0-9A-Za-z./+-]+:")
+		KEY("QKEY") STRING("\"([^\"\\\\]|\\\\[bfnrt'\"\\\\]|\\\\u[0-9a-zA-Z]{4})*\":")
+		KEY("COMMENT") STRING("#.*")
+	}
+	KEY("specials") {
+		KEY("LINE+") STRING("Generated when a non-empty line starts with deeper indentation than the previous line.\n")
+		KEY("LINE=") STRING("Generated when a non-empty line starts with the same indentation as the previous line.\n")
+		KEY("LINE-") STRING("Generated when a non-empty line starts with shallower indentation than the previous line. One token is generated for each level outdented, or an error if the indentation does not match a previous level.\n")
+	}
+}

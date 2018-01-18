@@ -1,0 +1,225 @@
+// -*- mode: C++ -*-
+// Copyright 2017 The Procyon Authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+#ifndef PN_FILE_
+#define PN_FILE_
+
+#include <procyon.h>
+#include <pn/arg>
+#include <pn/array>
+#include <pn/data>
+#include <pn/map>
+#include <pn/string>
+#include <pn/value>
+#include <type_traits>
+
+namespace pn {
+
+enum {
+    dump_default = PN_DUMP_DEFAULT,
+    dump_short   = PN_DUMP_SHORT,
+};
+
+class file {
+  public:
+    file() : _c_obj{nullptr} {}
+    explicit file(pn_file_t* f) : _c_obj{f} {}
+    file(const file&) = delete;
+    file(file&& other) : _c_obj{nullptr} { std::swap(_c_obj, other._c_obj); }
+    file& operator=(const file&) = delete;
+    file& operator               =(file&& other) { return std::swap(_c_obj, other._c_obj), *this; }
+    ~file() {
+        if (_c_obj) {
+            fclose(_c_obj);
+        }
+    }
+
+          operator bool() const { return c_obj() && !eof() && !error(); }
+    file& check() &;
+    file  check() && { return check(), std::move(*this); }
+
+    template <typename... arguments>
+    file& read(arguments... args);
+
+    template <typename... arguments>
+    file& write(const arguments&... args);
+
+    bool error() const { return ferror(c_obj()); }
+    bool eof() const { return feof(c_obj()); }
+
+    pn_file_t* c_obj() const { return _c_obj; }
+
+  private:
+    void check_ok();
+
+    pn_file_t* _c_obj;
+};
+
+class file_view {
+  public:
+    file_view() : _c_obj{nullptr} {}
+    file_view(const file& f) : _c_obj{f.c_obj()} {}
+    file_view(pn_file_t* f) : _c_obj{f} {}
+
+              operator bool() const { return c_obj() && !eof() && !error(); }
+    file_view check();
+
+    template <typename... arguments>
+    file_view& read(arguments... args);
+
+    template <typename... arguments>
+    file_view& write(const arguments&... args);
+
+    bool error() const { return ferror(c_obj()); }
+    bool eof() const { return feof(c_obj()); }
+
+    pn_file_t* c_obj() const { return _c_obj; }
+
+  private:
+    pn_file_t* _c_obj;
+};
+
+[[clang::warn_unused_result]] file open(string_view path, const char* mode);
+
+[[clang::warn_unused_result]] bool parse(file_view in, value_ref out, pn_error_t* error);
+
+template <typename... args>
+file_view format(file_view out, const char* fmt, const args&... arg);
+
+template <typename... args>
+[[clang::warn_unused_result]] string format(const char* fmt, const args&... arg);
+
+template <typename arg>
+file_view dump(file_view out, const arg& x, int flags = dump_default);
+
+template <typename arg>
+[[clang::warn_unused_result]] string dump(const arg& x, int flags = dump_default);
+
+namespace internal {
+
+template <typename tuple, int... i>
+bool apply_format(
+        file_view f, const char* input_format, const char* output_format, const tuple& args,
+        indexes<i...>) {
+    return pn_format(f.c_obj(), input_format, output_format, std::get<i>(args)...);
+}
+
+template <typename tuple>
+bool format(file_view f, const char* output_format, const char* input_format, const tuple& args) {
+    return apply_format(
+            f, output_format, input_format, args,
+            typename index_range<std::tuple_size<tuple>::value>::type());
+}
+
+template <typename tuple, int... i>
+void apply_dump(file_view f, int flags, char format, const tuple& args, indexes<i...>) {
+    pn_dump(f.c_obj(), flags, format, std::get<i>(args)...);
+}
+
+template <typename tuple>
+void dump(file_view f, int flags, char format, const tuple& args) {
+    apply_dump(
+            f, flags, format, args, typename index_range<std::tuple_size<tuple>::value>::type());
+}
+
+template <typename tuple, int... i>
+void apply_write(file_view file, const char* format, const tuple& args, indexes<i...>) {
+    pn_write(file.c_obj(), format, std::get<i>(args)...);
+}
+
+template <typename tuple>
+void write(file_view file, const char* format, const tuple& args) {
+    apply_write(file, format, args, typename index_range<std::tuple_size<tuple>::value>::type());
+}
+
+template <typename tuple, int... i>
+void apply_read(file_view file, const char* format, const tuple& args, indexes<i...>) {
+    pn_read(file.c_obj(), format, std::get<i>(args)...);
+}
+
+template <typename tuple>
+void read(file_view file, const char* format, const tuple& args) {
+    apply_read(file, format, args, typename index_range<std::tuple_size<tuple>::value>::type());
+}
+
+}  // namespace internal
+
+template <typename... args>
+file_view format(file_view out, const char* fmt, const args&... arg) {
+    internal::format(
+            out, fmt, (char[]){internal::arg<typename std::decay<args>::type>::code..., '\0'},
+            std::tuple_cat(internal::arg<typename std::decay<args>::type>::write_args(arg)...));
+    return out;
+}
+
+template <typename... args>
+string format(const char* fmt, const args&... arg) {
+    string out;
+    format(out.open("w").check(), fmt, std::forward<const args&>(arg)...).check();
+    return out;
+}
+
+template <typename arg>
+file_view dump(file_view out, const arg& x, int flags) {
+    internal::dump(
+            out, flags, internal::arg<typename std::decay<arg>::type>::code,
+            internal::arg<typename std::decay<arg>::type>::write_args(x));
+    return out;
+}
+
+template <typename arg>
+string dump(const arg& x, int flags) {
+    string out;
+    dump(out.open("w").check(), x, flags).check();
+    return out;
+}
+
+template <typename... args>
+file& file::read(args... arg) {
+    internal::read(
+            *this, (char[]){internal::read_arg<typename std::decay<args>::type>::code..., '\0'},
+            std::tuple_cat(
+                    internal::read_arg<typename std::decay<args>::type>::read_args(arg)...));
+    return *this;
+}
+
+template <typename... args>
+file_view& file_view::read(args... arg) {
+    internal::read(
+            *this, (char[]){internal::read_arg<typename std::decay<args>::type>::code..., '\0'},
+            std::tuple_cat(
+                    internal::read_arg<typename std::decay<args>::type>::read_args(arg)...));
+    return *this;
+}
+
+template <typename... args>
+file& file::write(const args&... arg) {
+    internal::write(
+            *this, (char[]){internal::arg<typename std::decay<args>::type>::code..., '\0'},
+            std::tuple_cat(internal::arg<typename std::decay<args>::type>::write_args(arg)...));
+    return *this;
+}
+
+template <typename... args>
+file_view& file_view::write(const args&... arg) {
+    internal::write(
+            *this, (char[]){internal::arg<typename std::decay<args>::type>::code..., '\0'},
+            std::tuple_cat(internal::arg<typename std::decay<args>::type>::write_args(arg)...));
+    return *this;
+}
+
+}  // namespace pn
+
+#endif  // PN_FILE_

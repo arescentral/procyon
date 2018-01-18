@@ -1,0 +1,62 @@
+{
+	KEY("general") STRING("Indentation starts a block. Tabs are preferred, and are equal to two spaces. (Valid) UTF-8 is allowed inside strings and comments. ASCII is allowed everywhere, except for control characters, which aren't allowed anywhere. Whitespace means tabs or spaces.\n")
+	KEY("types") {
+		KEY("scalar") {
+			KEY("null") NULL
+			KEY("bool") [
+				BOOL(true)
+				BOOL(false)
+			]
+			KEY("int") [
+				INT(0)
+				INT(20)
+				INT(1)
+				INT(-40)
+			]
+			KEY("float") [
+				FLOAT(0.0)
+				FLOAT(0.0)
+				FLOAT(-0.0)
+				FLOAT(6.02e+23)
+				FLOAT(inf)
+				FLOAT(inf)
+				FLOAT(-inf)
+				FLOAT(nan)
+			]
+		}
+		KEY("vector") {
+			KEY("data") {
+				KEY("short") DATA($0f1e2d3c)
+				KEY("long") DATA($0000000000000000111111111111111122222222222222223333333333333333444444444444444455555555555555556666666666666666777777777777777788888888888888889999999999999999aaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbccccccccccccccccddddddddddddddddeeeeeeeeeeeeeeeeffffffffffffffff)
+			}
+			KEY("string") {
+				KEY("short") STRING("use quotes\u0000use escapes")
+				KEY("long") STRING("Multi-line literals use \">\", \"|\", and \"!\". One tab or space character may follow them and is ignored. With \">\", non-empty input lines are joined to previous non-empty lines by a space. With \"|\" (always) or \">\" (when the current or previous line is empty), each input line begins a new line.\n\nA trailing newline is added unless the last line uses \"!\". A \"!\" ends the string: no text may occur after the \"!\" (except an optional space or tab) and no \">\" or \"!\" lines may follow it.")
+			}
+			KEY("array") {
+				KEY("short") [
+					INT(1)
+					INT(2)
+					INT(3)
+				]
+				KEY("long") [
+					STRING("multi-line arrays")
+					STRING("use stars")
+				]
+			}
+			KEY("dict") {
+				KEY("short") {
+					KEY("use-braces") BOOL(true)
+					KEY("use-colons") BOOL(true)
+					KEY("and sometimes quotes") BOOL(true)
+				}
+				KEY("long") {
+					KEY("multi-line") STRING("maps")
+					KEY("use") STRING("colons")
+					KEY("quoted keys") STRING("OK too")
+				}
+			}
+		}
+	}
+	KEY("notes") STRING("Short vector literals must always fit on one line. They are essentially the same as JSON, except that dict keys do not have to be quoted if they contain only [0-9A-Za-z./+-].\n")
+}

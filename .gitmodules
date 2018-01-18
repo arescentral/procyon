@@ -1,0 +1,6 @@
+[submodule "ext/gmock"]
+	path = ext/gmock
+	url = https://github.com/sfiera/gmock-gyp.git
+[submodule "build/lib"]
+	path = build/lib
+	url = https://github.com/sfiera/gn-tools

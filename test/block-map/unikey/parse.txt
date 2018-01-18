@@ -1,0 +1,26 @@
+[
+	{
+		KEY("\u0000") NULL
+		KEY("      ") NULL
+	}
+	{
+		KEY("\n\"\\") NULL
+		KEY("      ") NULL
+	}
+	{
+		KEY("Amélie") NULL
+		KEY("      ") NULL
+	}
+	{
+		KEY("Spin̈al Tap") NULL
+		KEY("          ") NULL
+	}
+	{
+		KEY("ゴジラ") NULL
+		KEY("      ") NULL
+	}
+	{
+		KEY("\U0010ffff") NULL
+		KEY("          ") NULL
+	}
+]

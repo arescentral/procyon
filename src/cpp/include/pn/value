@@ -1,0 +1,212 @@
+// -*- mode: C++ -*-
+// Copyright 2017 The Procyon Authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+#ifndef PN_VALUE_
+#define PN_VALUE_
+
+#include <procyon.h>
+#include <pn/fwd>
+
+namespace pn {
+
+class value {
+  public:
+    typedef pn_value_t       c_obj_type;
+    typedef const pn_value_t c_obj_const_type;
+
+    constexpr value() noexcept : _c_obj{} {}
+    constexpr value(std::nullptr_t) noexcept : _c_obj{PN_NULL, {}} {}
+    constexpr value(bool b) noexcept : _c_obj{PN_BOOL, {.b = b}} {}
+    constexpr value(int i) noexcept : _c_obj{PN_INT, {.i = i}} {}
+    constexpr value(int64_t i) noexcept : _c_obj{PN_INT, {.i = i}} {}
+    constexpr value(double f) noexcept : _c_obj{PN_FLOAT, {.f = f}} {}
+
+    value(data d);
+    value(string s);
+    value(const std::string& s);
+    value(const char* s);
+    value(array a);
+    value(map m);
+
+    explicit constexpr value(c_obj_type x) : _c_obj{x} {}
+
+    template <typename T>
+    value(T*)            = delete;  // Don't allow pointers to cast to bool.
+    value(char)          = delete;  // Don't allow characters to cast to int.
+    value(signed char)   = delete;  // Don't allow characters to cast to int.
+    value(unsigned char) = delete;  // Don't allow characters to cast to int.
+
+    value(value&& x) noexcept : _c_obj{} { swap(x); }
+    value(const value&) = delete;
+    value& operator     =(value&& x) noexcept { return swap(x), *this; }
+    value& operator=(const value&) = delete;
+
+    ~value() { pn_clear(c_obj()); }
+
+    void swap(value& x) { std::swap(*c_obj(), *x.c_obj()); }
+    void swap(value&& x) { std::swap(*c_obj(), *x.c_obj()); }
+
+    c_obj_type*             c_obj() { return &_c_obj; }
+    c_obj_const_type const* c_obj() const { return &_c_obj; }
+
+    value copy() const {
+        pn_value_t x;
+        pn_set(&x, 'x', c_obj());
+        return value{x};
+    }
+    int compare(value_cref other) const;
+
+    constexpr ::pn::type type() const { return c_obj()->type; }
+    constexpr bool       is_null() const { return type() == PN_NULL; }
+    constexpr bool       is_bool() const { return type() == PN_BOOL; }
+    constexpr bool       is_int() const { return type() == PN_INT; }
+    constexpr bool       is_float() const { return type() == PN_FLOAT; }
+    constexpr bool       is_number() const { return is_int() || is_float(); }
+    constexpr bool       is_data() const { return type() == PN_DATA; }
+    constexpr bool       is_string() const { return type() == PN_STRING; }
+    constexpr bool       is_array() const { return type() == PN_ARRAY; }
+    constexpr bool       is_map() const { return type() == PN_MAP; }
+
+    constexpr bool    as_bool() const { return is_bool() ? c_obj()->b : false; }
+    constexpr int64_t as_int() const { return is_int() ? c_obj()->i : 0; }
+    constexpr double  as_float() const { return is_float() ? c_obj()->f : 0.0; }
+    constexpr double  as_number() const { return is_int() ? c_obj()->i : as_float(); }
+    data_view         as_data() const;
+    string_view       as_string() const;
+    array_cref        as_array() const;
+    map_cref          as_map() const;
+
+    void       to_null() { *this = nullptr; }
+    bool&      to_bool() { return (is_bool() ? *this : (*this = false)).c_obj()->b; }
+    int64_t&   to_int() { return (is_int() ? *this : (*this = 0)).c_obj()->i; }
+    double&    to_float() { return (is_float() ? *this : (*this = 0.0)).c_obj()->f; }
+    data_ref   to_data();
+    string_ref to_string();
+    array_ref  to_array();
+    map_ref    to_map();
+
+  private:
+    c_obj_type _c_obj;
+};
+
+class value_ref {
+  public:
+    using c_obj_type       = pn_value_t;
+    using c_obj_const_type = const pn_value_t;
+
+    constexpr explicit value_ref(c_obj_type* x) : _c_obj{x} {}
+    constexpr value_ref(value& x) : value_ref{x.c_obj()} {}
+    value_ref& operator=(value x) { return std::swap(*c_obj(), *x.c_obj()), *this; }
+
+    c_obj_type*&                      c_obj() { return _c_obj; }
+    constexpr c_obj_const_type const* c_obj() const { return _c_obj; }
+
+    value copy() const {
+        pn_value_t x;
+        pn_set(&x, 'x', c_obj());
+        return value{x};
+    }
+    int compare(value_cref other) const;
+
+    constexpr ::pn::type type() const { return c_obj()->type; }
+    constexpr bool       is_null() const { return type() == PN_NULL; }
+    constexpr bool       is_bool() const { return type() == PN_BOOL; }
+    constexpr bool       is_int() const { return type() == PN_INT; }
+    constexpr bool       is_float() const { return type() == PN_FLOAT; }
+    constexpr bool       is_number() const { return is_int() || is_float(); }
+    constexpr bool       is_data() const { return type() == PN_DATA; }
+    constexpr bool       is_string() const { return type() == PN_STRING; }
+    constexpr bool       is_array() const { return type() == PN_ARRAY; }
+    constexpr bool       is_map() const { return type() == PN_MAP; }
+
+    constexpr bool    as_bool() const { return is_bool() ? c_obj()->b : false; }
+    constexpr int64_t as_int() const { return is_int() ? c_obj()->i : 0; }
+    constexpr double  as_float() const { return is_float() ? c_obj()->f : 0.0; }
+    constexpr double  as_number() const { return is_int() ? c_obj()->i : as_float(); }
+    data_view         as_data() const;
+    string_view       as_string() const;
+    array_cref        as_array() const;
+    map_cref          as_map() const;
+
+    void       to_null() { *this = nullptr; }
+    bool&      to_bool() { return (is_bool() ? *this : (*this = false)).c_obj()->b; }
+    int64_t&   to_int() { return (is_int() ? *this : (*this = 0)).c_obj()->i; }
+    double&    to_float() { return (is_float() ? *this : (*this = 0.0)).c_obj()->f; }
+    data_ref   to_data();
+    string_ref to_string();
+    array_ref  to_array();
+    map_ref    to_map();
+
+  private:
+    c_obj_type* _c_obj;
+};
+
+class value_cref {
+  public:
+    using c_obj_type       = const pn_value_t;
+    using c_obj_const_type = const pn_value_t;
+
+    constexpr explicit value_cref(const c_obj_type* x) : _c_obj{x} {}
+    constexpr value_cref(const value_ref& x) : value_cref{x.c_obj()} {}
+    constexpr value_cref(const value& x) : value_cref{x.c_obj()} {}
+
+    c_obj_type*&                      c_obj() { return _c_obj; }
+    constexpr c_obj_const_type const* c_obj() const { return _c_obj; }
+
+    value copy() const {
+        pn_value_t x;
+        pn_set(&x, 'x', c_obj());
+        return value{x};
+    }
+    int compare(value_cref other) const;
+
+    constexpr ::pn::type type() const { return c_obj()->type; }
+    constexpr bool       is_null() const { return type() == PN_NULL; }
+    constexpr bool       is_bool() const { return type() == PN_BOOL; }
+    constexpr bool       is_int() const { return type() == PN_INT; }
+    constexpr bool       is_float() const { return type() == PN_FLOAT; }
+    constexpr bool       is_number() const { return is_int() || is_float(); }
+    constexpr bool       is_data() const { return type() == PN_DATA; }
+    constexpr bool       is_string() const { return type() == PN_STRING; }
+    constexpr bool       is_array() const { return type() == PN_ARRAY; }
+    constexpr bool       is_map() const { return type() == PN_MAP; }
+
+    constexpr bool    as_bool() const { return is_bool() ? c_obj()->b : false; }
+    constexpr int64_t as_int() const { return is_int() ? c_obj()->i : 0; }
+    constexpr double  as_float() const { return is_float() ? c_obj()->f : 0.0; }
+    constexpr double  as_number() const { return is_int() ? c_obj()->i : as_float(); }
+    data_view         as_data() const;
+    string_view       as_string() const;
+    array_cref        as_array() const;
+    map_cref          as_map() const;
+
+  private:
+    c_obj_type* _c_obj;
+};
+
+inline int value::compare(value_cref other) const { return pn_cmp(c_obj(), other.c_obj()); }
+inline int value_ref::compare(value_cref other) const { return pn_cmp(c_obj(), other.c_obj()); }
+inline int value_cref::compare(value_cref other) const { return pn_cmp(c_obj(), other.c_obj()); }
+
+inline bool operator==(value_cref x, value_cref y) { return x.compare(y) == 0; }
+inline bool operator!=(value_cref x, value_cref y) { return x.compare(y) != 0; }
+inline bool operator<(value_cref x, value_cref y) { return x.compare(y) < 0; }
+inline bool operator<=(value_cref x, value_cref y) { return x.compare(y) <= 0; }
+inline bool operator>(value_cref x, value_cref y) { return x.compare(y) > 0; }
+inline bool operator>=(value_cref x, value_cref y) { return x.compare(y) >= 0; }
+
+}  // namespace pn
+
+#endif  // PN_VALUE_

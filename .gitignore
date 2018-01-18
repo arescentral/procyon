@@ -1,0 +1,8 @@
+/out
+/src/python/build
+/src/python/dist
+/misc/pygments/build
+/misc/pygments/dist
+*.pyc
+*.egg-info
+.cache

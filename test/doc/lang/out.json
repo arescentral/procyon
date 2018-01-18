@@ -1,0 +1,37 @@
+{
+	"general": "Indentation starts a block. Tabs are preferred, and are equal to two spaces. (Valid) UTF-8 is allowed inside strings and comments. ASCII is allowed everywhere, except for control characters, which aren't allowed anywhere. Whitespace means tabs or spaces.\n",
+	"types": {
+		"scalar": {
+			"null": null,
+			"bool": [true, false],
+			"int": [0, 20, 1, -40],
+			"float": [0.0, 0.0, -0.0, 6.02e+23, 1e999, 1e999, -1e999, null]
+		},
+		"vector": {
+			"data": {
+				"short": "0f1e2d3c",
+				"long": "0000000000000000111111111111111122222222222222223333333333333333444444444444444455555555555555556666666666666666777777777777777788888888888888889999999999999999aaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbccccccccccccccccddddddddddddddddeeeeeeeeeeeeeeeeffffffffffffffff"
+			},
+			"string": {
+				"short": "use quotes\u0000use escapes",
+				"long": "Multi-line literals use \">\", \"|\", and \"!\". One tab or space character may follow them and is ignored. With \">\", non-empty input lines are joined to previous non-empty lines by a space. With \"|\" (always) or \">\" (when the current or previous line is empty), each input line begins a new line.\n\nA trailing newline is added unless the last line uses \"!\". A \"!\" ends the string: no text may occur after the \"!\" (except an optional space or tab) and no \">\" or \"!\" lines may follow it."
+			},
+			"array": {
+				"short": [1, 2, 3],
+				"long": [
+					"multi-line arrays",
+					"use stars"
+				]
+			},
+			"dict": {
+				"short": {"use-braces": true, "use-colons": true, "and sometimes quotes": true},
+				"long": {
+					"multi-line": "maps",
+					"use": "colons",
+					"quoted keys": "OK too"
+				}
+			}
+		}
+	},
+	"notes": "Short vector literals must always fit on one line. They are essentially the same as JSON, except that dict keys do not have to be quoted if they contain only [0-9A-Za-z./+-].\n"
+}

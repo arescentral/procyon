@@ -1,0 +1,5 @@
+{
+	KEY("pøst") STRING("bøx")
+	KEY("〒") STRING("局")
+	KEY("🈐") STRING("✉️")
+}

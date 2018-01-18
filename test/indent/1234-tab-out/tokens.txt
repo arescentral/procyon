@@ -1,0 +1,11 @@
+1:1	LINE+
+1:1	INT	"1"
+2:1	LINE+
+2:3	INT	"2"
+3:1	LINE+
+3:5	INT	"3"
+4:1	LINE-
+4:1	LINE=
+4:3	INT	"4"
+5:1	LINE-
+5:1	LINE-

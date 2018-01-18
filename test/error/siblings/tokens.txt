@@ -1,0 +1,25 @@
+1:1	LINE+
+1:1	KEY	"bad:"
+1:8	TRUE	"true"
+2:1	LINE=
+2:1	NULL	"null"
+3:1	LINE=
+3:1	TRUE	"true"
+4:1	LINE=
+4:1	FALSE	"false"
+5:1	LINE=
+5:1	*	"*"
+5:1	LINE+
+5:3	INT	"1"
+6:1	LINE=
+6:2	COMMENT	"#\tand"
+7:1	LINE=
+7:2	INT	"2"
+8:1	LINE-
+8:1	LINE=
+8:1	KEY	"k:"
+8:8	NULL	"null"
+9:1	LINE=
+9:1	KEY	"what:"
+9:8	NULL	"null"
+10:1	LINE-

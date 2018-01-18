@@ -1,0 +1,114 @@
+1:1	LINE+
+1:1	KEY	"nonterminals:"
+2:1	LINE+
+2:2	KEY	"file:"
+2:12	STR	"\"block\""
+3:1	LINE=
+3:2	KEY	"block:"
+3:12	STR	"\"LINE+ bvalue LINE-\""
+4:1	LINE=
+4:2	KEY	"bvalue:"
+4:12	STR	"\"( COMMENT LINE= )* xvalue ( LINE= COMMENT )*\""
+5:1	LINE=
+5:2	KEY	"xvalue:"
+5:12	STR	"\"( word | xdata | string | xstring | array | xarray | map | xmap )\""
+6:1	LINE=
+6:2	KEY	"value:"
+6:12	STR	"\"word | data | string\""
+7:1	LINE=
+7:2	KEY	"word:"
+7:12	STR	"\"KEYWORD | INT | FLOAT | FLOATE\""
+8:1	LINE=
+8:2	KEY	"data:"
+8:12	STR	"\"`$` HEX\""
+9:1	LINE=
+9:2	KEY	"xdata:"
+9:12	STR	"\"data ( LINE= ( COMMENT | data ) )*\""
+10:1	LINE=
+10:2	KEY	"string:"
+10:12	STR	"\"STR\""
+11:1	LINE=
+11:2	KEY	"xstring:"
+11:12	STR	"\"XSTR ( LINE= ( COMMENT | XSTR ) )*\""
+12:1	LINE=
+12:2	KEY	"array:"
+12:12	STR	"\"`[` ( value  ( `,` value )* )? `]`\""
+13:1	LINE=
+13:2	KEY	"xarray:"
+13:12	STR	"\"`*` block ( `*` block | COMMENT LINE= )* COMMENT?\""
+14:1	LINE=
+14:2	KEY	"key:"
+14:12	STR	"\"KEY | QKEY\""
+15:1	LINE=
+15:2	KEY	"kvalue:"
+15:12	STR	"\"key value\""
+16:1	LINE=
+16:2	KEY	"map:"
+16:12	STR	"\"`{` ( kvalue ( `,` kvalue )* )? `}`\""
+17:1	LINE=
+17:2	KEY	"kblock:"
+17:12	STR	"\"key block\""
+18:1	LINE=
+18:2	KEY	"xmap:"
+18:12	STR	"\"kblock ( kblock | COMMENT LINE= )* COMMENT?\""
+20:1	LINE-
+20:1	LINE=
+20:1	KEY	"terminals:"
+21:1	LINE+
+21:2	KEY	"KEYWORD:"
+21:12	STR	"\"`null` | `true` | `false` | `inf` | `-inf` | `nan`\""
+22:1	LINE=
+22:2	KEY	"INT:"
+22:12	STR	"\"[+-]?(0|[1-9][0-9]*)\""
+23:1	LINE=
+23:2	KEY	"FLOAT:"
+23:12	STR	"\"[+-]?(0|[1-9][0-9]*)([.][0-9]+)\""
+24:1	LINE=
+24:2	KEY	"FLOATE:"
+24:12	STR	"\"[+-]?(0|[1-9][0-9]*)([.][0-9]+)?([Ee][+-]?[0-9]+)\""
+25:1	LINE=
+25:2	KEY	"HEX:"
+25:12	STR	"\"([ \\t]*[0-9A-Za-z]{2})*\""
+26:1	LINE=
+26:2	KEY	"STR:"
+26:12	STR	"\"\\\"([^\\\"\\\\\\\\]|\\\\\\\\[bfnrt'\\\"\\\\\\\\]|\\\\\\\\u[0-9a-zA-Z]{4})*\\\"\""
+27:1	LINE=
+27:2	KEY	"XSTR:"
+27:12	STR	"\"[>|!]([ \\t].*)?\""
+28:1	LINE=
+28:2	KEY	"KEY:"
+28:12	STR	"\"[0-9A-Za-z./+-]+:\""
+29:1	LINE=
+29:2	KEY	"QKEY:"
+29:12	STR	"\"\\\"([^\\\"\\\\\\\\]|\\\\\\\\[bfnrt'\\\"\\\\\\\\]|\\\\\\\\u[0-9a-zA-Z]{4})*\\\":\""
+30:1	LINE=
+30:2	KEY	"COMMENT:"
+30:12	STR	"\"#.*\""
+32:1	LINE-
+32:1	LINE=
+32:1	KEY	"specials:"
+33:1	LINE+
+33:2	KEY	"LINE+:"
+34:1	LINE+
+34:3	STR>	">\tGenerated when a non-empty line starts with deeper indentation than the"
+35:1	LINE=
+35:3	STR>	">\tprevious line."
+36:1	LINE-
+36:1	LINE=
+36:2	QKEY	"\"LINE=\":"
+37:1	LINE+
+37:3	STR>	">\tGenerated when a non-empty line starts with the same indentation as the"
+38:1	LINE=
+38:3	STR>	">\tprevious line."
+39:1	LINE-
+39:1	LINE=
+39:2	KEY	"LINE-:"
+40:1	LINE+
+40:3	STR>	">\tGenerated when a non-empty line starts with shallower indentation than"
+41:1	LINE=
+41:3	STR>	">\tthe previous line. One token is generated for each level outdented, or"
+42:1	LINE=
+42:3	STR>	">\tan error if the indentation does not match a previous level."
+43:1	LINE-
+43:1	LINE-
+43:1	LINE-

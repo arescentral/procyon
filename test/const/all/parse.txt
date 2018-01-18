@@ -1,0 +1,9 @@
+[
+	NULL
+	BOOL(true)
+	BOOL(false)
+	FLOAT(inf)
+	FLOAT(inf)
+	FLOAT(-inf)
+	FLOAT(nan)
+]

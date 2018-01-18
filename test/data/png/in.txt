@@ -1,0 +1,72 @@
+#	########################################################################
+#	The PNG magic header
+#
+#	High bit to detect 8-bit safety and make it less likely that a text file
+#	is mistakenly interpreted as PNG
+$89
+#	ASCII "PNG"
+$504e47
+#	CRLF, EOF, LF to detect line ending behavior and stop the remainder of
+#	the file from being displayed in DOS.
+$0d0a1a0a
+
+#	########################################################################
+#	IHDR chunk
+#
+#	Chunk length: 13 bytes
+$0000000d
+#	ASCII "IHDR"
+$49484452
+#	Image size 2x2 (uint32 width, height)
+$	0000 0002 0000 0002
+#	Bit depth 8
+$08
+#	Color type 3: indexed colors with PLTE chunk
+$03
+#	Compression method 0: DEFLATE
+$00
+#	Filter method 0: no filtering
+$00
+#	Interlace method 0: no interlacing
+$00
+#	Checksum
+$4568fd16
+
+#	########################################################################
+#	PLTE chunk
+#
+#	Chunk length: 12 bytes
+$0000000c
+#	ASCII "PLTE"
+$504c5445
+#	Red
+$ff0000
+#	Green
+$00ff00
+#	Yellow
+$ffff00
+#	Blue
+$0000ff
+#	Checksum
+$2619c3d8
+
+#	########################################################################
+#	IDAT chunk
+#	Chunk length: 16 bytes
+$00000010
+#	ASCII "IDAT"
+$49444154
+#	Compressed image data
+$	78da 6260 6260 6064 0608 3000 0015 0007
+#	Checksum
+$53b3fa73
+
+#	########################################################################
+#	IEND chunk
+#
+#	Chunk length: 0 bytes
+$00000000
+#	ASCII "IEND"
+$49454e44
+#	Checksum
+$ae426082

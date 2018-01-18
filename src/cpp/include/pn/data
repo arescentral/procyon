@@ -1,0 +1,269 @@
+// -*- mode: C++ -*-
+// Copyright 2017 The Procyon Authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+#ifndef PN_DATA_
+#define PN_DATA_
+
+#include <procyon.h>
+#include <pn/fwd>
+#include <pn/value>
+
+namespace pn {
+
+template <typename P>
+class byte_iterator {
+  public:
+    using iterator_category = std::random_access_iterator_tag;
+    using size_type         = int;
+    using difference_type   = int;
+    using value_type        = P;
+    using pointer           = value_type*;
+    using reference         = value_type&;
+
+    byte_iterator() : _it{nullptr} {}
+    explicit byte_iterator(pointer it) : _it{it} {}
+
+    value_type operator*() const { return *_it; }
+
+    byte_iterator   operator+(difference_type n) { return byte_iterator{_it + n}; }
+    byte_iterator&  operator+=(difference_type n) { return _it += n, *this; }
+    byte_iterator   operator-(difference_type n) { return byte_iterator{_it - n}; }
+    byte_iterator&  operator-=(difference_type n) { return _it -= n, *this; }
+    difference_type operator-(byte_iterator other) { return _it - other._it; }
+
+    byte_iterator& operator++() { return ++_it, *this; }
+    byte_iterator  operator++(int) { return byte_iterator{_it++}; }
+    byte_iterator& operator--() { return --_it, *this; }
+    byte_iterator  operator--(int) { return byte_iterator{_it--}; }
+
+    bool operator==(byte_iterator other) const { return _it == other._it; }
+    bool operator!=(byte_iterator other) const { return _it != other._it; }
+    bool operator<(byte_iterator other) const { return _it < other._it; }
+    bool operator<=(byte_iterator other) const { return _it <= other._it; }
+    bool operator>(byte_iterator other) const { return _it > other._it; }
+    bool operator>=(byte_iterator other) const { return _it >= other._it; }
+
+  private:
+    pointer _it;
+};
+
+class data_ {
+  public:
+    using c_obj_type       = pn_data_t*;
+    using c_obj_const_type = pn_data_t const*;
+    using size_type        = int;
+    using value_type       = uint8_t;
+    using reference        = uint8_t&;
+    using const_reference  = const uint8_t&;
+    using pointer          = uint8_t*;
+    using const_pointer    = const uint8_t*;
+    using iterator         = byte_iterator<uint8_t>;
+    using const_iterator   = byte_iterator<const uint8_t>;
+
+    data_() : data_(nullptr, 0) {}
+    data_(const_pointer data, size_type size);
+    explicit data_(c_obj_type l) : _c_obj{l} {}
+
+    data_(data&& s) : _c_obj{} { swap(s); }
+    data_& operator    =(data&& s) { return swap(s), *this; }
+    data_(const data&) = delete;
+    data_& operator=(const data& s) = delete;
+
+    ~data_();
+
+    size_type capacity() const { return (*c_obj())->size - sizeof(pn_data_t); }
+
+    bool          empty() const { return size() == 0; }
+    size_type     size() const { return (*c_obj())->count; }
+    pointer       data() { return (*c_obj())->values; }
+    const_pointer data() const { return (*c_obj())->values; }
+    string_view   as_string() const;
+    ::pn::data    copy() const { return ::pn::data(pn_datadup(*c_obj())); }
+    int           compare(data_view other) const;
+
+    void resize(size_type n);
+
+    data_& operator+=(data_view d);
+    void   append(const value_type* data, size_type size) { pn_datacat(c_obj(), data, size); }
+
+    reference  operator[](size_type index) { return data()[index]; }
+    value_type operator[](size_type index) const { return data()[index]; }
+    data_view  slice(size_type offset) const;
+    data_view  slice(size_type offset, size_type size) const;
+
+    reference  front() { return operator[](0); }
+    value_type front() const { return operator[](0); }
+    reference  back() { return operator[](size() - 1); }
+    value_type back() const { return operator[](size() - 1); }
+
+    iterator       begin() { return iterator{data()}; }
+    const_iterator begin() const { return const_iterator{data()}; }
+    iterator       end() { return iterator{data() + size()}; }
+    const_iterator end() const { return const_iterator{data() + size()}; }
+
+    void swap(data_& other) { std::swap(*c_obj(), *other.c_obj()); }
+    void swap(data_&& other) { std::swap(*c_obj(), *other.c_obj()); }
+
+    file open() const;
+    file open(const char* mode);
+
+    c_obj_type*             c_obj() { return &_c_obj; }
+    c_obj_const_type const* c_obj() const { return &_c_obj; }
+
+  private:
+    c_obj_type _c_obj;
+};
+
+class data_ref {
+  public:
+    using c_obj_type       = pn_data_t*;
+    using c_obj_const_type = const pn_data_t*;
+    using size_type        = int;
+    using value_type       = uint8_t;
+    using reference        = uint8_t&;
+    using const_reference  = const uint8_t&;
+    using pointer          = uint8_t*;
+    using const_pointer    = const uint8_t*;
+    using iterator         = byte_iterator<uint8_t>;
+    using const_iterator   = byte_iterator<const uint8_t>;
+
+    explicit data_ref(c_obj_type* x) : _c_obj{x} {}
+    data_ref(data& x) : _c_obj{x.c_obj()} {}
+
+    data_ref(const data_ref&) = default;
+    data_ref(data_ref&&)      = default;
+    data_ref& operator=(const data_ref&) = delete;
+    data_ref& operator=(data_ref&&) = delete;
+
+    data_ref& operator=(data x) { return std::swap(*c_obj(), *x.c_obj()), *this; }
+
+    size_type capacity() const { return (*c_obj())->size - sizeof(pn_data_t); }
+
+    bool          empty() const { return size() == 0; }
+    size_type     size() const { return (*c_obj())->count; }
+    pointer       data() { return (*c_obj())->values; }
+    const_pointer data() const { return (*c_obj())->values; }
+    string_view   as_string() const;
+    ::pn::data    copy() const { return ::pn::data(pn_datadup(*c_obj())); }
+    int           compare(data_view other) const;
+
+    void resize(size_type n);
+
+    data_ref& operator+=(data_view d);
+    void      append(const value_type* data, size_type size) { pn_datacat(c_obj(), data, size); }
+
+    reference  operator[](size_type index) { return data()[index]; }
+    value_type operator[](size_type index) const { return data()[index]; }
+    data_view  slice(size_type offset) const;
+    data_view  slice(size_type offset, size_type size) const;
+
+    reference  front() { return operator[](0); }
+    value_type front() const { return operator[](0); }
+    reference  back() { return operator[](size() - 1); }
+    value_type back() const { return operator[](size() - 1); }
+
+    iterator       begin() { return iterator{data()}; }
+    const_iterator begin() const { return const_iterator{data()}; }
+    iterator       end() { return iterator{data() + size()}; }
+    const_iterator end() const { return const_iterator{data() + size()}; }
+
+    file open() const;
+    file open(const char* mode);
+
+    c_obj_type*&            c_obj() { return _c_obj; }
+    c_obj_const_type const* c_obj() const { return _c_obj; }
+
+  private:
+    c_obj_type* _c_obj;
+};
+
+class data_view {
+  public:
+    using size_type      = int;
+    using value_type     = uint8_t;
+    using iterator       = byte_iterator<const uint8_t>;
+    using const_iterator = byte_iterator<const uint8_t>;
+
+    static constexpr size_type npos = -1;
+
+    data_view() : _data(nullptr), _size(0) {}
+    data_view(const value_type* data, size_type size) : _data(data), _size(size) {}
+    data_view(const data& d) : _data(d.data()), _size(d.size()) {}
+    data_view(data_ref d) : _data(d.data()), _size(d.size()) {}
+
+    bool              empty() const { return _size == 0; }
+    size_type         size() const { return _size; }
+    const value_type* data() const { return _data; }
+    string_view       as_string() const;
+
+    value_type operator[](size_type index) const { return data()[index]; }
+    value_type front() const { return operator[](0); }
+    value_type back() const { return operator[](size() - 1); }
+
+    iterator begin() const { return iterator{data()}; }
+    iterator end() const { return iterator{data() + size()}; }
+
+    data_view slice(size_type offset) const;
+    data_view slice(size_type offset, size_type size) const;
+
+    void shift(size_type n) { _data += n, _size -= n; }
+
+    int compare(data_view other) const;
+
+    ::pn::data copy() { return ::pn::data{data(), size()}; }
+
+    file open() const;
+
+  private:
+    const value_type* _data;
+    size_type         _size;
+};
+
+inline int data::compare(data_view other) const { return data_view{*this}.compare(other); }
+inline int data_ref::compare(data_view other) const { return data_view{*this}.compare(other); }
+
+inline data& data::operator+=(data_view d) { return append(d.data(), d.size()), *this; }
+inline data_ref& data_ref::operator+=(data_view d) { return append(d.data(), d.size()), *this; }
+
+inline data_view data::slice(size_type offset) const {
+    return data_view{data() + offset, size() - offset};
+}
+inline data_view data_ref::slice(size_type offset) const {
+    return data_view{data() + offset, size() - offset};
+}
+inline data_view data_view::slice(size_type offset) const {
+    return data_view{data() + offset, size() - offset};
+}
+
+inline data_view data::slice(size_type offset, size_type size) const {
+    return data_view{data() + offset, size};
+}
+inline data_view data_ref::slice(size_type offset, size_type size) const {
+    return data_view{data() + offset, size};
+}
+inline data_view data_view::slice(size_type offset, size_type size) const {
+    return data_view{data() + offset, size};
+}
+
+inline bool operator==(data_view x, data_view y) { return x.compare(y) == 0; }
+inline bool operator!=(data_view x, data_view y) { return x.compare(y) != 0; }
+inline bool operator<(data_view x, data_view y) { return x.compare(y) < 0; }
+inline bool operator<=(data_view x, data_view y) { return x.compare(y) <= 0; }
+inline bool operator>(data_view x, data_view y) { return x.compare(y) > 0; }
+inline bool operator>=(data_view x, data_view y) { return x.compare(y) >= 0; }
+
+}  // namespace pn
+
+#endif  // PN_DATA_

@@ -1,0 +1,11 @@
+# Procyon
+
+Procyon is a simple object notation. It's a little more than [JSON][json] and a lot less than [YAML][yaml]. For a complete introduction, see [lang.pn][lang].
+
+[json]: http://json.org
+[yaml]: http://yaml.org
+[lang]: doc/lang.pn
+
+## pnfmt
+
+Procyon notation has a standard style and format. The `pnfmt` tool will automatically convert files to the standard style and rewrap strings for readability.

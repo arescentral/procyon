@@ -1,0 +1,77 @@
+1:1	LINE+
+1:1	COMMENT	"#\tUnescaped surrogates"
+2:1	LINE=
+2:1	*	"*"
+2:1	LINE+
+2:3	STR	"\"\ud7ff\""
+3:1	LINE-
+3:1	LINE=
+3:1	*	"*"
+3:1	LINE+
+3:3	ERROR	3:5:invalid UTF-8 continuation byte	$22eda08022
+4:1	LINE-
+4:1	LINE=
+4:1	*	"*"
+4:1	LINE+
+4:3	ERROR	4:5:invalid UTF-8 continuation byte	$22eda0bd22
+5:1	LINE-
+5:1	LINE=
+5:1	*	"*"
+5:1	LINE+
+5:3	ERROR	5:5:invalid UTF-8 continuation byte	$22edba8022
+6:1	LINE-
+6:1	LINE=
+6:1	*	"*"
+6:1	LINE+
+6:3	ERROR	6:5:invalid UTF-8 continuation byte	$22edbfbf22
+7:1	LINE-
+7:1	LINE=
+7:1	*	"*"
+7:1	LINE+
+7:3	STR	"\"\ue000\""
+9:1	LINE-
+9:1	LINE=
+9:1	COMMENT	"#\tEscaped surrogates"
+10:1	LINE=
+10:1	*	"*"
+10:1	LINE+
+10:3	STR	"\"\\uD7FF\""
+11:1	LINE-
+11:1	LINE=
+11:1	*	"*"
+11:1	LINE+
+11:3	ERROR	11:4:invalid \uXXXX escape	"\"\\uD800\""
+12:1	LINE-
+12:1	LINE=
+12:1	*	"*"
+12:1	LINE+
+12:3	ERROR	12:4:invalid \uXXXX escape	"\"\\uD83d\""
+13:1	LINE-
+13:1	LINE=
+13:1	*	"*"
+13:1	LINE+
+13:3	ERROR	13:4:invalid \uXXXX escape	"\"\\uDE80\""
+14:1	LINE-
+14:1	LINE=
+14:1	*	"*"
+14:1	LINE+
+14:3	ERROR	14:4:invalid \uXXXX escape	"\"\\uDFFF\""
+15:1	LINE-
+15:1	LINE=
+15:1	*	"*"
+15:1	LINE+
+15:3	STR	"\"\\uE000\""
+17:1	LINE-
+17:1	LINE=
+17:1	COMMENT	"#\tUTF-16"
+18:1	LINE=
+18:1	*	"*"
+18:1	LINE+
+18:3	ERROR	18:5:invalid UTF-8 continuation byte	$22eda0bdedba8022
+19:1	LINE-
+19:1	LINE=
+19:1	*	"*"
+19:1	LINE+
+19:3	ERROR	19:4:invalid \uXXXX escape	"\"\\uD83d\\uDE80\""
+20:1	LINE-
+20:1	LINE-

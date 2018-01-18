@@ -1,0 +1,6 @@
+[
+	STRING("Line wrap line wrap line wrap line wrap line wrap line wrap line wrap line wrap line wrap line wrap\nNeeds pipe")
+	STRING("pipe() {\n    pipe();\n}\n")
+	STRING("Don't wrap in this case\n")
+	STRING("Becomes pipes.\n\nThat's OK.\n")
+]

@@ -1,0 +1,6 @@
+[
+	"Line wrap line wrap line wrap line wrap line wrap line wrap line wrap line wrap line wrap line wrap\nNeeds pipe",
+	"pipe() {\n    pipe();\n}\n",
+	"Don't wrap in this case\n",
+	"Becomes pipes.\n\nThat's OK.\n"
+]

@@ -1,0 +1,137 @@
+1:1	LINE+
+1:1	COMMENT	"#\t########################################################################"
+2:1	LINE=
+2:1	COMMENT	"#\tThe PNG magic header"
+3:1	LINE=
+3:1	COMMENT	"#"
+4:1	LINE=
+4:1	COMMENT	"#\tHigh bit to detect 8-bit safety and make it less likely that a text file"
+5:1	LINE=
+5:1	COMMENT	"#\tis mistakenly interpreted as PNG"
+6:1	LINE=
+6:1	DATA	"$89"
+7:1	LINE=
+7:1	COMMENT	"#\tASCII \"PNG\""
+8:1	LINE=
+8:1	DATA	"$504e47"
+9:1	LINE=
+9:1	COMMENT	"#\tCRLF, EOF, LF to detect line ending behavior and stop the remainder of"
+10:1	LINE=
+10:1	COMMENT	"#\tthe file from being displayed in DOS."
+11:1	LINE=
+11:1	DATA	"$0d0a1a0a"
+13:1	LINE=
+13:1	COMMENT	"#\t########################################################################"
+14:1	LINE=
+14:1	COMMENT	"#\tIHDR chunk"
+15:1	LINE=
+15:1	COMMENT	"#"
+16:1	LINE=
+16:1	COMMENT	"#\tChunk length: 13 bytes"
+17:1	LINE=
+17:1	DATA	"$0000000d"
+18:1	LINE=
+18:1	COMMENT	"#\tASCII \"IHDR\""
+19:1	LINE=
+19:1	DATA	"$49484452"
+20:1	LINE=
+20:1	COMMENT	"#\tImage size 2x2 (uint32 width, height)"
+21:1	LINE=
+21:1	DATA	"$\t0000 0002 0000 0002"
+22:1	LINE=
+22:1	COMMENT	"#\tBit depth 8"
+23:1	LINE=
+23:1	DATA	"$08"
+24:1	LINE=
+24:1	COMMENT	"#\tColor type 3: indexed colors with PLTE chunk"
+25:1	LINE=
+25:1	DATA	"$03"
+26:1	LINE=
+26:1	COMMENT	"#\tCompression method 0: DEFLATE"
+27:1	LINE=
+27:1	DATA	"$00"
+28:1	LINE=
+28:1	COMMENT	"#\tFilter method 0: no filtering"
+29:1	LINE=
+29:1	DATA	"$00"
+30:1	LINE=
+30:1	COMMENT	"#\tInterlace method 0: no interlacing"
+31:1	LINE=
+31:1	DATA	"$00"
+32:1	LINE=
+32:1	COMMENT	"#\tChecksum"
+33:1	LINE=
+33:1	DATA	"$4568fd16"
+35:1	LINE=
+35:1	COMMENT	"#\t########################################################################"
+36:1	LINE=
+36:1	COMMENT	"#\tPLTE chunk"
+37:1	LINE=
+37:1	COMMENT	"#"
+38:1	LINE=
+38:1	COMMENT	"#\tChunk length: 12 bytes"
+39:1	LINE=
+39:1	DATA	"$0000000c"
+40:1	LINE=
+40:1	COMMENT	"#\tASCII \"PLTE\""
+41:1	LINE=
+41:1	DATA	"$504c5445"
+42:1	LINE=
+42:1	COMMENT	"#\tRed"
+43:1	LINE=
+43:1	DATA	"$ff0000"
+44:1	LINE=
+44:1	COMMENT	"#\tGreen"
+45:1	LINE=
+45:1	DATA	"$00ff00"
+46:1	LINE=
+46:1	COMMENT	"#\tYellow"
+47:1	LINE=
+47:1	DATA	"$ffff00"
+48:1	LINE=
+48:1	COMMENT	"#\tBlue"
+49:1	LINE=
+49:1	DATA	"$0000ff"
+50:1	LINE=
+50:1	COMMENT	"#\tChecksum"
+51:1	LINE=
+51:1	DATA	"$2619c3d8"
+53:1	LINE=
+53:1	COMMENT	"#\t########################################################################"
+54:1	LINE=
+54:1	COMMENT	"#\tIDAT chunk"
+55:1	LINE=
+55:1	COMMENT	"#\tChunk length: 16 bytes"
+56:1	LINE=
+56:1	DATA	"$00000010"
+57:1	LINE=
+57:1	COMMENT	"#\tASCII \"IDAT\""
+58:1	LINE=
+58:1	DATA	"$49444154"
+59:1	LINE=
+59:1	COMMENT	"#\tCompressed image data"
+60:1	LINE=
+60:1	DATA	"$\t78da 6260 6260 6064 0608 3000 0015 0007"
+61:1	LINE=
+61:1	COMMENT	"#\tChecksum"
+62:1	LINE=
+62:1	DATA	"$53b3fa73"
+64:1	LINE=
+64:1	COMMENT	"#\t########################################################################"
+65:1	LINE=
+65:1	COMMENT	"#\tIEND chunk"
+66:1	LINE=
+66:1	COMMENT	"#"
+67:1	LINE=
+67:1	COMMENT	"#\tChunk length: 0 bytes"
+68:1	LINE=
+68:1	DATA	"$00000000"
+69:1	LINE=
+69:1	COMMENT	"#\tASCII \"IEND\""
+70:1	LINE=
+70:1	DATA	"$49454e44"
+71:1	LINE=
+71:1	COMMENT	"#\tChecksum"
+72:1	LINE=
+72:1	DATA	"$ae426082"
+73:1	LINE-

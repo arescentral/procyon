@@ -1,0 +1,49 @@
+general:
+	>	Indentation starts a block. Tabs are preferred, and are equal to two
+	>	spaces. (Valid) UTF-8 is allowed inside strings and comments. ASCII is
+	>	allowed everywhere, except for control characters, which aren't allowed
+	>	anywhere. Whitespace means tabs or spaces.
+types:
+	scalar:
+		null:   null
+		bool:   [true, false]
+		int:    [0, 20, +1, -40]
+		float:  [0.0, +0.0, -0.0, +6.02e23, inf, +inf, -inf, nan]
+	vector:
+		data:
+			short:  $0f1e2d3c
+			long:
+				$	00000000 00000000 11111111 11111111 22222222 22222222 33333333 33333333
+				$	44444444 44444444 55555555 55555555 66666666 66666666 77777777 77777777
+				$	88888888 88888888 99999999 99999999 AaAaAaAa AaAaAaAa BbBbBbBb BbBbBbBb
+				$	CcCcCcCc CcCcCcCc DdDdDdDd DdDdDdDd EeEeEeEe EeEeEeEe FfFfFfFf FfFfFfFf
+		string:
+			short:  "use quotes\u0000use escapes"
+			long:
+				>	Multi-line literals use ">", "|", and "!". One tab or space character
+				>	may follow them and is ignored. With ">", non-empty input lines are
+				>	joined to previous non-empty lines by a space. With "|" (always) or ">"
+				>	(when the current or previous line is empty), each input line begins a
+				>	new line.
+				>
+				>	A trailing newline is added unless the last line uses "!". A "!" ends
+				>	the string: no text may occur after the "!" (except an optional space or
+				>	tab) and no ">" or "!" lines may follow it.
+				!
+		array:
+			short:  [1, 2, 3]
+			long:
+				*	"multi-line arrays"
+				*	"use stars"
+		dict:
+			short:  {use-braces: true, use-colons: true, "and sometimes quotes": true}
+			long:
+				multi-line:     "maps"
+				use:            "colons"
+				"quoted keys":  "OK too"
+	#	There are comments too, but they aren't a type.
+	#	They have to follow the same indentation rules as everything else.
+notes:
+	>	Short vector literals must always fit on one line. They are essentially
+	>	the same as JSON, except that dict keys do not have to be quoted if they
+	>	contain only [0-9A-Za-z./+-].

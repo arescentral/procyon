@@ -1,0 +1,230 @@
+
+// -*- mode: C++ -*-
+// Copyright 2017 The Procyon Authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+#ifndef PN_ARG_
+#define PN_ARG_
+
+#include <pn/array>
+#include <pn/data>
+#include <pn/map>
+#include <pn/string>
+#include <pn/value>
+#include <tuple>
+
+namespace pn {
+
+struct pad {
+    int size;
+    constexpr pad(int s) : size{s} {}
+};
+
+namespace internal {
+
+template <typename T, int = 0>
+struct arg;
+template <typename T>
+struct read_arg;
+
+template <typename T>
+struct read_arg<T*> : arg<T> {};
+
+template <>
+struct arg<pad> {
+    static constexpr char     code = '#';
+    static std::tuple<size_t> write_args(pad p) { return std::make_tuple(p.size); }
+    static std::tuple<size_t> read_args(pad p) { return std::make_tuple(p.size); }
+};
+template <>
+struct read_arg<pad> : arg<pad> {};
+
+template <>
+struct arg<std::nullptr_t> {
+    static constexpr char code = 'n';
+    static std::tuple<>   write_args(std::nullptr_t) { return std::make_tuple(); }
+};
+
+template <typename T, char C>
+struct pod_arg {
+    static constexpr char code = C;
+    static std::tuple<T> write_args(T t) { return std::make_tuple(t); }
+    static std::tuple<T*> read_args(T* t) { return std::make_tuple(t); }
+};
+
+template <typename T, typename... types>
+struct zero_if_not_in;
+template <typename T>
+struct zero_if_not_in<T> : std::integral_constant<int, 0> {};
+template <typename T, typename... types>
+struct zero_if_not_in<T, T, types...> : std::integral_constant<int, 1 + sizeof...(types)> {};
+template <typename T, typename U, typename... types>
+struct zero_if_not_in<T, U, types...>
+        : std::integral_constant<int, zero_if_not_in<T, types...>::value> {};
+
+template <>
+struct arg<bool> : pod_arg<bool, '?'> {};
+template <>
+struct arg<char> : pod_arg<char, 'c'> {};
+template <>
+struct arg<int> : pod_arg<int, 'i'> {};
+template <>
+struct arg<unsigned int> : pod_arg<unsigned int, 'I'> {};
+template <>
+struct arg<int8_t> : pod_arg<int8_t, 'b'> {};
+template <>
+struct arg<uint8_t> : pod_arg<uint8_t, 'B'> {};
+template <>
+struct arg<int16_t> : pod_arg<int16_t, 'h'> {};
+template <>
+struct arg<uint16_t> : pod_arg<uint16_t, 'H'> {};
+template <>
+struct arg<int32_t, zero_if_not_in<int, int32_t>::value> : pod_arg<int32_t, 'l'> {};
+template <>
+struct arg<uint32_t, zero_if_not_in<unsigned int, uint32_t>::value> : pod_arg<uint32_t, 'L'> {};
+template <>
+struct arg<int64_t> : pod_arg<int64_t, 'q'> {};
+template <>
+struct arg<uint64_t> : pod_arg<uint64_t, 'Q'> {};
+template <>
+struct arg<float> : pod_arg<float, 'f'> {};
+template <>
+struct arg<double> : pod_arg<double, 'd'> {};
+template <>
+struct arg<intptr_t, zero_if_not_in<intptr_t, int64_t>::value> : pod_arg<intptr_t, 'p'> {};
+template <>
+struct arg<uintptr_t, zero_if_not_in<uintptr_t, uint64_t>::value> : pod_arg<uintptr_t, 'P'> {};
+template <>
+struct arg<size_t, zero_if_not_in<size_t, uintptr_t, uint64_t>::value> : pod_arg<size_t, 'z'> {};
+template <>
+struct arg<ssize_t, zero_if_not_in<ssize_t, intptr_t, int64_t>::value> : pod_arg<ssize_t, 'Z'> {};
+template <>
+struct arg<void*> : pod_arg<void*, 'P'> {};
+
+template <>
+struct arg<const char*> {
+    static constexpr char          code = 's';
+    static std::tuple<const char*> write_args(const char* s) { return std::make_tuple(s); }
+};
+template <>
+struct arg<char*> : arg<const char*> {};
+
+template <>
+struct arg<data_view> {
+    static constexpr char code = '$';
+    static std::tuple<const uint8_t*, size_t> write_args(data_view d) {
+        return std::make_tuple(d.data(), d.size());
+    }
+};
+
+template <>
+struct arg<data> {
+    static constexpr char code = '$';
+    static std::tuple<const uint8_t*, size_t> write_args(const data& d) {
+        return std::make_tuple(d.data(), d.size());
+    }
+    static std::tuple<uint8_t*, size_t> read_args(data* d) {
+        return std::make_tuple(d->data(), d->size());
+    }
+};
+
+template <>
+struct arg<data_ref> {
+    static constexpr char code = '$';
+    static std::tuple<const uint8_t*, size_t> write_args(const data_ref& d) {
+        return std::make_tuple(d.data(), d.size());
+    }
+    static std::tuple<uint8_t*, size_t> read_args(data_ref* d) {
+        return std::make_tuple(d->data(), d->size());
+    }
+};
+
+template <>
+struct arg<string_view> {
+    static constexpr char code = 'S';
+    static std::tuple<const char*, size_t> write_args(string_view s) {
+        return std::make_tuple(s.data(), s.size());
+    }
+};
+template <>
+struct arg<string> : arg<string_view> {};
+template <>
+struct arg<string_ref> : arg<string_view> {};
+template <>
+struct arg<std::string> : arg<string_view> {};
+template <>
+struct arg<rune> : arg<string_view> {};
+
+template <>
+struct arg<array_cref> {
+    static constexpr char                code = 'a';
+    static std::tuple<const pn_array_t*> write_args(array_cref a) {
+        return std::make_tuple(*a.c_obj());
+    }
+};
+template <>
+struct arg<array> : arg<array_cref> {};
+template <>
+struct arg<array_ref> : arg<array_cref> {};
+
+template <>
+struct arg<map_cref> {
+    static constexpr char              code = 'm';
+    static std::tuple<const pn_map_t*> write_args(map_cref m) {
+        return std::make_tuple(*m.c_obj());
+    }
+};
+template <>
+struct arg<map> : arg<map_cref> {};
+template <>
+struct arg<map_ref> : arg<map_cref> {};
+
+template <>
+struct arg<value_cref> {
+    static constexpr char                code = 'x';
+    static std::tuple<const pn_value_t*> write_args(value_cref x) {
+        return std::make_tuple(x.c_obj());
+    }
+};
+template <>
+struct arg<value> : arg<value_cref> {};
+template <>
+struct arg<value_ref> : arg<value_cref> {};
+
+template <int... i>
+struct indexes {};
+
+template <int end>
+struct index_range {
+    template <typename>
+    struct append;
+
+    template <int... prev>
+    struct append<indexes<prev...>> {
+        using type = indexes<prev..., end - 1>;
+    };
+
+    using type = typename append<typename index_range<end - 1>::type>::type;
+};
+
+template <>
+struct index_range<0> {
+    using type = indexes<>;
+};
+
+}  // namespace internal
+
+}  // namespace pn
+
+#endif  // PN_FILE_

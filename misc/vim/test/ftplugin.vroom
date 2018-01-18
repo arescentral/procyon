@@ -1,0 +1,45 @@
+#!/usr/bin/env vroom --neovim
+
+  :source $VROOMDIR/setup.vim
+
+Hard tabs with a tabstop of 2.
+  :set filetype=procyon
+  > i<Tab># tab<CR><Esc>0C  # space<Esc>
+  & 	# tab
+  &   # space
+
+  > -jC2<Esc>
+  & 	# tab
+  &   2
+
+
+
+Comments continue on subsequent lines and can be wrapped.
+  :set filetype=procyon
+  > i# This<CR>is a<CR>comment.<Esc>
+  & # This
+  & # is a
+  & # comment.
+
+  > gqip
+  & # This is a comment.
+
+
+
+Likewise for wrapped string literals.
+  :set filetype=procyon
+  > i> Three may keep a secret<CR>if two of them are dead.<Esc>
+  & > Three may keep a secret
+  & > if two of them are dead.
+
+  > gqip
+  & > Three may keep a secret if two of them are dead.
+
+
+
+This is broken; it shouldn't be necessary to add a > on the second line.
+  :set filetype=procyon
+  > i*<Tab>> one<CR>> two<CR>three
+  & *	> one
+  & 	> two
+  & 	> three

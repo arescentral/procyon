@@ -1,0 +1,13 @@
+*	>	Line wrap line wrap line wrap line wrap line wrap line wrap line wrap
+	>	line wrap line wrap line wrap
+	|	Needs pipe
+	!
+*	|	pipe() {
+	|	    pipe();
+	|	}
+*	>	Don't wrap
+	#	around the comment
+	>	in this case
+*	|	Becomes pipes.
+	|
+	|	That's OK.

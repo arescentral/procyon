@@ -1,0 +1,31 @@
+1:1	LINE+
+1:1	*	"*"
+1:1	LINE+
+1:3	STR>	">>"
+2:1	LINE-
+2:1	LINE=
+2:1	*	"*"
+2:1	LINE+
+2:3	STR|	"||"
+3:1	LINE-
+3:1	LINE=
+3:1	*	"*"
+3:1	LINE+
+3:3	ERROR	3:4:expected eol after '!'	"!!"
+4:1	LINE-
+4:1	LINE=
+4:1	*	"*"
+4:1	LINE+
+4:3	STR>	"> >"
+5:1	LINE-
+5:1	LINE=
+5:1	*	"*"
+5:1	LINE+
+5:3	STR|	"| |"
+6:1	LINE-
+6:1	LINE=
+6:1	*	"*"
+6:1	LINE+
+6:3	ERROR	6:5:expected eol after '!'	"! !"
+7:1	LINE-
+7:1	LINE-

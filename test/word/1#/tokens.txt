@@ -1,0 +1,4 @@
+1:1	LINE+
+1:1	INT	"1"
+1:2	COMMENT	"#"
+2:1	LINE-
