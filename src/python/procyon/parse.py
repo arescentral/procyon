@@ -189,7 +189,9 @@ class ProcyonParser(object):
 
             self.stack.extend(extend)
             if len(self.stack) > 64:
-                error(Error.RECURSION)(self)
+                lineno = self.l.token.lineno
+                column = self.l.token.range[0] + 1
+                raise ProcyonDecodeError(Error.RECURSION, lineno, column)
             if self.event is not None:
                 return True
 
