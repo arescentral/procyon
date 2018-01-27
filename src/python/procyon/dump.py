@@ -19,7 +19,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import math
 import re
-import textwrap
 import unicodedata
 from . import error
 from . import py3
@@ -157,8 +156,12 @@ class ProcyonEncoder(object):
             head, tail = s[:73], s[73:]
             if " " in head:
                 line, line_tail = head.rsplit(" ", 1)
-                yield line
-                s = line_tail + tail
+                if line_tail or tail:
+                    yield line
+                    s = line_tail + tail
+                else:
+                    yield s
+                    return
             elif " " in tail:
                 line_tail, tail = tail.split(" ", 1)
                 yield head + line_tail

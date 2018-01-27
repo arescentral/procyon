@@ -185,10 +185,11 @@ static bool dump_long_data(const pn_data_t* d, pn_string_t** indent, pn_file_t* 
 
 static bool should_dump_short_string_view(const char* data, size_t size) {
     bool has_nl = false;
-    for (size_t i = 0; i < size; ++i) {
-        if (data[i] == '\n') {
+    for (size_t i = 0; i < size; i = pn_rune_next(data, size, i)) {
+        uint32_t r = pn_rune(data, size, i);
+        if (r == '\n') {
             has_nl = true;
-        } else if ((data[i] < ' ') || (data[i] == '\177')) {
+        } else if (!pn_isprint(r)) {
             return true;  // non-printable characters require short form
         }
     }
@@ -285,7 +286,7 @@ static bool split_line(const char* data, size_t size, size_t* part) {
         return false;
     }
     char* space = strchr(data, ' ');
-    if (!space) {
+    if ((!space) || (space == (data + size - 1))) {
         return false;
     }
     *part = space - data;

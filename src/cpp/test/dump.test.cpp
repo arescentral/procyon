@@ -271,6 +271,15 @@ TEST_F(DumpTest, String) {
                     ">\tThese are the voyages of the starship Enterprise. Its five-year mission:\n"
                     ">\tto explore strange new worlds, to seek out new life and new\n"
                     ">\tcivilizations, to boldly go where no man has gone before.\n"));
+
+    pn::string s;
+    for (int i = 0; i < 72; ++i) {
+        s += "…";
+    }
+    s += " \n";
+    EXPECT_THAT(
+            dump('s', s.c_str()), IsString(">\t………………………………………………………………………………………………"
+                                           "……………………………………………………………………………………………… \n"));
 }
 
 TEST_F(DumpTest, List) {

@@ -213,6 +213,9 @@ def test_string():
             ">\tto explore strange new worlds, to seek out new life and new\n"
             ">\tcivilizations, to boldly go where no man has gone before.\n")
 
+    assert procyon.dumps(("…" * 72) + " \n") == (
+        ">\t……………………………………………………………………………………………………………………………………………………………………………………………… \n")
+
 
 def test_unicode():
     # Control characters:
