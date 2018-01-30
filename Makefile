@@ -38,7 +38,9 @@ test-vim:
 
 .PHONY: regen
 regen:
-	src/c/scripts/gen.py --python=src/python/procyon/spec.py
+	src/c/scripts/gen.py \
+		--c=src/c/src/gen_table.c \
+		--python=src/python/procyon/spec.py
 
 .PHONY: clean
 clean:

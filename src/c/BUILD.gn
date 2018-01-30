@@ -14,7 +14,6 @@
 
 static_library("procyon") {
   sources = [
-    "$target_gen_dir/gen_table.c",
     "include/procyon.h",
     "src/common.c",
     "src/common.h",
@@ -23,6 +22,7 @@ static_library("procyon") {
     "src/error.c",
     "src/file.c",
     "src/format.c",
+    "src/gen_table.c",
     "src/gen_table.h",
     "src/io.c",
     "src/lex.c",
@@ -43,25 +43,8 @@ static_library("procyon") {
     sources += [ "src/file_linux.c" ]
   }
 
-  deps = [
-    ":gen_from_spec",
-  ]
-
   public_configs = [ ":procyon_public" ]
   configs += [ ":procyon_private" ]
-}
-
-action("gen_from_spec") {
-  script = "scripts/gen.py"
-  gen_table = "$target_gen_dir/gen_table.c"
-
-  args = [ "--c=" + rebase_path(gen_table, root_build_dir) ]
-  inputs = [
-    "src/spec.pn",
-  ]
-  outputs = [
-    gen_table,
-  ]
 }
 
 config("procyon_public") {
