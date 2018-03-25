@@ -1,0 +1,12 @@
+language:  cpp
+
+matrix:
+  include:
+    - os:       osx
+      install:  brew upgrade python && pip3 install --user pytest pygments
+
+    - os:       linux
+      dist:     trusty
+      install:  sudo apt-get install python3-pip && pip3 install --user pytest pygments
+
+script: ./configure && make && make test
