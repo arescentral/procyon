@@ -153,6 +153,14 @@ class ProcyonEncoder(object):
             if len(s) <= 72:
                 yield s
                 return
+            elif len(s) == 73:
+                if " " in s[:72]:
+                    head, tail = s[:72].rsplit(" ", 1)
+                    yield head
+                    yield tail + s[72]
+                else:
+                    yield s
+                return
             head, tail = s[:73], s[73:]
             if " " in head:
                 line, line_tail = head.rsplit(" ", 1)
