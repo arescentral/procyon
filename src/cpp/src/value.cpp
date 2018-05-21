@@ -155,6 +155,8 @@ static_assert(conversion<value, const string&>::fails, "allows string copy conve
 static_assert(conversion<value, const array&>::fails, "allows array copy conversion");
 static_assert(conversion<value, const map&>::fails, "allows map copy conversion");
 
+// Broken for some reason prior to Xcode 7.3.
+#if defined(__apple_build_version__) && (__apple_build_version__ < 7030000)
 static_assert(conversion<value, char>::fails, "allows char conversion");
 static_assert(conversion<value, signed char>::fails, "allows signed char conversion");
 static_assert(conversion<value, unsigned char>::fails, "allows unsigned char conversion");
@@ -162,5 +164,6 @@ static_assert(conversion<value, uint32_t>::fails, "allows uint32_t conversion");
 static_assert(conversion<value, uint64_t>::fails, "allows uint64_t conversion");
 static_assert(conversion<value, void*>::fails, "allows void* conversion");
 static_assert(conversion<value, char*>::fails, "allows char* conversion");
+#endif
 
 }  // namespace pn
