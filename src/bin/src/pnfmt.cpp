@@ -33,15 +33,16 @@ static const char* progname;
 const int kDataCompactMaxWidth = 8;  // key: $0f1e2d3c
 
 struct token {
-    pn_token_type_t type         = PN_TOK_ERROR;
-    pn::string      content      = "";
-    int             spaces_after = 0;
-    bool            tab_after    = false;
-    bool            nl_tab_after = false;
+    pn_token_type_t type    = PN_TOK_ERROR;
+    pn::string      content = "";
+    int             column  = 0;
 };
 
 struct line {
-    bool extra_newline_before = false;
+    int  indent          = 0;
+    bool extra_nl_before = false;
+    bool nl_after        = false;
+    bool tab_after       = false;
 
     std::vector<token> tokens;
     std::vector<line>  children;
@@ -52,12 +53,13 @@ static void      lex_file(pn::string_view path, pn::file_view in, std::vector<li
 static void      join_tokens(std::vector<line>* lines);
 static void      simplify_tokens(std::vector<line>* lines);
 static void      wrap_tokens(std::vector<line>* lines);
-static void      indent(token* parent, std::vector<line>* lines);
+static void      indent(std::vector<line>* lines, int tab, int column);
 static pn::value repr(const std::vector<line>& lines);
 static void      output_tokens(
              const std::vector<line>& roots, bool in_place, pn::string_view path,
              pn::value_cref output);
-static void format_tokens(const std::vector<line>& lines, pn::file_view out, int indent);
+static void format_tokens(
+        const std::vector<line>& lines, pn::file_view out, int indent, int column);
 
 #ifndef NDEBUG
 static void check_invariants(const std::vector<line>& lines);
@@ -129,7 +131,7 @@ void main(int argc, char* const* argv) {
     join_tokens(&roots);
     simplify_tokens(&roots);
     wrap_tokens(&roots);
-    indent(nullptr, &roots);
+    indent(&roots, 0, 0);
     if (dump) {
         pn::dump(stdout, repr(roots));
     } else {
@@ -152,17 +154,16 @@ static void usage(pn::file_view out, int status) {
 
 static pn::value repr(const token& t) {
     pn::map m{
-            {"type", t.type},
-            {"content", t.content.copy()},
-            {"spaces_after", t.spaces_after},
-            {"tab_after", t.tab_after},
-            {"nl_tab_after", t.nl_tab_after},
+            {"type", t.type}, {"column", t.column}, {"content", t.content.copy()},
     };
     return std::move(m);
 }
 
 static pn::value repr(const line& l) {
-    pn::map m{{"extra_newline_before", l.extra_newline_before}};
+    pn::map m{{"indent", l.indent},
+              {"extra_nl_before", l.extra_nl_before},
+              {"nl_after", l.nl_after},
+              {"tab_after", l.tab_after}};
     if (!l.tokens.empty()) {
         pn::array_ref a = m["tokens"].to_array();
         for (const token& token : l.tokens) {
@@ -196,7 +197,7 @@ static void output_tokens(
                 exit(1);
             }
             pn::file out(fdopen(fd, "w"));
-            format_tokens(roots, out, 0);
+            format_tokens(roots, out, 0, 0);
             out.write('\n').check();
         }
         if (rename(tmp.c_str(), path.copy().c_str()) < 0) {
@@ -212,10 +213,10 @@ static void output_tokens(
             pn::format(stderr, "{0}: {1}: {2}\n", progname, output.as_string(), e.what());
             exit(1);
         }
-        format_tokens(roots, out, 0);
+        format_tokens(roots, out, 0, 0);
         out.write('\n').check();
     } else {
-        format_tokens(roots, stdout, 0);
+        format_tokens(roots, stdout, 0, 0);
         pn::file_view{stdout}.write('\n').check();
     }
 }
@@ -270,8 +271,8 @@ static void lex_block(
 
         line.tokens.push_back(std::move(token));
         if (*need_newline) {
-            line.extra_newline_before = true;
-            *need_newline             = false;
+            line.extra_nl_before = true;
+            *need_newline        = false;
         }
     }
 }
@@ -609,8 +610,8 @@ static void wrap_tokens(std::vector<line>* lines) {
         switch (token.type) {
             case PN_TOK_DATA: {
                 wrap_data(token, &out);
-                out[old_size].extra_newline_before = l.extra_newline_before;
-                out.back().children                = std::move(l.children);
+                out[old_size].extra_nl_before = l.extra_nl_before;
+                out.back().children           = std::move(l.children);
                 break;
             }
 
@@ -623,9 +624,9 @@ static void wrap_tokens(std::vector<line>* lines) {
                 }
                 is_empty = xstring_data(token).empty();
                 wrap_string(token, was_empty || is_empty, preferred_str_header, &out);
-                was_empty                          = is_empty;
-                out[old_size].extra_newline_before = l.extra_newline_before;
-                out.back().children                = std::move(l.children);
+                was_empty                     = is_empty;
+                out[old_size].extra_nl_before = l.extra_nl_before;
+                out.back().children           = std::move(l.children);
                 break;
 
             default: out.push_back(std::move(l)); break;
@@ -634,108 +635,105 @@ static void wrap_tokens(std::vector<line>* lines) {
     }
     lines->swap(out);
 }
-static int key_width(pn::string_view s) { return 2 + pn_str_width(s.data(), s.size()); }
 
-static void indent(token* parent, std::vector<line>* lines) {
+static void indent(std::vector<line>* lines, int tab, int column) {
     int width = 0;
     for (line& l : *lines) {
         if (l.tokens.empty()) {
             continue;
         }
-        token*       prev = nullptr;
-        const token* last = &l.tokens.back();
+        if (column) {
+            l.indent = 0;
+        } else {
+            l.indent = tab;
+        }
+        bool needs_space = false;
         for (token& token : l.tokens) {
+            token.column = column;
+            if (needs_space) {
+                ++token.column;
+            }
+            needs_space = true;
             switch (token.type) {
                 case PN_TOK_COMMA:
                 case PN_TOK_ARRAY_OUT:
-                case PN_TOK_MAP_OUT:
-                    if (prev) {
-                        prev->spaces_after = 0;
-                    } else if (parent) {
-                        parent->spaces_after = 0;
-                    }
-                    break;
-
+                case PN_TOK_MAP_OUT: token.column = column; break;
                 case PN_TOK_ARRAY_IN:
-                case PN_TOK_MAP_IN: prev = &token; continue;
-
+                case PN_TOK_MAP_IN: needs_space = false; break;
                 default: break;
             }
 
-            if (&token == last) {
-                if (l.children.empty()) {
-                    break;
-                }
-
-                switch (token.type) {
-                    case PN_TOK_STAR: token.tab_after = true; continue;
-
-                    case PN_TOK_KEY:
-                    case PN_TOK_QKEY:
-                        if (!is_short_block(l.children)) {
-                            token.nl_tab_after = true;
-                            continue;
-                        }
-                        break;
-
-                    default: token.nl_tab_after = true; continue;
-                }
-                token.spaces_after = 2;
-                width              = std::max(width, key_width(token.content));
-            } else {
-                token.spaces_after = 1;
-            }
-
-            prev = &token;
+            column = token.column + pn_str_width(token.content.data(), token.content.size());
         }
+
+        if (!l.children.empty()) {
+            switch (l.tokens.back().type) {
+                case PN_TOK_STAR: l.tab_after = true; break;
+
+                case PN_TOK_KEY:
+                case PN_TOK_QKEY:
+                    if (!is_short_block(l.children)) {
+                        l.nl_after = true;
+                    } else {
+                        width = std::max(width, column);
+                    }
+                    break;
+
+                default: l.nl_after = true; break;
+            }
+        }
+
+        column = 0;
     }
 
     for (line& l : *lines) {
         if (l.tokens.empty()) {
             continue;
         }
-        for (token& token : l.tokens) {
-            if (token.spaces_after == 2) {
-                token.spaces_after = 2 + width - key_width(token.content);
-            }
+        if (l.nl_after || l.tab_after) {
+            indent(&l.children, tab + 1, 0);
+        } else {
+            indent(&l.children, tab + 1, width + 2);
         }
-        indent(&l.tokens.back(), &l.children);
     }
 }
 
-static void format_tokens(const std::vector<line>& lines, pn::file_view out, int indent) {
+static void format_tokens(
+        const std::vector<line>& lines, pn::file_view out, int indent, int column) {
     bool newline_before = false;
     for (const line& l : lines) {
         if (newline_before) {
-            if (l.extra_newline_before) {
+            if (l.extra_nl_before) {
                 out.write("\n\n").check();
+                indent = column = 0;
             } else {
                 out.write('\n').check();
-            }
-            for (int i = 0; i < indent; ++i) {
-                out.write('\t').check();
+                indent = column = 0;
             }
         } else {
             newline_before = true;
         }
 
-        for (const token& token : l.tokens) {
-            out.write(token.content).check();
-            if (token.tab_after) {
+        if (l.indent) {
+            for (; indent < l.indent; ++indent) {
                 out.write('\t').check();
-            } else if (token.spaces_after) {
-                for (int i = 0; i < token.spaces_after; ++i) {
-                    out.write(' ').check();
-                }
-            } else if (token.nl_tab_after) {
-                out.write("\n\t").check();
-                for (int i = 0; i < indent; ++i) {
-                    out.write('\t').check();
-                }
             }
+            column = 0;
         }
 
-        format_tokens(l.children, out, indent + 1);
+        for (const token& token : l.tokens) {
+            for (; column < token.column; ++column) {
+                out.write(' ').check();
+            }
+            out.write(token.content).check();
+            column += pn_str_width(token.content.data(), token.content.size());
+        }
+
+        if (l.nl_after) {
+            out.write('\n').check();
+            indent = column = 0;
+        }
+        format_tokens(l.children, out, indent, column);
     }
 }
 
