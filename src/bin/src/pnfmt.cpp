@@ -632,7 +632,8 @@ static void wrap_tokens(std::vector<line>* lines) {
 }
 
 static void indent(std::vector<line>* lines, int* lineno, int tab, int column) {
-    int width = 0;
+    int key_value_column = 0;
+    int comment_column   = 0;
     for (line& l : *lines) {
         if (l.tokens.empty()) {
             continue;
@@ -655,6 +656,7 @@ static void indent(std::vector<line>* lines, int* lineno, int tab, int column) {
                 case PN_TOK_MAP_OUT: token.column = column; break;
                 case PN_TOK_ARRAY_IN:
                 case PN_TOK_MAP_IN: needs_space = false; break;
+                case PN_TOK_COMMENT: comment_column = std::max(comment_column, column); break;
                 default: break;
             }
 
@@ -666,7 +668,7 @@ static void indent(std::vector<line>* lines, int* lineno, int tab, int column) {
                 case PN_TOK_KEY:
                 case PN_TOK_QKEY:
                     if (is_short_block(l.children)) {
-                        width = std::max(width, column);
+                        key_value_column = std::max(key_value_column, column);
                     }
                     break;
 
@@ -682,8 +684,16 @@ static void indent(std::vector<line>* lines, int* lineno, int tab, int column) {
             ++*lineno;
         }
         l.lineno = *lineno;
+        if (l.tokens.empty()) {
+            ++*lineno;
+            continue;
+        }
 
-        if (l.tokens.empty() || l.children.empty()) {
+        if (l.tokens.size() > 1 && l.tokens.back().type == PN_TOK_COMMENT) {
+            l.tokens.back().column = comment_column + 2;
+        }
+
+        if (l.children.empty()) {
             ++*lineno;
             continue;
         }
@@ -692,7 +702,7 @@ static void indent(std::vector<line>* lines, int* lineno, int tab, int column) {
             case PN_TOK_KEY:
             case PN_TOK_QKEY:
                 if (is_short_block(l.children)) {
-                    indent(&l.children, lineno, tab + 1, width + 2);
+                    indent(&l.children, lineno, tab + 1, key_value_column + 2);
                 } else {
                     ++*lineno;
                     indent(&l.children, lineno, tab + 1, 0);
