@@ -480,7 +480,7 @@ parse:
 	BLOCK_COMMENT_LINE:
 		:          {error: "SUFFIX"}
 		LINE_IN:   {extend: ["BLOCK_COMMENT_LINE", "BLOCK_COMMENT_NEXT"]}
-		LINE_EQ:   {extend: ["BLOCK_COMMENT_LINE"]}
+		LINE_EQ:   {extend: ["BLOCK_COMMENT_NEXT"]}
 		LINE_OUT:  {}
 
 	#	Short-form values.

@@ -1,0 +1,10 @@
+1:1	LINE+
+1:1	STR>	">\t1"
+2:1	LINE+
+2:2	COMMENT	"#\tline one"
+3:1	LINE=
+3:2	COMMENT	"#\tline two"
+4:1	LINE-
+4:1	LINE=
+4:1	STR>	">\t2"
+5:1	LINE-
