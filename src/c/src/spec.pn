@@ -47,26 +47,26 @@ tokens:
 	*	"MAP_IN"
 	*	"MAP_OUT"
 	*	"COMMA"
-	*	"STR_WRAP_EMPTY" #	>
-	*	"STR_PIPE_EMPTY" #	|
-	*	"STR_BANG" #	!
-	*	"NULL" #	null
-	*	"TRUE" #	true
-	*	"FALSE" #	false
-	*	"INF" #	inf
-	*	"NEG_INF" #	-inf
-	*	"NAN" #	nan
+	*	"STR_WRAP_EMPTY"  # >
+	*	"STR_PIPE_EMPTY"  # |
+	*	"STR_BANG"  # !
+	*	"NULL"  # null
+	*	"TRUE"  # true
+	*	"FALSE"  # false
+	*	"INF"  # inf
+	*	"NEG_INF"  # -inf
+	*	"NAN"  # nan
 
 	#	Matched sequences
-	*	"KEY" #	key:    hi:     0:      -/.+:
-	*	"QKEY" #	"key":  "hi":   "0":    "\\\"":
-	*	"INT" #	0       1       -1
-	*	"FLOAT" #	0.0     1e100   -0.5
-	*	"DATA" #	$       $01     $ 01234567 89abcdef
-	*	"STR" #	""      "str"   "\n\\\0"
-	*	"STR_WRAP" #	> string line
-	*	"STR_PIPE" #	| string line
-	*	"COMMENT" #	# comment
+	*	"KEY"  # key:    hi:     0:      -/.+:
+	*	"QKEY"  # "key":  "hi":   "0":    "\\\"":
+	*	"INT"  # 0       1       -1
+	*	"FLOAT"  # 0.0     1e100   -0.5
+	*	"DATA"  # $       $01     $ 01234567 89abcdef
+	*	"STR"  # ""      "str"   "\n\\\0"
+	*	"STR_WRAP"  # > string line
+	*	"STR_PIPE"  # | string line
+	*	"COMMENT"  # # comment
 
 lex:
 	start:
