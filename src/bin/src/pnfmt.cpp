@@ -40,9 +40,8 @@ struct token {
 
 struct line {
     int  indent          = 0;
+    int  lineno          = 0;
     bool extra_nl_before = false;
-    bool nl_after        = false;
-    bool tab_after       = false;
 
     std::vector<token> tokens;
     std::vector<line>  children;
@@ -53,13 +52,13 @@ static void      lex_file(pn::string_view path, pn::file_view in, std::vector<li
 static void      join_tokens(std::vector<line>* lines);
 static void      simplify_tokens(std::vector<line>* lines);
 static void      wrap_tokens(std::vector<line>* lines);
-static void      indent(std::vector<line>* lines, int tab, int column);
+static void      indent(std::vector<line>* lines, int* lineno, int tab, int column);
 static pn::value repr(const std::vector<line>& lines);
 static void      output_tokens(
              const std::vector<line>& roots, bool in_place, pn::string_view path,
              pn::value_cref output);
 static void format_tokens(
-        const std::vector<line>& lines, pn::file_view out, int indent, int column);
+        const std::vector<line>& lines, pn::file_view out, int* lineno, int indent, int column);
 
 #ifndef NDEBUG
 static void check_invariants(const std::vector<line>& lines);
@@ -131,7 +130,8 @@ void main(int argc, char* const* argv) {
     join_tokens(&roots);
     simplify_tokens(&roots);
     wrap_tokens(&roots);
-    indent(&roots, 0, 0);
+    int lineno = 0;
+    indent(&roots, &lineno, 0, 0);
     if (dump) {
         pn::dump(stdout, repr(roots));
     } else {
@@ -160,10 +160,7 @@ static pn::value repr(const token& t) {
 }
 
 static pn::value repr(const line& l) {
-    pn::map m{{"indent", l.indent},
-              {"extra_nl_before", l.extra_nl_before},
-              {"nl_after", l.nl_after},
-              {"tab_after", l.tab_after}};
+    pn::map m{{"indent", l.indent}, {"lineno", l.lineno}, {"extra_nl_before", l.extra_nl_before}};
     if (!l.tokens.empty()) {
         pn::array_ref a = m["tokens"].to_array();
         for (const token& token : l.tokens) {
@@ -187,6 +184,7 @@ static pn::value repr(const std::vector<line>& lines) {
 static void output_tokens(
         const std::vector<line>& roots, bool in_place, pn::string_view path,
         pn::value_cref output) {
+    int lineno = 0;
     if (in_place) {
         pn::string tmp = path.copy();
         tmp += ".XXXXXX";
@@ -197,7 +195,7 @@ static void output_tokens(
                 exit(1);
             }
             pn::file out(fdopen(fd, "w"));
-            format_tokens(roots, out, 0, 0);
+            format_tokens(roots, out, &lineno, 0, 0);
             out.write('\n').check();
         }
         if (rename(tmp.c_str(), path.copy().c_str()) < 0) {
@@ -213,10 +211,10 @@ static void output_tokens(
             pn::format(stderr, "{0}: {1}: {2}\n", progname, output.as_string(), e.what());
             exit(1);
         }
-        format_tokens(roots, out, 0, 0);
+        format_tokens(roots, out, &lineno, 0, 0);
         out.write('\n').check();
     } else {
-        format_tokens(roots, stdout, 0, 0);
+        format_tokens(roots, stdout, &lineno, 0, 0);
         pn::file_view{stdout}.write('\n').check();
     }
 }
@@ -605,13 +603,11 @@ static void wrap_tokens(std::vector<line>* lines) {
             out.push_back(std::move(l));
             continue;
         }
-        token& token    = l.tokens[0];
-        auto   old_size = out.size();
+        token& token = l.tokens[0];
         switch (token.type) {
             case PN_TOK_DATA: {
                 wrap_data(token, &out);
-                out[old_size].extra_nl_before = l.extra_nl_before;
-                out.back().children           = std::move(l.children);
+                out.back().children = std::move(l.children);
                 break;
             }
 
@@ -624,9 +620,8 @@ static void wrap_tokens(std::vector<line>* lines) {
                 }
                 is_empty = xstring_data(token).empty();
                 wrap_string(token, was_empty || is_empty, preferred_str_header, &out);
-                was_empty                     = is_empty;
-                out[old_size].extra_nl_before = l.extra_nl_before;
-                out.back().children           = std::move(l.children);
+                was_empty           = is_empty;
+                out.back().children = std::move(l.children);
                 break;
 
             default: out.push_back(std::move(l)); break;
@@ -636,7 +631,7 @@ static void wrap_tokens(std::vector<line>* lines) {
     lines->swap(out);
 }
 
-static void indent(std::vector<line>* lines, int tab, int column) {
+static void indent(std::vector<line>* lines, int* lineno, int tab, int column) {
     int width = 0;
     for (line& l : *lines) {
         if (l.tokens.empty()) {
@@ -668,18 +663,14 @@ static void indent(std::vector<line>* lines, int tab, int column) {
 
         if (!l.children.empty()) {
             switch (l.tokens.back().type) {
-                case PN_TOK_STAR: l.tab_after = true; break;
-
                 case PN_TOK_KEY:
                 case PN_TOK_QKEY:
-                    if (!is_short_block(l.children)) {
-                        l.nl_after = true;
-                    } else {
+                    if (is_short_block(l.children)) {
                         width = std::max(width, column);
                     }
                     break;
 
-                default: l.nl_after = true; break;
+                default: break;
             }
         }
 
@@ -687,37 +678,44 @@ static void indent(std::vector<line>* lines, int tab, int column) {
     }
 
     for (line& l : *lines) {
-        if (l.tokens.empty()) {
+        if (l.extra_nl_before) {
+            ++*lineno;
+        }
+        l.lineno = *lineno;
+
+        if (l.tokens.empty() || l.children.empty()) {
+            ++*lineno;
             continue;
         }
-        if (l.nl_after || l.tab_after) {
-            indent(&l.children, tab + 1, 0);
-        } else {
-            indent(&l.children, tab + 1, width + 2);
+        switch (l.tokens.back().type) {
+            case PN_TOK_STAR: indent(&l.children, lineno, tab + 1, 0); break;
+            case PN_TOK_KEY:
+            case PN_TOK_QKEY:
+                if (is_short_block(l.children)) {
+                    indent(&l.children, lineno, tab + 1, width + 2);
+                } else {
+                    ++*lineno;
+                    indent(&l.children, lineno, tab + 1, 0);
+                }
+                break;
+            default:
+                ++*lineno;
+                indent(&l.children, lineno, tab + 1, 0);
+                break;
         }
     }
 }
 
 static void format_tokens(
-        const std::vector<line>& lines, pn::file_view out, int indent, int column) {
-    bool newline_before = false;
+        const std::vector<line>& lines, pn::file_view out, int* lineno, int indent, int column) {
     for (const line& l : lines) {
-        if (newline_before) {
-            if (l.extra_nl_before) {
-                out.write("\n\n").check();
-                indent = column = 0;
-            } else {
-                out.write('\n').check();
-                indent = column = 0;
-            }
-        } else {
-            newline_before = true;
+        for (; *lineno < l.lineno; ++*lineno) {
+            out.write('\n').check();
+            indent = column = 0;
         }
 
-        if (l.indent) {
-            for (; indent < l.indent; ++indent) {
-                out.write('\t').check();
-            }
+        for (; indent < l.indent; ++indent) {
+            out.write('\t').check();
             column = 0;
         }
 
@@ -729,11 +727,7 @@ static void format_tokens(
             column += pn_str_width(token.content.data(), token.content.size());
         }
 
-        if (l.nl_after) {
-            out.write('\n').check();
-            indent = column = 0;
-        }
-        format_tokens(l.children, out, indent, column);
+        format_tokens(l.children, out, lineno, indent, column);
     }
 }
 
