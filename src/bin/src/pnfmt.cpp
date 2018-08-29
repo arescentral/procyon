@@ -433,8 +433,8 @@ static void simplify_tokens(std::vector<line>* lines) {
                     break;
 
                 case PN_TOK_COMMENT: {
-                    for (auto it = token.content.end(), end = it--; it != token.content.begin();
-                         --it) {
+                    pn::string::iterator begin = token.content.begin(), end = token.content.end();
+                    for (auto it = token.content.end(); it != token.content.begin(); --it) {
                         switch ((*it).value()) {
                             case ' ':
                             case '\t':
@@ -444,26 +444,23 @@ static void simplify_tokens(std::vector<line>* lines) {
                         break;
                     }
 
-                    if (token.content.size() > 2) {
-                        switch (token.content.data()[1]) {
-                            case ' ': token.content.data()[1] = '\t'; break;
-                            case '\t': break;
-                            default:
-                                pn::string s{"#"};
-                                s += pn::rune{'\t'};
-                                s += token.content.substr(1);
-                                token.content = std::move(s);
-                                break;
-                        }
-                    } else if (token.content.size() == 2) {
-                        pn::string s{"#"};
-                        s += pn::rune{'\t'};
-                        s += token.content.substr(1);
-                        token.content = std::move(s);
-                        break;
-                    } else {
+                    ++begin;
+                    if (begin == end) {
                         token.content = "#";
+                        break;
                     }
+                    if ((*begin == pn::rune{'\t'}) || (*begin == pn::rune{' '})) {
+                        ++begin;
+                    }
+                    if (begin == end) {
+                        token.content = "#";
+                        break;
+                    }
+
+                    pn::string new_content = (&token == &l.tokens[0]) ? "#\t" : "# ";
+                    new_content +=
+                            token.content.substr(begin.offset(), end.offset() - begin.offset());
+                    token.content = std::move(new_content);
                     break;
                 }
 
