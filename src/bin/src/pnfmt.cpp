@@ -47,7 +47,9 @@ struct line {
     std::vector<line>  children;
 };
 
-static void      usage(pn::file_view out, int status);
+static void usage(pn::file_view out, int status);
+static void format_file(
+        pn::string_view path, pn::file_view in, bool dump, bool in_place, const pn::value& output);
 static void      lex_file(pn::string_view path, pn::file_view in, std::vector<line>* roots);
 static void      join_tokens(std::vector<line>* lines);
 static void      simplify_tokens(std::vector<line>* lines);
@@ -100,32 +102,39 @@ void main(int argc, char* const* argv) {
     argc -= optind;
     argv += optind;
 
-    if (in_place) {
-        if (argc == 0) {
-            pn::format(stderr, "{0}: --in-place requires a path\n", progname);
-            exit(64);
-        } else if (!output.is_null()) {
-            pn::format(stderr, "{0}: --in-place conflicts with --output\n", progname);
-            exit(64);
-        }
-    } else if (argc > 1) {
-        usage(stderr, 64);
+    if (in_place && !output.is_null()) {
+        pn::format(stderr, "{0}: --in-place conflicts with --output\n", progname);
+        exit(64);
+    } else if (in_place && (argc == 0)) {
+        pn::format(stderr, "{0}: --in-place requires an input path\n", progname);
+        exit(64);
+    } else if (!output.is_null() && (argc > 1)) {
+        pn::format(stderr, "{0}: --output requires at most one input path\n", progname);
+        exit(64);
     }
 
-    std::vector<line> roots;
     if (argc == 0) {
-        lex_file("-", stdin, &roots);
+        format_file("-", stdin, dump, in_place, output);
     } else {
-        pn::file f;
-        try {
-            f = pn::open(argv[0], "r").check();
-        } catch (std::runtime_error& e) {
-            pn::format(stderr, "{0}: {1}: {2}\n", progname, argv[0], e.what());
-            exit(64);
+        for (int i = 0; i < argc; ++i) {
+            pn::string_view path = argv[i];
+            pn::file        f;
+            try {
+                f = pn::open(path, "r").check();
+            } catch (std::runtime_error& e) {
+                pn::format(stderr, "{0}: {1}: {2}\n", progname, path, e.what());
+                exit(64);
+            }
+            format_file(path, f, dump, in_place, output);
         }
-        lex_file(argv[0], f, &roots);
     }
+}
 
+static void format_file(
+        pn::string_view path, pn::file_view in, bool dump, bool in_place,
+        const pn::value& output) {
+    std::vector<line> roots;
+    lex_file(path, in, &roots);
 #ifndef NDEBUG
     check_invariants(roots);
 #endif
@@ -139,7 +148,7 @@ void main(int argc, char* const* argv) {
     if (dump) {
         pn::dump(stdout, repr(roots));
     } else {
-        output_tokens(roots, in_place, argv[0], output);
+        output_tokens(roots, in_place, path, output);
     }
 }
 
