@@ -1,4 +1,4 @@
-bad:   true
+bad:  true
 null
 true
 false

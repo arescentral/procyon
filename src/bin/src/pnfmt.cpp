@@ -16,6 +16,7 @@
 #include <errno.h>
 #include <getopt.h>
 #include <unistd.h>
+#include <deque>
 #include <map>
 #include <pn/file>
 #include <pn/value>
@@ -41,6 +42,7 @@ struct token {
 struct line {
     int  indent          = 0;
     int  lineno          = 0;
+    int  width           = 0;
     bool extra_nl_before = false;
 
     std::vector<token> tokens;
@@ -56,7 +58,7 @@ static void      simplify_tokens(std::vector<line>* lines);
 static void      wrap_tokens(std::vector<line>* lines);
 static void      set_lineno(std::vector<line>* lines, int* lineno);
 static void      set_indent(std::vector<line>* lines, int indent);
-static void      set_column(std::vector<line>* lines, int column);
+static void      set_column(std::vector<line>* lines);
 static pn::value repr(const std::vector<line>& lines);
 static void      output_tokens(
              const std::vector<line>& roots, bool in_place, pn::string_view path,
@@ -144,7 +146,7 @@ static void format_file(
     int lineno = 0;
     set_lineno(&roots, &lineno);
     set_indent(&roots, 0);
-    set_column(&roots, 0);
+    set_column(&roots);
     if (dump) {
         pn::dump(stdout, repr(roots));
     } else {
@@ -173,7 +175,10 @@ static pn::value repr(const token& t) {
 }
 
 static pn::value repr(const line& l) {
-    pn::map m{{"indent", l.indent}, {"lineno", l.lineno}, {"extra_nl_before", l.extra_nl_before}};
+    pn::map m{{"indent", l.indent},
+              {"lineno", l.lineno},
+              {"width", l.width},
+              {"extra_nl_before", l.extra_nl_before}};
     if (!l.tokens.empty()) {
         pn::array_ref a = m["tokens"].to_array();
         for (const token& token : l.tokens) {
@@ -678,13 +683,12 @@ static void set_indent(std::vector<line>* lines, int indent) {
     }
 }
 
-static void set_column(std::vector<line>* lines, int column) {
-    int key_value_column = 0;
-    int comment_column   = 0;
+static void set_unaligned_column(std::vector<line>* lines) {
     for (line& l : *lines) {
         if (l.tokens.empty()) {
             continue;
         }
+        int  column      = 0;
         bool needs_space = false;
         for (token& token : l.tokens) {
             token.column = column;
@@ -698,54 +702,106 @@ static void set_column(std::vector<line>* lines, int column) {
                 case PN_TOK_MAP_OUT: token.column = column; break;
                 case PN_TOK_ARRAY_IN:
                 case PN_TOK_MAP_IN: needs_space = false; break;
-                case PN_TOK_COMMENT: comment_column = std::max(comment_column, column); break;
                 default: break;
             }
 
             column = token.column + pn_str_width(token.content.data(), token.content.size());
         }
-
-        if (!l.children.empty()) {
-            switch (l.tokens.back().type) {
-                case PN_TOK_KEY:
-                case PN_TOK_QKEY:
-                    if (is_short_block(l.children)) {
-                        key_value_column = std::max(key_value_column, column);
-                    }
-                    break;
-
-                default: break;
-            }
-        }
-
-        column = 0;
+        l.width = column;
+        set_unaligned_column(&l.children);
     }
+}
 
+struct Cohort {
+    int                column;
+    std::vector<line*> lines;
+};
+
+static void join_cohort(
+        line* line, int column, std::deque<Cohort>* cohorts,
+        std::map<std::pair<int, int>, Cohort*>* line_indent_to_cohort) {
+    std::pair<int, int> key{line->lineno, line->indent};
+    std::pair<int, int> prev{line->lineno - 1, line->indent};
+    auto                it = line_indent_to_cohort->find(prev);
+    if (it != line_indent_to_cohort->end()) {
+        Cohort* cohort                = it->second;
+        (*line_indent_to_cohort)[key] = cohort;
+        cohort->column                = std::max(cohort->column, column);
+        cohort->lines.push_back(line);
+    } else {
+        cohorts->push_back(Cohort{column, {line}});
+        (*line_indent_to_cohort)[key] = &cohorts->back();
+    }
+}
+
+static void find_key_alignment_cohorts(
+        std::vector<line>* lines, std::deque<Cohort>* cohorts,
+        std::map<std::pair<int, int>, Cohort*>* line_indent_to_cohort) {
     for (line& l : *lines) {
-        if (l.tokens.empty()) {
-            continue;
-        }
-
-        if (l.tokens.size() > 1 && l.tokens.back().type == PN_TOK_COMMENT) {
-            l.tokens.back().column = comment_column + 2;
-        }
-
-        if (l.children.empty()) {
+        if (l.tokens.empty() || l.children.empty()) {
             continue;
         }
         switch (l.tokens.back().type) {
-            case PN_TOK_STAR: set_column(&l.children, 0); break;
             case PN_TOK_KEY:
             case PN_TOK_QKEY:
                 if (is_short_block(l.children)) {
-                    l.children[0].indent = 0;
-                    set_column(&l.children, key_value_column + 2);
-                } else {
-                    set_column(&l.children, 0);
+                    join_cohort(&l.children[0], l.width, cohorts, line_indent_to_cohort);
                 }
                 break;
-            default: set_column(&l.children, 0); break;
+            default: break;
         }
+        find_key_alignment_cohorts(&l.children, cohorts, line_indent_to_cohort);
+    }
+}
+
+static void do_key_alignment(const std::deque<Cohort>& cohorts) {
+    for (const auto& cohort : cohorts) {
+        for (line* l : cohort.lines) {
+            l->indent = 0;
+            for (token& t : l->tokens) {
+                t.column += cohort.column + 2;
+            }
+        }
+    }
+}
+
+static void find_comment_alignment_cohorts(
+        std::vector<line>* lines, std::deque<Cohort>* cohorts,
+        std::map<std::pair<int, int>, Cohort*>* line_indent_to_cohort) {
+    for (line& l : *lines) {
+        if (l.tokens.size() >= 2) {
+            switch (l.tokens.back().type) {
+                case PN_TOK_COMMENT:
+                    join_cohort(&l, l.tokens.back().column, cohorts, line_indent_to_cohort);
+                    break;
+                default: break;
+            }
+        }
+        find_comment_alignment_cohorts(&l.children, cohorts, line_indent_to_cohort);
+    }
+}
+
+static void do_comment_alignment(const std::deque<Cohort>& cohorts) {
+    for (const auto& cohort : cohorts) {
+        for (line* l : cohort.lines) {
+            l->tokens.back().column = cohort.column + 1;
+        }
+    }
+}
+
+static void set_column(std::vector<line>* lines) {
+    set_unaligned_column(lines);
+    {
+        std::deque<Cohort>                     cohorts;
+        std::map<std::pair<int, int>, Cohort*> line_indent_to_cohort;
+        find_key_alignment_cohorts(lines, &cohorts, &line_indent_to_cohort);
+        do_key_alignment(cohorts);
+    }
+    {
+        std::deque<Cohort>                     cohorts;
+        std::map<std::pair<int, int>, Cohort*> line_indent_to_cohort;
+        find_comment_alignment_cohorts(lines, &cohorts, &line_indent_to_cohort);
+        do_comment_alignment(cohorts);
     }
 }
 
