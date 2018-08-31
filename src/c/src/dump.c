@@ -429,7 +429,7 @@ static bool should_dump_short_map(const pn_map_t* m) {
 
 static bool needs_quotes(const pn_string_t* key) {
     // clang-format off
-    bool ok[256] = {
+    static const bool ok[256] = {
         ['0'] = 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
         ['+'] = 1, ['-'] = 1, ['_'] = 1, ['.'] = 1, ['/'] = 1,
         ['A'] = 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
