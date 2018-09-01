@@ -30,7 +30,7 @@ EAST_ASIAN_WIDTH_URL = "http://www.unicode.org/Public/UCD/latest/ucd/EastAsianWi
 def main():
     unidata = cache_unidata()
     eawdata = cache_east_asian_widths()
-    widths = [-1 for i in xrange(0x110000)]
+    widths = [-1 for i in range(0x110000)]
 
     # First, set width to 2 for anything with East Asian Width "W" (wide) or "F" (full-width).
     for line in eawdata.splitlines():
@@ -49,7 +49,7 @@ def main():
             cp = int(cprange, 16)
             cprange = (cp, cp)
 
-        for cp in xrange(cprange[0], cprange[1] + 1):
+        for cp in range(cprange[0], cprange[1] + 1):
             widths[cp] = 2
 
     # Second, set width to 0 for all modifiers, and clear width for control/space characters.
@@ -76,7 +76,10 @@ def main():
 
 def print_level(name, values, level=0):
     block_size = 8
-    if max(values) < 256:
+    if level == 0:
+        ctype = "int8_t"
+        csize = 1
+    elif max(values) < 256:
         ctype = "uint8_t"
         csize = 1
     elif max(values) < 65536:
@@ -89,7 +92,7 @@ def print_level(name, values, level=0):
     if len(values) > (block_size * 1.5):
         blocks = set()
         next_values = []
-        for i in xrange(0, len(values), block_size):
+        for i in range(0, len(values), block_size):
             block = tuple(values[i:i + block_size])
             while len(block) < block_size:
                 block = block + (0, )
@@ -99,11 +102,11 @@ def print_level(name, values, level=0):
         blocks = {block: index for index, block in enumerate(sorted(blocks))}
 
         print("static const %s %s_%d[][%d] = {" % (ctype, name, level, block_size))
-        for block, index in sorted(blocks.iteritems()):
+        for block, index in sorted(blocks.items()):
             print("        [%d] = {%s}," % (index, ", ".join(map(str, block))))
         print("};")
         return (csize * block_size * len(blocks)) + print_level(
-            name, map(blocks.get, next_values), level + 1)
+            name, [blocks.get(x) for x in next_values], level + 1)
     else:
         print("static const %s %s_%d[] = {%s};" % (ctype, name, level,
                                                    ", ".join(map(str, values))))
@@ -113,22 +116,22 @@ def print_level(name, values, level=0):
 def cache_unidata():
     if os.path.isfile(UNICODE_DATA_FILE):
         with open(UNICODE_DATA_FILE) as f:
-            data = f.read().decode("utf-8")
+            data = f.read()
     else:
         data = requests.get(UNICODE_DATA_URL).text
         with open(UNICODE_DATA_FILE, "w") as f:
-            f.write(data.encode("utf-8"))
+            f.write(data)
     return data
 
 
 def cache_east_asian_widths():
     if os.path.isfile(EAST_ASIAN_WIDTH_FILE):
         with open(EAST_ASIAN_WIDTH_FILE) as f:
-            data = f.read().decode("utf-8")
+            data = f.read()
     else:
         data = requests.get(EAST_ASIAN_WIDTH_URL).text
         with open(EAST_ASIAN_WIDTH_FILE, "w") as f:
-            f.write(data.encode("utf-8"))
+            f.write(data)
     return data
 
 
