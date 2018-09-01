@@ -545,31 +545,36 @@ static void wrap_data(token& t, std::vector<line>* out) {
 
 static std::vector<pn::string> wrap_paragraph(pn::string_view in) {
     std::vector<pn::string>    out;
-    pn::string_view::size_type split_start_offset   = 0;
-    pn::string_view::size_type split_end_offset     = in.npos;
-    int                        split_end_rune_count = 0;
-    int                        rune_count           = 0;
-    bool                       initial_space        = true;
+    pn::string_view::size_type line_start_offset  = 0;
+    pn::string_view::size_type space_offset       = pn::string_view::npos;
+    pn::string_view::size_type prev_space_offset  = pn::string_view::npos;
+    int                        column_count       = 0;
+    int                        space_column_count = 0;
     for (auto it = in.begin(); it != in.end(); ++it) {
-        if (*it == pn::rune{' '}) {
-            if ((it.offset() != in.size() - 1) && !initial_space) {
-                split_end_offset     = it.offset();
-                split_end_rune_count = rune_count;
-            }
-        } else {
-            initial_space = false;
+        pn::rune r = *it;
+        column_count += pn_rune_width(r.value());
+        if (r == pn::rune{' '}) {
+            prev_space_offset  = space_offset;
+            space_offset       = it.offset();
+            space_column_count = column_count;
         }
-        rune_count += pn_rune_width((*it).value());
-        if ((rune_count > 72) && (split_end_offset >= 0)) {
-            out.push_back(
-                    in.substr(split_start_offset, split_end_offset - split_start_offset).copy());
-            split_start_offset = split_end_offset + 1;
-            split_end_offset   = in.npos;
-            rune_count -= (1 + split_end_rune_count);
-            initial_space = true;
+        if ((space_offset != pn::string_view::npos) && (column_count > 72)) {
+            if (space_offset < (in.size() - 1)) {
+                out.push_back(
+                        in.substr(line_start_offset, space_offset - line_start_offset).copy());
+                line_start_offset = space_offset + 1;
+                column_count -= space_column_count;
+                space_offset = prev_space_offset = pn::string_view::npos;
+                continue;
+            } else if (prev_space_offset != pn::string_view::npos) {
+                out.push_back(in.substr(line_start_offset, prev_space_offset - line_start_offset)
+                                      .copy());
+                line_start_offset = prev_space_offset + 1;
+            }
+            break;
         }
     }
-    out.push_back(in.substr(split_start_offset).copy());
+    out.push_back(in.substr(line_start_offset).copy());
     return out;
 }
 

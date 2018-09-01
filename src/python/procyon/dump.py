@@ -166,28 +166,29 @@ class ProcyonEncoder(object):
 
     @staticmethod
     def _wrap_lines(s):
-        line_start = i = 0
+        line_start = 0
         width = 0
+        prev_space = None
         space = None
-        while i < len(s):
+        space_width = None
+        for i in py3.xrange(len(s)):
             ch = s[i]
             width += ProcyonEncoder._char_width(ch)
-            if (width > 72) and (i == len(s) - 1):
-                if space is not None:
-                    yield s[line_start:space]
-                    line_start = space + 1
-                break
             if ch == " ":
+                prev_space = space
                 space = i
+                space_width = width
             if (space is not None) and (width > 72):
                 if space < (len(s) - 1):
                     yield s[line_start:space]
-                    line_start = i = space + 1
-                    width = 0
-                    space = None
+                    line_start = space + 1
+                    width -= space_width
+                    space = prev_space = None
                     continue
+                elif prev_space:
+                    yield s[line_start:prev_space]
+                    line_start = prev_space + 1
                 break
-            i += 1
         yield s[line_start:]
 
     def _dump_long_string(self, s, indent):
