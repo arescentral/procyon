@@ -218,7 +218,7 @@ TEST_F(DumpTest, Data) {
     EXPECT_THAT(
             dump('$', "\x00\x11\x22\x33\x44\x55\x66\x77\x88\x99\xaa\xbb\xcc\xdd\xee\xff",
                  static_cast<size_t>(16)),
-            IsString("$\t00112233 44556677 8899aabb ccddeeff\n"));
+            IsString("$\t0011 2233 4455 6677 8899 aabb ccdd eeff\n"));
 
     EXPECT_THAT(
             dump('$',
@@ -226,8 +226,9 @@ TEST_F(DumpTest, Data) {
                  "\x00\x11\x22\x33\x44\x55\x66\x77\x88\x99\xaa\xbb\xcc\xdd\xee\xff"
                  "\x00\x11\x22\x33\x44\x55\x66\x77\x88\x99",
                  static_cast<size_t>(42)),
-            IsString("$\t00112233 44556677 8899aabb ccddeeff 00112233 44556677 8899aabb ccddeeff\n"
-                     "$\t00112233 44556677 8899\n"));
+            IsString("$\t0011 2233 4455 6677 8899 aabb ccdd eeff\n"
+                     "$\t0011 2233 4455 6677 8899 aabb ccdd eeff\n"
+                     "$\t0011 2233 4455 6677 8899\n"));
 }
 
 TEST_F(DumpTest, String) {

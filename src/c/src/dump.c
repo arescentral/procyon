@@ -163,11 +163,11 @@ static bool dump_long_data_view(
     for (size_t i = 0; i < size; ++i) {
         if (i == 0) {
             fprintf(file, "$\t");
-        } else if ((i % 32) == 0) {
+        } else if ((i % 16) == 0) {
             if (!(start_line(*indent, file) && WRITE_CSTRING("$\t", file))) {
                 return false;
             }
-        } else if ((i % 4) == 0) {
+        } else if ((i % 2) == 0) {
             if (putc(' ', file) == EOF) {
                 return false;
             }

@@ -172,14 +172,14 @@ def test_data():
     assert procyon.dumps(b"\x01\x02") == "$0102\n"
 
     assert procyon.dumps(b"\x00\x11\x22\x33\x44\x55\x66\x77\x88\x99\xaa\xbb\xcc\xdd\xee\xff") == (
-        "$\t00112233 44556677 8899aabb ccddeeff\n")
+        "$\t0011 2233 4455 6677 8899 aabb ccdd eeff\n")
 
-    assert procyon.dumps(
-        b"\x00\x11\x22\x33\x44\x55\x66\x77\x88\x99\xaa\xbb\xcc\xdd\xee\xff"
-        b"\x00\x11\x22\x33\x44\x55\x66\x77\x88\x99\xaa\xbb\xcc\xdd\xee\xff"
-        b"\x00\x11\x22\x33\x44\x55\x66\x77\x88\x99") == (
-            "$\t00112233 44556677 8899aabb ccddeeff 00112233 44556677 8899aabb ccddeeff\n"
-            "$\t00112233 44556677 8899\n")
+    assert procyon.dumps(b"\x00\x11\x22\x33\x44\x55\x66\x77\x88\x99\xaa\xbb\xcc\xdd\xee\xff"
+                         b"\x00\x11\x22\x33\x44\x55\x66\x77\x88\x99\xaa\xbb\xcc\xdd\xee\xff"
+                         b"\x00\x11\x22\x33\x44\x55\x66\x77\x88\x99") == (
+                             "$\t0011 2233 4455 6677 8899 aabb ccdd eeff\n"
+                             "$\t0011 2233 4455 6677 8899 aabb ccdd eeff\n"
+                             "$\t0011 2233 4455 6677 8899\n")
 
 
 def test_string():

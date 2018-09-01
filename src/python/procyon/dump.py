@@ -105,9 +105,9 @@ class ProcyonEncoder(object):
         for i, byte in enumerate(bytearray(d)):
             if i == 0:
                 yield "$\t"
-            elif (i % 32) == 0:
+            elif (i % 16) == 0:
                 yield "\n%s$\t" % indent
-            elif (i % 4) == 0:
+            elif (i % 2) == 0:
                 yield " "
             yield "%02x" % byte
 
