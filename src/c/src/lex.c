@@ -117,6 +117,10 @@ void pn_lexer_next(pn_lexer_t* lex, pn_error_t* error) {
         if (next_line(lex, error)) {
             return;  // emits LINE*
         }
+    } else if (lex->token.type == PN_TOK_STAR) {
+        if (pn_lexer_indent(lex) && update_lexer_level(lex, error)) {
+            return;
+        }
     } else if (update_lexer_level(lex, error)) {
         return;
     }
@@ -148,10 +152,6 @@ void pn_lexer_next(pn_lexer_t* lex, pn_error_t* error) {
 
     if (state & PN_TOK_FLAG_OK) {
         lex->token.type = state & PN_TOK_FLAG_VALUE;
-        if (lex->token.type == PN_TOK_STAR) {
-            pn_lexer_indent(lex);
-            lex->token.end = lex->token.begin + 1;
-        }
         return;
     }
 

@@ -308,6 +308,9 @@ static void check_invariants(const std::vector<line>& lines) {
         if (!l.tokens.empty()) {
             const token& last_token = l.tokens.back();
             for (const token& t : l.tokens) {
+                if (t.type == PN_TOK_ERROR) {
+                    continue;
+                }
                 assert(!t.content.empty());
                 switch (t.type) {
                     case PN_TOK_LINE_IN:
@@ -323,7 +326,6 @@ static void check_invariants(const std::vector<line>& lines) {
                     case PN_TOK_STR_PIPE_EMPTY:
                     case PN_TOK_STR_BANG:
                     case PN_TOK_COMMENT:
-                    case PN_TOK_ERROR:
                         assert(&t == &last_token);  // Should always be final on line:
                         break;
 

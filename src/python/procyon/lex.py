@@ -69,6 +69,9 @@ class Lexer(object):
         if self._line_end == self._line_begin:
             if self._next_line():
                 return self._make_token()
+        elif self._token_type == Token.STAR:
+            if self._reindent() and self._update_lexer_level():
+                return self._make_token()
         elif self._update_lexer_level():
             return self._make_token()
 
@@ -95,9 +98,6 @@ class Lexer(object):
 
         if state & FLAG_OK:
             self._token_type = Token(state & FLAG_VALUE)
-            if self._token_type == Token.STAR:
-                self._reindent()
-                self._token_end = self._token_begin + 1
         else:  # state & FLAG_ERROR
             err = error.Error(state & FLAG_VALUE)
             at = self._token_end
@@ -186,6 +186,7 @@ class Lexer(object):
                 self._token_end = i
                 return True
             i += 1
+        return False
 
     def _fail(self, code, at):
         self._token_type = Token.ERROR
@@ -234,8 +235,8 @@ def main(args=None):
             print("{0}:{1}\t{2}\t{3}".format(token.lineno, column, type_str, value))
         else:
             print("{0}:{1}\tERROR\t{2}:{3}:{4}\t{5}".format(
-                token.lineno, column, token.lineno, token.error_column, error.error_message[
-                    token.error], value))
+                token.lineno, column, token.lineno, token.error_column,
+                error.error_message[token.error], value))
 
 
 __all__ = ["Lexer", "lex"]
