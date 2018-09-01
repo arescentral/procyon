@@ -69,6 +69,16 @@ executable("pnparse") {
   configs += [ ":procyon_private" ]
 }
 
+executable("pndump") {
+  sources = [
+    "src/pndump.cpp",
+  ]
+  deps = [
+    "../cpp:procyon-cpp",
+  ]
+  configs += [ ":procyon_private" ]
+}
+
 static_library("cpp") {
   sources = [
     "src/lex.cpp",

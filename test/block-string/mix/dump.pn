@@ -1,0 +1,11 @@
+*	>	Line wrap line wrap line wrap line wrap line wrap line wrap line wrap
+	>	line wrap line wrap line wrap
+	|	Needs pipe
+	!
+*	>	pipe() {
+	|	    pipe();
+	|	}
+*	>	Don't wrap in this case
+*	>	Becomes pipes.
+	>
+	>	That's OK.

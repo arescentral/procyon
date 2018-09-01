@@ -266,7 +266,7 @@ static size_t short_string_width(const pn_string_t* s) {
             case '\\': width += 2; break;
             default:
                 if (pn_isprint(r)) {
-                    width += next - i;
+                    width += pn_rune_width(r);
                 } else if (r < 0x10000) {
                     width += 6;
                 } else {
@@ -282,22 +282,31 @@ static size_t short_string_width(const pn_string_t* s) {
 // If there is a space before the 72nd column, returns the last one.
 // If there is no space before the 72nd column, returns the first one.
 static bool split_line(const char* data, size_t size, size_t* part) {
-    if (size <= 72) {
-        return false;
-    }
-    char* space = strchr(data, ' ');
-    if ((!space) || (space == (data + size - 1))) {
-        return false;
-    }
-    *part = space - data;
-    while ((space = strchr(data + *part + 1, ' '))) {
-        if ((space - data) <= 72) {
-            *part = space - data;
-        } else {
-            break;
+    const char* space = NULL;
+    size_t      width = 0;
+    for (size_t i = 0; i < size; i = pn_rune_next(data, size, i)) {
+        uint32_t rune = pn_rune(data, size, i);
+        width += pn_rune_width(rune);
+        if ((width > 72) && (i == size - 1)) {
+            if (space) {
+                *part = space - data;
+                return true;
+            }
+            return false;
+        }
+        if (data[i] == ' ') {
+            space = &data[i];
+        }
+        if (space && (width > 72)) {
+            size_t part_size = space - data;
+            if (part_size < (size - 1)) {
+                *part = part_size;
+                return true;
+            }
+            return false;
         }
     }
-    return true;
+    return false;
 }
 
 static bool dump_long_string_view(

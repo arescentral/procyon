@@ -90,7 +90,7 @@ class ProcyonEncoder(object):
                 return "inf"
             else:
                 return "-inf"
-        return repr(f)
+        return py3.repr(f)
 
     @staticmethod
     def _should_dump_short_data(d):
@@ -148,35 +148,47 @@ class ProcyonEncoder(object):
         yield '"'
 
     @staticmethod
+    def _char_width(ch):
+        if " " <= ch < "\177":
+            return 1
+        category = unicodedata.category(ch)
+        if category.startswith("M"):
+            return 0
+        elif category.startswith("C"):
+            return 1
+        elif unicodedata.east_asian_width(ch) in "FW":
+            return 2
+        return 1
+
+    @staticmethod
+    def _str_width(s):
+        return sum(ProcyonEncoder._char_width(ch) for ch in s)
+
+    @staticmethod
     def _wrap_lines(s):
-        while True:
-            if len(s) <= 72:
-                yield s
-                return
-            elif len(s) == 73:
-                if " " in s[:72]:
-                    head, tail = s[:72].rsplit(" ", 1)
-                    yield head
-                    yield tail + s[72]
-                else:
-                    yield s
-                return
-            head, tail = s[:73], s[73:]
-            if " " in head:
-                line, line_tail = head.rsplit(" ", 1)
-                if line_tail or tail:
-                    yield line
-                    s = line_tail + tail
-                else:
-                    yield s
-                    return
-            elif " " in tail:
-                line_tail, tail = tail.split(" ", 1)
-                yield head + line_tail
-                s = tail
-            else:
-                yield s
-                return
+        line_start = i = 0
+        width = 0
+        space = None
+        while i < len(s):
+            ch = s[i]
+            width += ProcyonEncoder._char_width(ch)
+            if (width > 72) and (i == len(s) - 1):
+                if space is not None:
+                    yield s[line_start:space]
+                    line_start = space + 1
+                break
+            if ch == " ":
+                space = i
+            if (space is not None) and (width > 72):
+                if space < (len(s) - 1):
+                    yield s[line_start:space]
+                    line_start = i = space + 1
+                    width = 0
+                    space = None
+                    continue
+                break
+            i += 1
+        yield s[line_start:]
 
     def _dump_long_string(self, s, indent):
         paragraphs = s.split("\n")
@@ -266,7 +278,7 @@ class ProcyonEncoder(object):
     def _dump_key(self, k):
         if _NO_QUOTE_RE.match(k):
             return k
-        return self._dump_short_string(k)
+        return "".join(self._dump_short_string(k))
 
     @staticmethod
     def _should_dump_short_map(m):
@@ -319,15 +331,20 @@ class ProcyonEncoder(object):
             if self.converter is not None:
                 v = self.converter(v)
             short = self._should_dump_short_value(v)
-            if short and (len(k) > max_short_key_width):
-                max_short_key_width = len(k)
-            adjusted.append((k, v, short))
+            if short:
+                width = ProcyonEncoder._str_width(k)
+                max_short_key_width = max(width, max_short_key_width)
+                adjusted.append((k, v, short, width))
+            else:
+                adjusted.append((k, v, short, 0))
 
-        for k, v, short in adjusted:
+        for k, v, short, width in adjusted:
             yield prefix
             prefix = tail_prefix
             if short:
-                yield (k + ":").ljust(max_short_key_width + 3)
+                yield k
+                yield ":"
+                yield " " * (max_short_key_width - width + 2)
                 for chunk in self._dump_short_value(v, markers):
                     yield chunk
             else:
@@ -454,4 +471,26 @@ def dumps(obj, style=DefaultStyle, converter=None):
     return encoder.encode(obj)
 
 
+def main(args=None):
+    import sys
+    from .decode import load
+    if args is None:
+        args = sys.argv
+
+    if len(args) != 1:
+        sys.stderr.write("usage: python -m procyon.dump\n")
+        return 64
+
+    try:
+        x = load(sys.stdin)
+    except Exception as e:
+        sys.stderr.write("%s: %s\n" % (args[0], e))
+        return 1
+    dump(x, sys.stdout)
+
+
 __all__ = ["dump", "dumps"]
+
+if __name__ == "__main__":
+    import sys
+    sys.exit(main())

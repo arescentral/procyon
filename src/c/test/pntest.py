@@ -30,7 +30,8 @@ TEST_DATA = os.path.join(ROOT, "test")
 DIRECTORIES = [os.path.relpath(p, TEST_DATA) for p in glob.glob(os.path.join(TEST_DATA, "*/*"))]
 
 REQUIRED_FILES = frozenset("in.txt tokens.txt canonical.pn".split())
-USED_FILES = REQUIRED_FILES | frozenset("parse.txt out.json out.txt out.png err.txt".split())
+USED_FILES = REQUIRED_FILES | frozenset(
+    "parse.txt dump.pn out.json out.txt out.png err.txt".split())
 
 
 def run_test(directory, tokenize=None, reformat=None, jsonify=None, flatten=None):
@@ -94,6 +95,22 @@ def parse_test(directory, parse):
         pytest.fail("neither parse.txt nor err.txt present in %s" % directory)
 
 
+def dump_test(directory, dump):
+    dirname = os.path.join(TEST_DATA, directory)
+    with open(os.path.join(dirname, "in.txt"), "rb") as f:
+        source = f.read()
+    if os.path.isfile(os.path.join(dirname, "dump.pn")):
+        dumped, errors = dump(source)
+        assert (errors is None) and (dumped is not None)
+        diff(os.path.join(dirname, "dump.pn"), dumped)
+    elif os.path.isfile(os.path.join(dirname, "err.txt")):
+        dumped, errors = dump(source)
+        assert (dumped is None) and (errors is not None)
+        diff(os.path.join(dirname, "err.txt"), errors)
+    else:
+        pytest.fail("neither dump.pn nor err.txt present in %s" % directory)
+
+
 def check_output(args, stdin, **kwds):
     status = kwds.pop("status", 0)
     if not isinstance(stdin, (bytes, bytearray, memoryview)):
@@ -136,3 +153,4 @@ def diff(expected_path, actual):
 CASES = [functools.partial(run_test, directory) for directory in DIRECTORIES]
 LEX_CASES = [functools.partial(lex_test, directory) for directory in DIRECTORIES]
 PARSE_CASES = [functools.partial(parse_test, directory) for directory in DIRECTORIES]
+DUMP_CASES = [functools.partial(dump_test, directory) for directory in DIRECTORIES]

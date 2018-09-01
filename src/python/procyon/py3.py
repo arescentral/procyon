@@ -26,7 +26,12 @@ iterkeys     dict.iterkeys    dict.keys
 itervalues   dict.itervalues  dict.values
 """
 
-unicode = type(u"")
+try:
+    unicode = unicode
+    repr = (lambda r: lambda x: r(x).decode("utf-8"))(repr)
+except NameError:
+    unicode = str
+    repr = repr
 
 try:
     long = long

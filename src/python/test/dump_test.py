@@ -19,7 +19,14 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import collections
 import pytest
-from .context import procyon
+import sys
+
+try:
+    from io import BytesIO, StringIO
+except ImportError:
+    from cStringIO import StringIO
+    BytesIO = StringIO
+from .context import procyon, pntest
 
 
 def test_named():
@@ -270,12 +277,12 @@ def test_list():
 
 def test_map():
     assert procyon.dumps({"null": None}) == "{null: null}\n"
-    assert procyon.dumps(
-        collections.OrderedDict([("t", True), ("f", False)])) == "{t: true, f: false}\n"
-    assert procyon.dumps(collections.OrderedDict([("one", 1), ("two", 2), ("three", 3)
-                                                  ])) == "{one: 1, two: 2, three: 3}\n"
-    assert procyon.dumps(collections.OrderedDict([("less", 0.1), ("more", 0.2)])) == (
-        "{less: 0.1, more: 0.2}\n")
+    assert procyon.dumps(collections.OrderedDict([("t", True),
+                                                  ("f", False)])) == "{t: true, f: false}\n"
+    assert procyon.dumps(collections.OrderedDict([("one", 1), ("two", 2),
+                                                  ("three", 3)])) == "{one: 1, two: 2, three: 3}\n"
+    assert procyon.dumps(collections.OrderedDict([("less", 0.1),
+                                                  ("more", 0.2)])) == ("{less: 0.1, more: 0.2}\n")
     assert procyon.dumps(
         collections.OrderedDict([
             ("null", None),
@@ -327,44 +334,47 @@ def test_map():
 def test_composite():
     assert procyon.dumps(
         collections.OrderedDict([
-            ("us", collections.OrderedDict([
-                ("name", "United States of America"),
-                ("ratio", 1.9),
-                ("stars", 50),
-                ("stripes", 13),
-                ("colors", [
-                    b"\xb2\x22\x34",
-                    b"\xff\xff\xff",
-                    b"\x3c\x3b\x6e",
-                ]),
-                ("nicknames", [
-                    "The Stars and Stripes",
-                    "Old Glory",
-                    "The Star-Spangled Banner",
-                ]),
-            ])),
-            ("cl", collections.OrderedDict([
-                ("name", "Republic of Chile"),
-                ("ratio", 1.5),
-                ("stars", 1),
-                ("stripes", 2),
-                ("colors", [
-                    b"\xda\x29\x1c",
-                    b"\xff\xff\xff",
-                    b"\x00\x33\xa0",
-                ]),
-            ])),
-            ("cu", collections.OrderedDict([
-                ("name", "Republic of Cuba"),
-                ("ratio", 2.0),
-                ("stars", 1),
-                ("stripes", 5),
-                ("colors", [
-                    b"\xcb\x15\x15",
-                    b"\xff\xff\xff",
-                    b"\x00\x2a\x8f",
-                ]),
-            ])),
+            ("us",
+             collections.OrderedDict([
+                 ("name", "United States of America"),
+                 ("ratio", 1.9),
+                 ("stars", 50),
+                 ("stripes", 13),
+                 ("colors", [
+                     b"\xb2\x22\x34",
+                     b"\xff\xff\xff",
+                     b"\x3c\x3b\x6e",
+                 ]),
+                 ("nicknames", [
+                     "The Stars and Stripes",
+                     "Old Glory",
+                     "The Star-Spangled Banner",
+                 ]),
+             ])),
+            ("cl",
+             collections.OrderedDict([
+                 ("name", "Republic of Chile"),
+                 ("ratio", 1.5),
+                 ("stars", 1),
+                 ("stripes", 2),
+                 ("colors", [
+                     b"\xda\x29\x1c",
+                     b"\xff\xff\xff",
+                     b"\x00\x33\xa0",
+                 ]),
+             ])),
+            ("cu",
+             collections.OrderedDict([
+                 ("name", "Republic of Cuba"),
+                 ("ratio", 2.0),
+                 ("stars", 1),
+                 ("stripes", 5),
+                 ("colors", [
+                     b"\xcb\x15\x15",
+                     b"\xff\xff\xff",
+                     b"\x00\x2a\x8f",
+                 ]),
+             ])),
         ])) == ("us:\n"
                 "\tname:     \"United States of America\"\n"
                 "\tratio:    1.9\n"
@@ -424,6 +434,33 @@ def test_circular():
         "\t*\t[null]\n"
         "d:\n"
         "\ta:  [null]\n")
+
+
+def do_dump(source):
+    from procyon.dump import main
+
+    sys.stdin = BytesIO(source)
+    sys.stdout = StringIO()
+    sys.stderr = StringIO()
+    if not main(["procyon.dump"]):
+        out = sys.stdout.getvalue().encode("utf-8")
+        err = None
+    else:
+        out = None
+        err = sys.stderr.getvalue().split(": ", 1)[1].encode("utf-8")
+    sys.stdin = sys.__stdin__
+    sys.stdout = sys.__stdout__
+    sys.stderr = sys.__stderr__
+    return out, err
+
+
+def test_func(run):
+    run(do_dump)
+
+
+def pytest_generate_tests(metafunc):
+    if metafunc.function == test_func:
+        metafunc.parametrize("run", pntest.DUMP_CASES, ids=pntest.DIRECTORIES)
 
 
 if __name__ == "__main__":
