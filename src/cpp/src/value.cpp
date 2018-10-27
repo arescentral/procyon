@@ -58,7 +58,7 @@ data_view value::as_data() const { return helper<PN_DATA>::as(*this); }
 data_view value_ref::as_data() const { return helper<PN_DATA>::as(*this); }
 data_view value_cref::as_data() const { return helper<PN_DATA>::as(*this); }
 data_ref  value::to_data() { return helper<PN_DATA>::to(*this); }
-data_ref  value_ref::to_data() { return helper<PN_DATA>::to(*this); }
+data_ref  value_ref::to_data() const { return helper<PN_DATA>::to(*this); }
 
 template <>
 struct helper<PN_STRING> {
@@ -78,7 +78,7 @@ string_view value::as_string() const { return helper<PN_STRING>::as(*this); }
 string_view value_ref::as_string() const { return helper<PN_STRING>::as(*this); }
 string_view value_cref::as_string() const { return helper<PN_STRING>::as(*this); }
 string_ref  value::to_string() { return helper<PN_STRING>::to(*this); }
-string_ref  value_ref::to_string() { return helper<PN_STRING>::to(*this); }
+string_ref  value_ref::to_string() const { return helper<PN_STRING>::to(*this); }
 
 template <>
 struct helper<PN_ARRAY> {
@@ -96,7 +96,7 @@ array_cref value::as_array() const { return helper<PN_ARRAY>::as(*this); }
 array_cref value_ref::as_array() const { return helper<PN_ARRAY>::as(*this); }
 array_cref value_cref::as_array() const { return helper<PN_ARRAY>::as(*this); }
 array_ref  value::to_array() { return helper<PN_ARRAY>::to(*this); }
-array_ref  value_ref::to_array() { return helper<PN_ARRAY>::to(*this); }
+array_ref  value_ref::to_array() const { return helper<PN_ARRAY>::to(*this); }
 
 template <>
 struct helper<PN_MAP> {
@@ -114,7 +114,7 @@ map_cref value::as_map() const { return helper<PN_MAP>::as(*this); }
 map_cref value_ref::as_map() const { return helper<PN_MAP>::as(*this); }
 map_cref value_cref::as_map() const { return helper<PN_MAP>::as(*this); }
 map_ref  value::to_map() { return helper<PN_MAP>::to(*this); }
-map_ref  value_ref::to_map() { return helper<PN_MAP>::to(*this); }
+map_ref  value_ref::to_map() const { return helper<PN_MAP>::to(*this); }
 
 static_assert(sizeof(value) == sizeof(pn_value_t), "value size wrong");
 static_assert(sizeof(value_ref) == sizeof(pn_value_t*), "value_ref size wrong");

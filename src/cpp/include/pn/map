@@ -76,6 +76,7 @@ class key_value_ref {
   public:
     using c_obj_type            = pn_kv_pair_t;
     using c_obj_const_type      = pn_kv_pair_t const;
+    using value_type            = key_value;
     using key_type              = string;
     using key_reference         = string_ref;
     using key_const_reference   = string_view;
@@ -91,20 +92,18 @@ class key_value_ref {
     key_value_ref& operator=(const key_value_ref&) = delete;
     key_value_ref& operator=(key_value_ref&&) = delete;
 
-    key_value_ref& operator=(key_value x) { return std::swap(*c_obj(), *x.c_obj()), *this; }
-
-    key_reference       key() { return key_reference{&c_obj()->key}; }
-    key_const_reference key() const {
-        return key_const_reference{c_obj()->key->values,
-                                   static_cast<int>(c_obj()->key->count) - 1};
+    const key_value_ref& operator=(key_value x) const {
+        return std::swap(*c_obj(), *x.c_obj()), *this;
     }
-    value_reference       value() { return value_reference{&c_obj()->value}; }
-    value_const_reference value() const { return value_const_reference{&c_obj()->value}; }
 
-    c_obj_type*&            c_obj() { return _c_obj; }
-    c_obj_const_type const* c_obj() const { return _c_obj; }
+    key_reference   key() const { return key_reference{&c_obj()->key}; }
+    value_reference value() const { return value_reference{&c_obj()->value}; }
+
+    c_obj_type* c_obj() const { return _c_obj; }
 
   private:
+    friend class internal::ptr<key_value_ref>;
+
     c_obj_type* _c_obj;
 };
 
@@ -112,6 +111,7 @@ class key_value_cref {
   public:
     using c_obj_type            = pn_kv_pair_t const;
     using c_obj_const_type      = pn_kv_pair_t const;
+    using value_type            = const key_value;
     using key_type              = string;
     using key_reference         = string_view;
     using key_const_reference   = string_view;
@@ -125,18 +125,18 @@ class key_value_cref {
 
     key_value_cref(const key_value_cref&) = default;
     key_value_cref(key_value_cref&&)      = default;
-    key_value_cref&     operator=(const key_value_cref&) = delete;
-    key_value_cref&     operator=(key_value_cref&&) = delete;
-    key_const_reference key() const {
-        return key_const_reference{c_obj()->key->values,
-                                   static_cast<int>(c_obj()->key->count) - 1};
+    key_value_cref& operator=(const key_value_cref&) = delete;
+    key_value_cref& operator=(key_value_cref&&) = delete;
+    key_reference   key() const {
+        return key_reference{c_obj()->key->values, static_cast<int>(c_obj()->key->count) - 1};
     }
-    value_const_reference value() const { return value_const_reference{&c_obj()->value}; }
+    value_reference value() const { return value_reference{&c_obj()->value}; }
 
-    c_obj_type const*&      c_obj() { return _c_obj; }
-    c_obj_const_type const* c_obj() const { return _c_obj; }
+    const c_obj_type* c_obj() const { return _c_obj; }
 
   private:
+    friend class internal::ptr<key_value_cref>;
+
     const c_obj_type* _c_obj;
 };
 
@@ -150,6 +150,8 @@ class map {
     using value_type       = key_value;
     using reference        = key_value_ref;
     using const_reference  = key_value_cref;
+    using pointer          = key_value_ptr;
+    using const_pointer    = key_value_cptr;
     using iterator         = internal::iterator<map>;
     using const_iterator   = internal::iterator<const map>;
 

@@ -53,8 +53,8 @@ file_view file_view::check() {
 
 file open(string_view path, const char* mode) { return file{fopen(path.copy().c_str(), mode)}; }
 
-bool parse(file_view in, value_ref out, pn_error_t* error) {
-    return pn_parse(in.c_obj(), out.c_obj(), error);
+bool parse(file_view in, value_ptr out, pn_error_t* error) {
+    return pn_parse(in.c_obj(), out->c_obj(), error);
 }
 
 }  // namespace pn

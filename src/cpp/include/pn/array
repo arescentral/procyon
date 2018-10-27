@@ -32,6 +32,8 @@ class array {
     using value_type       = value;
     using reference        = value_ref;
     using const_reference  = value_cref;
+    using pointer          = value_ptr;
+    using const_pointer    = value_cptr;
     using iterator         = internal::iterator<array>;
     using const_iterator   = internal::iterator<const array>;
 

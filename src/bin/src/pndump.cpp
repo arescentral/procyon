@@ -47,7 +47,7 @@ void main(int argc, char* const* argv) {
 
     pn_error_t error{};
     pn::value  x;
-    if (!parse(stdin, x, &error)) {
+    if (!parse(stdin, &x, &error)) {
         throw std::runtime_error(
                 pn::format("-:{0}:{1}: {2}", error.lineno, error.column, pn_strerror(error.code))
                         .c_str());

@@ -62,6 +62,8 @@ class iterator {
     using _val      = typename Container::value_type;
     using _ref      = typename Container::reference;
     using _cref     = typename Container::const_reference;
+    using _ptr      = typename Container::pointer;
+    using _cptr     = typename Container::const_pointer;
 
   public:
     using iterator_category = std::random_access_iterator_tag;
@@ -70,40 +72,82 @@ class iterator {
     using value_type        = typename std::conditional<_is_const::value, const _val, _val>::type;
     using reference         = typename std::conditional<_is_const::value, _cref, _ref>::type;
     using const_reference   = _ref;
-    using pointer           = reference*;
-    using const_pointer     = const_reference*;
+    using pointer           = typename std::conditional<_is_const::value, _cptr, _ptr>::type;
+    using const_pointer     = _ptr;
 
-    iterator(const iterator<typename std::remove_const<Container>::type>& it) : _it{*it} {}
-    constexpr explicit iterator(typename reference::c_obj_type* it) : _it{it} {}
+    iterator(const iterator<typename std::remove_const<Container>::type>& it) : _it{it->c_obj()} {}
+    constexpr explicit iterator(pointer it) : _it{it} {}
 
-    reference       operator*() { return _it; }
-    const_reference operator*() const { return _it; }
-    pointer         operator->() { return &_it; }
-    const_pointer   operator->() const { return &_it; }
+    reference       operator*() { return *_it; }
+    const_reference operator*() const { return *_it; }
+    pointer         operator->() { return _it; }
+    const_pointer   operator->() const { return _it; }
 
-    iterator        operator+(difference_type n) { return iterator{_it.c_obj() + n}; }
-    iterator&       operator+=(difference_type n) { return _it.c_obj() += n, *this; }
-    iterator        operator-(difference_type n) { return iterator{_it.c_obj() - n}; }
-    iterator&       operator-=(difference_type n) { return _it.c_obj() -= n, *this; }
-    difference_type operator-(iterator other) { return _it.c_obj() - other._it.c_obj(); }
+    iterator        operator+(difference_type n) { return iterator{_it + n}; }
+    iterator&       operator+=(difference_type n) { return _it += n, *this; }
+    iterator        operator-(difference_type n) { return iterator{_it - n}; }
+    iterator&       operator-=(difference_type n) { return _it -= n, *this; }
+    difference_type operator-(iterator other) { return _it - other._it; }
 
-    iterator& operator++() { return *this += 1; }
+    iterator& operator++() { return ++_it, *this; }
     iterator  operator++(int) { return _it++; }
-    iterator& operator--() { return *this -= 1; }
+    iterator& operator--() { return --_it, *this; }
     iterator  operator--(int) { return _it--; }
 
-    bool operator==(iterator other) const { return _it.c_obj() == other._it.c_obj(); }
-    bool operator!=(iterator other) const { return _it.c_obj() != other._it.c_obj(); }
-    bool operator<(iterator other) const { return _it.c_obj() < other._it.c_obj(); }
-    bool operator<=(iterator other) const { return _it.c_obj() <= other._it.c_obj(); }
-    bool operator>(iterator other) const { return _it.c_obj() > other._it.c_obj(); }
-    bool operator>=(iterator other) const { return _it.c_obj() >= other._it.c_obj(); }
+    bool operator==(iterator other) const { return _it == other._it; }
+    bool operator!=(iterator other) const { return _it != other._it; }
+    bool operator<(iterator other) const { return _it < other._it; }
+    bool operator<=(iterator other) const { return _it <= other._it; }
+    bool operator>(iterator other) const { return _it > other._it; }
+    bool operator>=(iterator other) const { return _it >= other._it; }
 
   private:
-    reference _it;
+    pointer _it;
+};
+
+template <typename ref>
+class ptr {
+  public:
+    using c_obj_type      = typename ref::c_obj_type;
+    using value_type      = typename ref::value_type;
+    using reference       = ref;
+    using difference_type = std::ptrdiff_t;
+
+    ptr(c_obj_type* x) : _ref{x} {}
+    ptr(value_type* x) : _ref{x->c_obj()} {}
+    ptr(reference* x) : _ref{x->c_obj()} {}
+
+    const reference& operator*() const { return _ref; }
+    const reference* operator->() const { return &_ref; }
+
+    ptr             operator+(difference_type n) { return ptr{_ref._c_obj + n}; }
+    ptr&            operator+=(difference_type n) { return _ref._c_obj += n, *this; }
+    ptr             operator-(difference_type n) { return ptr{_ref._c_obj - n}; }
+    ptr&            operator-=(difference_type n) { return _ref._c_obj -= n, *this; }
+    difference_type operator-(ptr other) { return _ref._c_obj - other._ref._c_obj; }
+
+    ptr& operator++() { return ++_ref._c_obj, *this; }
+    ptr  operator++(int) { return ptr{_ref._c_obj++}; }
+    ptr& operator--() { return --_ref._c_obj, *this; }
+    ptr  operator--(int) { return ptr{_ref._c_obj--}; }
+
+    bool operator==(ptr other) const { return _ref._c_obj == other._ref._c_obj; }
+    bool operator!=(ptr other) const { return _ref._c_obj != other._ref._c_obj; }
+    bool operator<(ptr other) const { return _ref._c_obj < other._ref._c_obj; }
+    bool operator<=(ptr other) const { return _ref._c_obj <= other._ref._c_obj; }
+    bool operator>(ptr other) const { return _ref._c_obj > other._ref._c_obj; }
+    bool operator>=(ptr other) const { return _ref._c_obj >= other._ref._c_obj; }
+
+  private:
+    reference _ref;
 };
 
 }  // namespace internal
+
+using value_ptr      = internal::ptr<value_ref>;
+using value_cptr     = internal::ptr<value_cref>;
+using key_value_ptr  = internal::ptr<key_value_ref>;
+using key_value_cptr = internal::ptr<key_value_cref>;
 
 }  // namespace pn
 

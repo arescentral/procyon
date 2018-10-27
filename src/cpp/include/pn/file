@@ -93,7 +93,7 @@ class file_view {
 
 [[clang::warn_unused_result]] file open(string_view path, const char* mode);
 
-[[clang::warn_unused_result]] bool parse(file_view in, value_ref out, pn_error_t* error);
+[[clang::warn_unused_result]] bool parse(file_view in, value_ptr out, pn_error_t* error);
 
 template <typename... args>
 file_view format(file_view out, const char* fmt, const args&... arg);

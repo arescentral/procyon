@@ -105,13 +105,13 @@ class value_ref {
   public:
     using c_obj_type       = pn_value_t;
     using c_obj_const_type = const pn_value_t;
+    using value_type       = value;
 
     constexpr explicit value_ref(c_obj_type* x) : _c_obj{x} {}
     constexpr value_ref(value& x) : value_ref{x.c_obj()} {}
-    value_ref& operator=(value x) { return std::swap(*c_obj(), *x.c_obj()), *this; }
+    const value_ref& operator=(value x) const { return std::swap(*c_obj(), *x.c_obj()), *this; }
 
-    c_obj_type*&                      c_obj() { return _c_obj; }
-    constexpr c_obj_const_type const* c_obj() const { return _c_obj; }
+    c_obj_type* c_obj() const { return _c_obj; }
 
     value copy() const {
         pn_value_t x;
@@ -140,16 +140,18 @@ class value_ref {
     array_cref        as_array() const;
     map_cref          as_map() const;
 
-    void       to_null() { *this = nullptr; }
-    bool&      to_bool() { return (is_bool() ? *this : (*this = false)).c_obj()->b; }
-    int64_t&   to_int() { return (is_int() ? *this : (*this = 0)).c_obj()->i; }
-    double&    to_float() { return (is_float() ? *this : (*this = 0.0)).c_obj()->f; }
-    data_ref   to_data();
-    string_ref to_string();
-    array_ref  to_array();
-    map_ref    to_map();
+    void       to_null() const { *this = nullptr; }
+    bool&      to_bool() const { return (is_bool() ? *this : (*this = false)).c_obj()->b; }
+    int64_t&   to_int() const { return (is_int() ? *this : (*this = 0)).c_obj()->i; }
+    double&    to_float() const { return (is_float() ? *this : (*this = 0.0)).c_obj()->f; }
+    data_ref   to_data() const;
+    string_ref to_string() const;
+    array_ref  to_array() const;
+    map_ref    to_map() const;
 
   private:
+    friend class internal::ptr<value_ref>;
+
     c_obj_type* _c_obj;
 };
 
@@ -157,6 +159,7 @@ class value_cref {
   public:
     using c_obj_type       = const pn_value_t;
     using c_obj_const_type = const pn_value_t;
+    using value_type       = const value;
 
     constexpr explicit value_cref(const c_obj_type* x) : _c_obj{x} {}
     constexpr value_cref(const value_ref& x) : value_cref{x.c_obj()} {}
@@ -193,6 +196,8 @@ class value_cref {
     map_cref          as_map() const;
 
   private:
+    friend class internal::ptr<value_cref>;
+
     c_obj_type* _c_obj;
 };
 
