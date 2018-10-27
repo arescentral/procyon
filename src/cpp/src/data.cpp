@@ -53,7 +53,7 @@ static void resize_data(pn_data_t** d, data::size_type n) {
 }
 
 void data::resize(size_type n) { resize_data(c_obj(), n); }
-void data_ref::resize(size_type n) { resize_data(c_obj(), n); }
+void data_ref::resize(size_type n) const { resize_data(c_obj(), n); }
 
 int data_view::compare(data_view other) const {
     return pn_memncmp(data(), size(), other.data(), other.size());
@@ -63,6 +63,8 @@ file data::open() const { return check_c_obj(file{pn_open_view(data(), size())})
 file data_ref::open() const { return check_c_obj(file{pn_open_view(data(), size())}); }
 file data_view::open() const { return check_c_obj(file{pn_open_view(data(), size())}); }
 file data::open(const char* mode) { return check_c_obj(file{pn_open_data(c_obj(), mode)}); }
-file data_ref::open(const char* mode) { return check_c_obj(file{pn_open_data(c_obj(), mode)}); }
+file data_ref::open(const char* mode) const {
+    return check_c_obj(file{pn_open_data(c_obj(), mode)});
+}
 
 }  // namespace pn

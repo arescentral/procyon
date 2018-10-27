@@ -75,7 +75,7 @@ class iterator {
     using pointer           = typename std::conditional<_is_const::value, _cptr, _ptr>::type;
     using const_pointer     = _ptr;
 
-    iterator(const iterator<typename std::remove_const<Container>::type>& it) : _it{it->c_obj()} {}
+    iterator(const iterator<typename std::remove_const<Container>::type>& it) : _it{it._it} {}
     constexpr explicit iterator(pointer it) : _it{it} {}
 
     reference       operator*() { return *_it; }
@@ -102,6 +102,9 @@ class iterator {
     bool operator>=(iterator other) const { return _it >= other._it; }
 
   private:
+    template <typename C>
+    friend class iterator;
+
     pointer _it;
 };
 
@@ -114,8 +117,8 @@ class ptr {
     using difference_type = std::ptrdiff_t;
 
     ptr(c_obj_type* x) : _ref{x} {}
-    ptr(value_type* x) : _ref{x->c_obj()} {}
-    ptr(reference* x) : _ref{x->c_obj()} {}
+    template <typename T>
+    ptr(T x) : _ref{x->c_obj()} {}
 
     const reference& operator*() const { return _ref; }
     const reference* operator->() const { return &_ref; }
