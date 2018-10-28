@@ -231,4 +231,40 @@ TEST_F(IoTest, WriteLimits) {
     EXPECT_THAT(write(d::quiet_NaN()), Eq(std::string("\177\370\0\0\0\0\0\0", 8)));
 }
 
+TEST_F(IoTest, ReadData) {
+    pn::string_view data{"\001\002\003\004\005\006"};
+    pn::file        f = data.open();
+
+    char d[2];
+    EXPECT_THAT(pn_read(f.c_obj(), "$", (void*)d, (size_t)2), Eq(true));
+    EXPECT_THAT(d[0], Eq(1));
+    EXPECT_THAT(d[1], Eq(2));
+
+    pn::data d2;
+    d2.resize(2);
+    EXPECT_THAT(f.read(&d2), Eq(true));
+    EXPECT_THAT(d2, Eq(pn::string_view{"\003\004"}.as_data()));
+}
+
+TEST_F(IoTest, WriteData) {
+    pn::data data;
+    pn::file f = data.open("w");
+
+    EXPECT_THAT(pn_write(f.c_obj(), "$", "\001\002", (size_t)2), Eq(true));
+    EXPECT_THAT(f.write(pn::string{"\003\004"}.as_data()), Eq(true));
+
+    EXPECT_THAT(data, Eq(pn::string_view{"\001\002\003\004"}.as_data()));
+}
+
+TEST_F(IoTest, WriteString) {
+    pn::string data;
+    pn::file   f = data.open("w");
+
+    EXPECT_THAT(pn_write(f.c_obj(), "S", "\001\002", (size_t)2), Eq(true));
+    EXPECT_THAT(pn_write(f.c_obj(), "s", "\003\004"), Eq(true));
+    EXPECT_THAT(f.write(pn::string_view{"\005\006"}), Eq(true));
+
+    EXPECT_THAT(data, Eq(pn::string_view{"\001\002\003\004\005\006"}));
+}
+
 }  // namespace pntest
