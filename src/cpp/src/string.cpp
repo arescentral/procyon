@@ -107,15 +107,15 @@ int string_view::compare(pn::string_view other) const {
     return pn_memncmp(data(), size(), other.data(), other.size());
 }
 
-bool partition(string_view& found, string_view separator, string_view& input) {
-    string_view::size_type at = input.find(separator);
+bool partition(string_view* found, string_view separator, string_view* input) {
+    string_view::size_type at = input->find(separator);
     if (at < 0) {
-        found = input;
-        input = string_view{};
+        *found = *input;
+        *input = string_view{};
         return false;
     }
-    found = input.substr(0, at);
-    input = input.substr(at + separator.size());
+    *found = input->substr(0, at);
+    *input = input->substr(at + separator.size());
     return true;
 }
 

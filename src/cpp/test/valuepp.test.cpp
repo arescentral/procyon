@@ -374,17 +374,17 @@ TEST_F(ValueppTest, Partition) {
     pn::string_view s = "http://arescentral.org/antares/contributing/";
 
     pn::string_view scheme;
-    ASSERT_THAT(partition(scheme, "//", s), Eq(true));
+    ASSERT_THAT(partition(&scheme, "//", &s), Eq(true));
     EXPECT_THAT(scheme, Eq("http:"));
     EXPECT_THAT(s, Eq("arescentral.org/antares/contributing/"));
 
     pn::string_view host;
-    ASSERT_THAT(partition(host, "/", s), Eq(true));
+    ASSERT_THAT(partition(&host, "/", &s), Eq(true));
     EXPECT_THAT(host, Eq("arescentral.org"));
     EXPECT_THAT(s, Eq("antares/contributing/"));
 
     pn::string_view path;
-    ASSERT_THAT(partition(path, "#", s), Eq(false));
+    ASSERT_THAT(partition(&path, "#", &s), Eq(false));
     EXPECT_THAT(path, Eq("antares/contributing/"));
     EXPECT_THAT(s, Eq(""));
 }

@@ -293,7 +293,7 @@ class string_view {
     size_type   _size;
 };
 
-bool partition(string_view& found, string_view separator, string_view& input);
+bool partition(string_view* found, string_view separator, string_view* input);
 bool strtoll(string_view s, int64_t* i, pn_error_code_t* error);
 bool strtod(string_view s, double* f, pn_error_code_t* error);
 
