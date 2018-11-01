@@ -16,7 +16,7 @@
 #ifndef PN_MAP_
 #define PN_MAP_
 
-#include <procyon.h>
+#include <pn/procyon.h>
 #include <initializer_list>
 #include <pn/string>
 #include <pn/value>

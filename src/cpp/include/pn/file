@@ -16,7 +16,7 @@
 #ifndef PN_FILE_
 #define PN_FILE_
 
-#include <procyon.h>
+#include <pn/procyon.h>
 #include <pn/arg>
 #include <pn/array>
 #include <pn/data>

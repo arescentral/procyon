@@ -13,7 +13,7 @@
 // limitations under the License.
 
 #include <gmock/gmock.h>
-#include <procyon.h>
+#include <pn/procyon.h>
 #include <cmath>
 #include <limits>
 #include <pn/string>

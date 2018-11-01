@@ -16,7 +16,7 @@
 #ifndef PN_ARRAY_
 #define PN_ARRAY_
 
-#include <procyon.h>
+#include <pn/procyon.h>
 #include <initializer_list>
 #include <pn/fwd>
 #include <pn/value>

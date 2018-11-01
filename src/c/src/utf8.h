@@ -15,7 +15,7 @@
 #ifndef PROCYON_UTF8_H_
 #define PROCYON_UTF8_H_
 
-#include <procyon.h>
+#include <pn/procyon.h>
 #include <sys/types.h>
 
 #ifdef __cplusplus

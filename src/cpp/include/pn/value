@@ -16,7 +16,7 @@
 #ifndef PN_VALUE_
 #define PN_VALUE_
 
-#include <procyon.h>
+#include <pn/procyon.h>
 #include <pn/fwd>
 
 namespace pn {

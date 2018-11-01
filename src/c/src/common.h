@@ -15,7 +15,7 @@
 #ifndef PROCYON_COMMON_H_
 #define PROCYON_COMMON_H_
 
-#include <procyon.h>
+#include <pn/procyon.h>
 
 #ifdef __cplusplus
 extern "C" {

@@ -16,7 +16,7 @@
 #ifndef PN_STRING_
 #define PN_STRING_
 
-#include <procyon.h>
+#include <pn/procyon.h>
 #include <string.h>
 #include <pn/fwd>
 #include <pn/value>

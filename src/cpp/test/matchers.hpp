@@ -15,7 +15,7 @@
 #ifndef TEST_MATCHERS_HPP_
 #define TEST_MATCHERS_HPP_
 
-#include <procyon.h>
+#include <pn/procyon.h>
 #include <cmath>
 #include <pn/array>
 #include <pn/data>

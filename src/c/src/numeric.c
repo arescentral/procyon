@@ -13,7 +13,7 @@
 // limitations under the License.
 
 #include <ctype.h>
-#include <procyon.h>
+#include <pn/procyon.h>
 #include <stdlib.h>
 #include <string.h>
 

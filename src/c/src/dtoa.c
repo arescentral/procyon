@@ -78,7 +78,7 @@
 // #define IEEE_MC68k for IEEE-arithmetic machines where the most
 //      significant byte has the lowest address.
 
-#include <procyon.h>
+#include <pn/procyon.h>
 
 #include <errno.h>
 #include <fenv.h>

@@ -15,7 +15,7 @@
 #ifndef PROCYON_LEX_H_
 #define PROCYON_LEX_H_
 
-#include <procyon.h>
+#include <pn/procyon.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>

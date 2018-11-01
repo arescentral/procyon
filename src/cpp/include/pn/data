@@ -16,7 +16,7 @@
 #ifndef PN_DATA_
 #define PN_DATA_
 
-#include <procyon.h>
+#include <pn/procyon.h>
 #include <pn/fwd>
 #include <pn/value>
 

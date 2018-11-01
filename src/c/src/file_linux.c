@@ -13,7 +13,7 @@
 // limitations under the License.
 
 #define _GNU_SOURCE
-#include <procyon.h>
+#include <pn/procyon.h>
 
 #include <ctype.h>
 #include <errno.h>
