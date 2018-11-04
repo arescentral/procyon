@@ -353,7 +353,7 @@ TEST_F(ValueppTest, MapModify) {
     EXPECT_THAT(x.has("four"), Eq(true));
 
     pn::value one;
-    EXPECT_THAT(x.pop("one", one), Eq(true));
+    EXPECT_THAT(x.pop("one", &one), Eq(true));
     EXPECT_THAT(one, IsInt(1));
     EXPECT_THAT(x.size(), Eq(2));
     EXPECT_THAT(x.has("one"), Eq(false));

@@ -182,8 +182,8 @@ class map {
         pn_mapset(c_obj(), 'S', 'X', k.data(), k.size(), x.c_obj());
     }
     void del(string_view k) { pn_mapdel(c_obj(), 'S', k.data(), k.size()); }
-    bool pop(string_view k, value_ref x) {
-        return pn_mappop(c_obj(), x.c_obj(), 'S', k.data(), k.size());
+    bool pop(string_view k, value_ptr x) {
+        return pn_mappop(c_obj(), x->c_obj(), 'S', k.data(), k.size());
     }
 
     void clear() { internal::map_clear(*c_obj()); }
@@ -245,8 +245,8 @@ class map_ref {
         pn_mapset(c_obj(), 'S', 'X', k.data(), k.size(), x.c_obj());
     }
     void del(string_view k) { pn_mapdel(c_obj(), 'S', k.data(), k.size()); }
-    bool pop(string_view k, value_ref x) {
-        return pn_mappop(c_obj(), x.c_obj(), 'S', k.data(), k.size());
+    bool pop(string_view k, value_ptr x) {
+        return pn_mappop(c_obj(), x->c_obj(), 'S', k.data(), k.size());
     }
 
     void clear() { internal::map_clear(*c_obj()); }
