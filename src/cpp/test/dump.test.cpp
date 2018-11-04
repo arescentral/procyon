@@ -486,11 +486,11 @@ TEST_F(DumpTest, CFailure) {
 
 TEST_F(DumpTest, CppFailure) {
     pn::string_view ro = "";
-    EXPECT_THAT(pn::dump(ro.open(), nullptr, pn::dump_default), Eq(false));
-    EXPECT_THAT(pn::dump(ro.open(), true, pn::dump_default), Eq(false));
-    EXPECT_THAT(pn::dump(ro.open(), false, pn::dump_default), Eq(false));
-    EXPECT_THAT(pn::dump(ro.open(), 1, pn::dump_default), Eq(false));
-    EXPECT_THAT(pn::dump(ro.open(), 1.0, pn::dump_default), Eq(false));
+    EXPECT_THAT(ro.open().dump(nullptr, pn::dump_default), Eq(false));
+    EXPECT_THAT(ro.open().dump(true, pn::dump_default), Eq(false));
+    EXPECT_THAT(ro.open().dump(false, pn::dump_default), Eq(false));
+    EXPECT_THAT(ro.open().dump(1, pn::dump_default), Eq(false));
+    EXPECT_THAT(ro.open().dump(1.0, pn::dump_default), Eq(false));
 }
 
 }  // namespace pntest

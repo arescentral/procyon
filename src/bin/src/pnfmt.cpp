@@ -105,13 +105,13 @@ void main(int argc, char* const* argv) {
     argv += optind;
 
     if (in_place && !output.is_null()) {
-        pn::format(stderr, "{0}: --in-place conflicts with --output\n", progname);
+        pn::file_view{stderr}.format("{0}: --in-place conflicts with --output\n", progname);
         exit(64);
     } else if (in_place && (argc == 0)) {
-        pn::format(stderr, "{0}: --in-place requires an input path\n", progname);
+        pn::file_view{stderr}.format("{0}: --in-place requires an input path\n", progname);
         exit(64);
     } else if (!output.is_null() && (argc > 1)) {
-        pn::format(stderr, "{0}: --output requires at most one input path\n", progname);
+        pn::file_view{stderr}.format("{0}: --output requires at most one input path\n", progname);
         exit(64);
     }
 
@@ -124,7 +124,7 @@ void main(int argc, char* const* argv) {
             try {
                 f = pn::open(path, "r").check();
             } catch (std::runtime_error& e) {
-                pn::format(stderr, "{0}: {1}: {2}\n", progname, path, e.what());
+                pn::file_view{stderr}.format("{0}: {1}: {2}\n", progname, path, e.what());
                 exit(64);
             }
             format_file(path, f, dump, in_place, output);
@@ -148,15 +148,14 @@ static void format_file(
     set_indent(&roots, 0);
     set_column(&roots);
     if (dump) {
-        pn::dump(stdout, repr(roots));
+        pn::file_view{stdout}.dump(repr(roots));
     } else {
         output_tokens(roots, in_place, path, output);
     }
 }
 
 static void usage(pn::file_view out, int status) {
-    pn::format(
-            out,
+    pn::file_view{out}.format(
             "usage: {0} [-i | -o OUT] [IN]\n"
             "\n"
             "options:\n"
@@ -209,7 +208,7 @@ static void output_tokens(
         {
             int fd = mkstemp(tmp.data());
             if (fd < 0) {
-                pn::format(stderr, "{0}: {1}: {2}\n", progname, tmp, strerror(errno));
+                pn::file_view{stderr}.format("{0}: {1}: {2}\n", progname, tmp, strerror(errno));
                 exit(1);
             }
             pn::file out(fdopen(fd, "w"));
@@ -217,7 +216,7 @@ static void output_tokens(
             out.write('\n').check();
         }
         if (rename(tmp.c_str(), path.copy().c_str()) < 0) {
-            pn::format(stderr, "{0}: {1}: {2}\n", progname, path, strerror(errno));
+            pn::file_view{stderr}.format("{0}: {1}: {2}\n", progname, path, strerror(errno));
             unlink(tmp.c_str());
             exit(1);
         }
@@ -226,7 +225,8 @@ static void output_tokens(
         try {
             out = pn::open(output.as_string(), "w").check();
         } catch (std::runtime_error& e) {
-            pn::format(stderr, "{0}: {1}: {2}\n", progname, output.as_string(), e.what());
+            pn::file_view{stderr}.format(
+                    "{0}: {1}: {2}\n", progname, output.as_string(), e.what());
             exit(1);
         }
         format_tokens(roots, out, &lineno, 0, 0);
@@ -277,9 +277,9 @@ static void lex_block(
                 continue;
 
             case PN_TOK_ERROR:
-                pn::format(
-                        stderr, "{0}:{1}:{2}: {3}\n", path.copy().c_str(), lex->lineno(),
-                        lex->column(), pn_strerror(error.code));
+                pn::file_view{stderr}.format(
+                        "{0}:{1}:{2}: {3}\n", path.copy().c_str(), lex->lineno(), lex->column(),
+                        pn_strerror(error.code));
                 break;
 
             default: break;
@@ -838,7 +838,7 @@ static void format_tokens(
 }
 
 void print_nested_exception(const std::exception& e) {
-    pn::format(stderr, ": {0}", e.what());
+    pn::file_view{stderr}.format(": {0}", e.what());
     try {
         std::rethrow_if_nested(e);
     } catch (const std::exception& e) {
@@ -847,13 +847,13 @@ void print_nested_exception(const std::exception& e) {
 }
 
 void print_exception(const std::exception& e) {
-    pn::format(stderr, "{0}: {1}", progname, e.what());
+    pn::file_view{stderr}.format("{0}: {1}", progname, e.what());
     try {
         std::rethrow_if_nested(e);
     } catch (const std::exception& e) {
         print_nested_exception(e);
     }
-    pn::format(stderr, "\n");
+    pn::file_view{stderr}.format("\n");
 }
 
 }  // namespace

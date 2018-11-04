@@ -55,8 +55,7 @@ void dump_minified_json(pn::file_view out, parser* prs, pn_error_t* error);
 void dump_json_root(pn::file_view out, parser* prs, pn_error_t* error);
 
 void usage(pn::file_view out, int status) {
-    pn::format(
-            out,
+    pn::file_view{out}.format(
             "usage: {0} [options] [FILE.pn]\n"
             "\n"
             "options:\n"
@@ -137,8 +136,8 @@ void nl_indent(pn::file_view out, int depth) {
 void dump_float(pn::file_view out, double f) {
     switch (std::fpclassify(f)) {
         case FP_NAN: out.write("null").check(); break;
-        case FP_INFINITE: pn::format(stdout, "{0}1e999", (f < 0) ? "-" : ""); break;
-        default: pn::dump(stdout, f, pn::dump_short); break;
+        case FP_INFINITE: pn::file_view{stdout}.format("{0}1e999", (f < 0) ? "-" : ""); break;
+        default: pn::file_view{stdout}.dump(f, pn::dump_short); break;
     }
 }
 
@@ -146,7 +145,7 @@ void dump_data(pn::file_view out, pn::data_view d) {
     static const char hex[] = "0123456789abcdef";
     out.write('"').check();
     for (int i = 0; i < d.size(); ++i) {
-        format(out, "{0}{1}", hex[(0xf0 & d[i]) >> 4], hex[0x0f & d[i]]);
+        out.format("{0}{1}", hex[(0xf0 & d[i]) >> 4], hex[0x0f & d[i]]);
     }
     out.write('"').check();
 }
@@ -218,7 +217,7 @@ void dump_token(pn::file_view out, pn_event_type_t t, pn::value_cref x) {
     switch (t) {
         case PN_EVT_NULL:
         case PN_EVT_BOOL:
-        case PN_EVT_INT: pn::dump(out, x, pn::dump_short); break;
+        case PN_EVT_INT: out.dump(x, pn::dump_short); break;
         case PN_EVT_FLOAT: dump_float(out, x.as_float()); break;
         case PN_EVT_DATA: dump_data(out, x.as_data()); break;
         case PN_EVT_STRING: dump_string(out, x.as_string()); break;
@@ -386,7 +385,7 @@ void dump_comma_first_json(pn::file_view out, parser* prs, pn_error_t* error) {
 }
 
 void print_nested_exception(const std::exception& e) {
-    pn::format(stderr, ": {0}", e.what());
+    pn::file_view{stderr}.format(": {0}", e.what());
     try {
         std::rethrow_if_nested(e);
     } catch (const std::exception& e) {
@@ -395,13 +394,13 @@ void print_nested_exception(const std::exception& e) {
 }
 
 void print_exception(const std::exception& e) {
-    pn::format(stderr, "{0}: {1}", progname, e.what());
+    pn::file_view{stderr}.format("{0}: {1}", progname, e.what());
     try {
         std::rethrow_if_nested(e);
     } catch (const std::exception& e) {
         print_nested_exception(e);
     }
-    pn::format(stderr, "\n");
+    pn::file_view{stderr}.format("\n");
 }
 
 }  // namespace

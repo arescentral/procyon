@@ -56,6 +56,12 @@ class file {
     template <typename... arguments>
     file& write(const arguments&... args);
 
+    template <typename argument>
+    file& dump(const argument& x, int flags = dump_default);
+
+    template <typename... arguments>
+    file& format(const char* fmt, const arguments&... arg);
+
     bool error() const { return ferror(c_obj()); }
     bool eof() const { return feof(c_obj()); }
 
@@ -82,6 +88,12 @@ class file_view {
     template <typename... arguments>
     file_view& write(const arguments&... args);
 
+    template <typename argument>
+    file_view& dump(const argument& x, int flags = dump_default);
+
+    template <typename... arguments>
+    file_view& format(const char* fmt, const arguments&... arg);
+
     bool error() const { return ferror(c_obj()); }
     bool eof() const { return feof(c_obj()); }
 
@@ -96,13 +108,7 @@ class file_view {
 [[clang::warn_unused_result]] bool parse(file_view in, value_ptr out, pn_error_t* error);
 
 template <typename... args>
-file_view format(file_view out, const char* fmt, const args&... arg);
-
-template <typename... args>
 [[clang::warn_unused_result]] string format(const char* fmt, const args&... arg);
-
-template <typename arg>
-file_view dump(file_view out, const arg& x, int flags = dump_default);
 
 template <typename arg>
 [[clang::warn_unused_result]] string dump(const arg& x, int flags = dump_default);
@@ -157,32 +163,16 @@ void read(file_view file, const char* format, const tuple& args) {
 }  // namespace internal
 
 template <typename... args>
-file_view format(file_view out, const char* fmt, const args&... arg) {
-    internal::format(
-            out, fmt, (char[]){internal::arg<typename std::decay<args>::type>::code..., '\0'},
-            std::tuple_cat(internal::arg<typename std::decay<args>::type>::write_args(arg)...));
-    return out;
-}
-
-template <typename... args>
 string format(const char* fmt, const args&... arg) {
     string out;
-    format(out.open("w").check(), fmt, std::forward<const args&>(arg)...).check();
-    return out;
-}
-
-template <typename arg>
-file_view dump(file_view out, const arg& x, int flags) {
-    internal::dump(
-            out, flags, internal::arg<typename std::decay<arg>::type>::code,
-            internal::arg<typename std::decay<arg>::type>::write_args(x));
+    out.open("w").check().format(fmt, std::forward<const args&>(arg)...).check();
     return out;
 }
 
 template <typename arg>
 string dump(const arg& x, int flags) {
     string out;
-    dump(out.open("w").check(), x, flags).check();
+    out.open("w").check().dump(x, flags).check();
     return out;
 }
 
@@ -216,6 +206,38 @@ template <typename... args>
 file_view& file_view::write(const args&... arg) {
     internal::write(
             *this, (char[]){internal::arg<typename std::decay<args>::type>::code..., '\0'},
+            std::tuple_cat(internal::arg<typename std::decay<args>::type>::write_args(arg)...));
+    return *this;
+}
+
+template <typename arg>
+file& file::dump(const arg& x, int flags) {
+    internal::dump(
+            *this, flags, internal::arg<typename std::decay<arg>::type>::code,
+            internal::arg<typename std::decay<arg>::type>::write_args(x));
+    return *this;
+}
+
+template <typename arg>
+file_view& file_view::dump(const arg& x, int flags) {
+    internal::dump(
+            *this, flags, internal::arg<typename std::decay<arg>::type>::code,
+            internal::arg<typename std::decay<arg>::type>::write_args(x));
+    return *this;
+}
+
+template <typename... args>
+file& file::format(const char* fmt, const args&... arg) {
+    internal::format(
+            *this, fmt, (char[]){internal::arg<typename std::decay<args>::type>::code..., '\0'},
+            std::tuple_cat(internal::arg<typename std::decay<args>::type>::write_args(arg)...));
+    return *this;
+}
+
+template <typename... args>
+file_view& file_view::format(const char* fmt, const args&... arg) {
+    internal::format(
+            *this, fmt, (char[]){internal::arg<typename std::decay<args>::type>::code..., '\0'},
             std::tuple_cat(internal::arg<typename std::decay<args>::type>::write_args(arg)...));
     return *this;
 }
