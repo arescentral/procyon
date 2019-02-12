@@ -15,7 +15,7 @@ matrix:
         - "TEST=out/cur/procyon-cpp-test"
 
     - os:        linux
-      dist:      trusty
+      dist:      xenial
       install:   sudo apt-get install python3-pip && pip3 install --user pytest pygments
 
 script: ./configure && make && $TEST
