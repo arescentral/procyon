@@ -131,7 +131,7 @@ file string::open() const { return check_c_obj(file{pn_open_view(data(), size())
 file string_ref::open() const { return check_c_obj(file{pn_open_view(data(), size())}); }
 file string_view::open() const { return check_c_obj(file{pn_open_view(data(), size())}); }
 file string::open(const char* mode) { return check_c_obj(file{pn_open_string(c_obj(), mode)}); }
-file string_ref::open(const char* mode) {
+file string_ref::open(const char* mode) const {
     return check_c_obj(file{pn_open_string(c_obj(), mode)});
 }
 

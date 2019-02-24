@@ -211,21 +211,20 @@ class string_ref {
     string_ref& operator=(const string_ref&) = delete;
     string_ref& operator=(string_ref&&) = delete;
 
-    string_ref& operator=(string x) { return std::swap(*c_obj(), *x.c_obj()), *this; }
+    const string_ref& operator=(string x) const { return std::swap(*c_obj(), *x.c_obj()), *this; }
 
-    bool        empty() const { return size() == 0; }
-    size_type   size() const { return (*c_obj())->count - 1; }
-    char*       data() { return (*c_obj())->values; }
-    const char* data() const { return (*c_obj())->values; }
-    data_view   as_data() const;
-    string      copy() const { return string(pn_strdup(*c_obj())); }
-    int         compare(string_view other) const;
+    bool      empty() const { return size() == 0; }
+    size_type size() const { return (*c_obj())->count - 1; }
+    char*     data() const { return (*c_obj())->values; }
+    data_view as_data() const;
+    string    copy() const { return string(pn_strdup(*c_obj())); }
+    int       compare(string_view other) const;
 
-    string_ref& operator+=(string_view s);
-    void        append(const char* data, size_type size) { pn_strncat(c_obj(), data, size); }
-    void        replace(size_type at, size_type size, string_view replacement);
+    const string_ref& operator+=(string_view s) const;
+    void append(const char* data, size_type size) const { pn_strncat(c_obj(), data, size); }
+    void replace(size_type at, size_type size, string_view replacement) const;
 
-    void clear() { (*c_obj())->count = 1, (*c_obj())->values[0] = '\0'; }
+    void clear() const { (*c_obj())->count = 1, (*c_obj())->values[0] = '\0'; }
 
     string_view substr(size_type offset) const;
     string_view substr(size_type offset, size_type size) const;
@@ -235,16 +234,15 @@ class string_ref {
     iterator  begin() const { return iterator{data(), size(), 0}; }
     iterator  end() const { return iterator{data(), size(), size()}; }
 
-    void swap(string& other) noexcept { std::swap(*c_obj(), *other.c_obj()); }
-    void swap(string&& other) noexcept { std::swap(*c_obj(), *other.c_obj()); }
+    void swap(string& other) const noexcept { std::swap(*c_obj(), *other.c_obj()); }
+    void swap(string&& other) const noexcept { std::swap(*c_obj(), *other.c_obj()); }
 
     file open() const;
-    file open(const char* mode);
+    file open(const char* mode) const;
 
-    const char*             c_str() const { return data(); }
-    std::string             cpp_str() const { return std::string(data(), size()); }
-    c_obj_type*&            c_obj() { return _c_obj; }
-    c_obj_const_type const* c_obj() const { return _c_obj; }
+    const char* c_str() const { return data(); }
+    std::string cpp_str() const { return std::string(data(), size()); }
+    c_obj_type* c_obj() const { return _c_obj; }
 
   private:
     c_obj_type* _c_obj;
@@ -299,8 +297,8 @@ bool strtod(string_view s, double* f, pn_error_code_t* error);
 
 inline string rune::copy() const { return string_view{*this}.copy(); }
 
-inline string& string::operator+=(string_view s) { return append(s.data(), s.size()), *this; }
-inline string_ref& string_ref::operator+=(string_view s) {
+inline string& string::  operator+=(string_view s) { return append(s.data(), s.size()), *this; }
+inline const string_ref& string_ref::operator+=(string_view s) const {
     return append(s.data(), s.size()), *this;
 }
 
@@ -326,7 +324,7 @@ inline string_view string_view::substr(size_type offset, size_type size) const {
 inline void string::replace(size_type at, size_type size, string_view replacement) {
     pn_strreplace(c_obj(), at, size, replacement.data(), replacement.size());
 }
-inline void string_ref::replace(size_type at, size_type size, string_view replacement) {
+inline void string_ref::replace(size_type at, size_type size, string_view replacement) const {
     pn_strreplace(c_obj(), at, size, replacement.data(), replacement.size());
 }
 

@@ -111,44 +111,39 @@ class array_ref {
     array_ref& operator=(const array_ref&) = delete;
     array_ref& operator=(array_ref&&) = delete;
 
-    array_ref& operator=(array x) { return std::swap(*c_obj(), *x.c_obj()), *this; }
+    const array_ref& operator=(array x) const { return std::swap(*c_obj(), *x.c_obj()), *this; }
 
-    bool              empty() const { return size() == 0; }
-    size_type         size() const { return (*c_obj())->count; }
-    pn_value_t*       data() { return &(*c_obj())->values[0]; }
-    pn_value_t const* data() const { return &(*c_obj())->values[0]; }
-    array             copy() const { return array(pn_arraydup(*c_obj())); }
-    int               compare(array_cref other) const;
+    bool        empty() const { return size() == 0; }
+    size_type   size() const { return (*c_obj())->count; }
+    pn_value_t* data() const { return &(*c_obj())->values[0]; }
+    array       copy() const { return array(pn_arraydup(*c_obj())); }
+    int         compare(array_cref other) const;
 
-    void clear() { resize(0); }
-    void insert(const_iterator at, value x) { pn_arrayins(c_obj(), at - begin(), 'X', x.c_obj()); }
-    void erase(const_iterator at);
-    void push_back(value x) { insert(end(), std::move(x)); }
-    value pop_back() { return value{data()[--(*c_obj())->count]}; }
-    void  resize(size_type n) { pn_arrayresize(c_obj(), n); }
+    void clear() const { resize(0); }
+    void insert(const_iterator at, value x) const {
+        pn_arrayins(c_obj(), at - begin(), 'X', x.c_obj());
+    }
+    void  erase(const_iterator at) const;
+    void  push_back(value x) const { insert(end(), std::move(x)); }
+    value pop_back() const { return value{data()[--(*c_obj())->count]}; }
+    void  resize(size_type n) const { pn_arrayresize(c_obj(), n); }
 
-    void reserve(size_type n);
-    void shrink_to_fit();
+    void reserve(size_type n) const;
+    void shrink_to_fit() const;
 
-    reference       operator[](size_type index) { return reference{data() + index}; }
-    const_reference operator[](size_type index) const { return const_reference{data() + index}; }
+    reference operator[](size_type index) const { return reference{data() + index}; }
 
-    reference       front() { return operator[](0); }
-    const_reference front() const { return operator[](0); }
-    reference       back() { return operator[](size() - 1); }
-    const_reference back() const { return operator[](size() - 1); }
+    reference front() const { return operator[](0); }
+    reference back() const { return operator[](size() - 1); }
 
     size_type capacity() const {
         return ((*c_obj())->size - sizeof(pn_array_t)) / sizeof(pn_value_t);
     }
 
-    iterator       begin() { return iterator{data()}; }
-    const_iterator begin() const { return const_iterator{data()}; }
-    iterator       end() { return iterator{data() + size()}; }
-    const_iterator end() const { return const_iterator{data() + size()}; }
+    iterator begin() const { return iterator{data()}; }
+    iterator end() const { return iterator{data() + size()}; }
 
-    c_obj_type*&            c_obj() { return _c_obj; }
-    c_obj_const_type const* c_obj() const { return _c_obj; }
+    c_obj_type* c_obj() const { return _c_obj; }
 
   private:
     c_obj_type* _c_obj;
@@ -192,8 +187,7 @@ class array_cref {
     const_iterator begin() const { return const_iterator{data()}; }
     const_iterator end() const { return const_iterator{data() + size()}; }
 
-    c_obj_type const*&      c_obj() { return _c_obj; }
-    c_obj_const_type const* c_obj() const { return _c_obj; }
+    c_obj_type const* c_obj() const { return _c_obj; }
 
   private:
     const c_obj_type* _c_obj;
@@ -203,7 +197,7 @@ inline void array::erase(const_iterator at) {
     size_type index = at - begin();
     pn_arraydel(c_obj(), index);
 }
-inline void array_ref::erase(const_iterator at) {
+inline void array_ref::erase(const_iterator at) const {
     size_type index = at - begin();
     pn_arraydel(c_obj(), index);
 }

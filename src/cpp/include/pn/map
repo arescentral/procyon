@@ -227,41 +227,37 @@ class map_ref {
     map_ref& operator=(const map_ref&) = delete;
     map_ref& operator=(map_ref&&) = delete;
 
-    map_ref& operator=(map x) { return std::swap(*c_obj(), *x.c_obj()), *this; }
+    const map_ref& operator=(map x) const { return std::swap(*c_obj(), *x.c_obj()), *this; }
 
-    bool                                  empty() const { return size() == 0; }
-    size_type                             size() const { return (*c_obj())->count; }
-    typename reference::c_obj_type*       data() { return (*c_obj())->values; }
-    typename reference::c_obj_const_type* data() const { return (*c_obj())->values; }
-    map                                   copy() const { return map(pn_mapdup(*c_obj())); }
-    int                                   compare(map_cref other) const;
+    bool                            empty() const { return size() == 0; }
+    size_type                       size() const { return (*c_obj())->count; }
+    typename reference::c_obj_type* data() const { return (*c_obj())->values; }
+    map                             copy() const { return map(pn_mapdup(*c_obj())); }
+    int                             compare(map_cref other) const;
 
-    value_ref operator[](string_view k) {
+    value_ref operator[](string_view k) const {
         return internal::map_force(c_obj(), k.data(), k.size());
     }
     bool has(string_view k) const { return pn_mapget_const(*c_obj(), 'S', k.data(), k.size()); }
     value_cref get(string_view k) const { return internal::map_get(*c_obj(), k.data(), k.size()); }
-    void       set(string_view k, value x) {
+    void       set(string_view k, value x) const {
         pn_mapset(c_obj(), 'S', 'X', k.data(), k.size(), x.c_obj());
     }
-    void del(string_view k) { pn_mapdel(c_obj(), 'S', k.data(), k.size()); }
-    bool pop(string_view k, value_ptr x) {
+    void del(string_view k) const { pn_mapdel(c_obj(), 'S', k.data(), k.size()); }
+    bool pop(string_view k, value_ptr x) const {
         return pn_mappop(c_obj(), x->c_obj(), 'S', k.data(), k.size());
     }
 
-    void clear() { internal::map_clear(*c_obj()); }
+    void clear() const { internal::map_clear(*c_obj()); }
 
     size_type capacity() const;
-    void      reserve(size_type n);
-    void      shrink_to_fit();
+    void      reserve(size_type n) const;
+    void      shrink_to_fit() const;
 
-    iterator       begin() { return iterator{data()}; }
-    iterator       end() { return iterator{data() + size()}; }
-    const_iterator begin() const { return const_iterator{data()}; }
-    const_iterator end() const { return const_iterator{data() + size()}; }
+    iterator begin() const { return iterator{data()}; }
+    iterator end() const { return iterator{data() + size()}; }
 
-    c_obj_type*&            c_obj() { return _c_obj; }
-    c_obj_const_type const* c_obj() const { return _c_obj; }
+    c_obj_type* c_obj() const { return _c_obj; }
 
   private:
     c_obj_type* _c_obj;
@@ -289,12 +285,11 @@ class map_cref {
     map_cref& operator=(const map_cref&) = delete;
     map_cref& operator=(map_cref&&) = delete;
 
-    bool                                  empty() const { return size() == 0; }
-    size_type                             size() const { return (*c_obj())->count; }
-    typename reference::c_obj_type*       data() { return (*c_obj())->values; }
-    typename reference::c_obj_const_type* data() const { return (*c_obj())->values; }
-    map                                   copy() const { return map(pn_mapdup(*c_obj())); }
-    int                                   compare(map_cref other) const;
+    bool                            empty() const { return size() == 0; }
+    size_type                       size() const { return (*c_obj())->count; }
+    typename reference::c_obj_type* data() const { return (*c_obj())->values; }
+    map                             copy() const { return map(pn_mapdup(*c_obj())); }
+    int                             compare(map_cref other) const;
 
     bool has(string_view k) const { return pn_mapget_const(*c_obj(), 'S', k.data(), k.size()); }
     value_cref get(string_view k) const { return internal::map_get(*c_obj(), k.data(), k.size()); }
@@ -304,8 +299,7 @@ class map_cref {
     const_iterator begin() const { return const_iterator{data()}; }
     const_iterator end() const { return const_iterator{data() + size()}; }
 
-    c_obj_type const*&      c_obj() { return _c_obj; }
-    c_obj_const_type const* c_obj() const { return _c_obj; }
+    c_obj_type const* c_obj() const { return _c_obj; }
 
   private:
     const c_obj_type* _c_obj;
