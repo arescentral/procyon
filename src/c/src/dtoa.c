@@ -84,6 +84,7 @@
 #include <fenv.h>
 #include <float.h>
 #include <math.h>
+#include <pthread.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -673,9 +674,19 @@ typedef struct ThInfo {
     Bigint* P5s;
 } ThInfo;
 
+static pthread_key_t  ti_key;
+static pthread_once_t ti_once;
+static void ti_init() { pthread_key_create(&ti_key, free); }
+
 static ThInfo* get_TI(void) {
-    static __thread ThInfo ti;
-    return &ti;
+    pthread_once(&ti_once, ti_init);
+    ThInfo* ti = pthread_getspecific(ti_key);
+    if (!ti) {
+        ti = malloc(sizeof(ThInfo));
+        memset(ti, 0, sizeof(ThInfo));
+        pthread_setspecific(ti_key, ti);
+    }
+    return ti;
 }
 
 static Bigint* Balloc(int k, ThInfo** PTI) {
