@@ -63,7 +63,9 @@ executable("procyon-cpp-test") {
     "test/utf8.test.cpp",
     "test/value.test.cpp",
   ]
-  if (target_os != "win") {
+  if (target_os == "win") {
+    output_extension = "exe"
+  } else {
     sources += [
       "test/dump.test.cpp",
       "test/file.test.cpp",
