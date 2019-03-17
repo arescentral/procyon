@@ -25,8 +25,6 @@ static_library("procyon") {
     "src/gen_table.c",
     "src/gen_table.h",
     "src/io.c",
-    "src/lex.c",
-    "src/lex.h",
     "src/numeric.c",
     "src/numeric.h",
     "src/parse.c",
@@ -36,6 +34,12 @@ static_library("procyon") {
     "src/utf8.h",
     "src/vector.h",
   ]
+  if (target_os != "win") {
+    sources += [
+      "src/lex.c",
+      "src/lex.h",
+    ]
+  }
 
   if (target_os == "mac") {
     sources += [ "src/file_mac.c" ]
