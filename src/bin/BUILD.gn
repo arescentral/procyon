@@ -27,56 +27,58 @@ config("procyon_private") {
   ]
 }
 
-executable("pnfmt") {
-  sources = [
-    "src/pnfmt.cpp",
-  ]
-  deps = [
-    ":cpp",
-    "../cpp:procyon-cpp",
-  ]
-  configs += [ ":procyon_private" ]
-}
+if (target_os != "win") {
+  executable("pnfmt") {
+    sources = [
+      "src/pnfmt.cpp",
+    ]
+    deps = [
+      ":cpp",
+      "../cpp:procyon-cpp",
+    ]
+    configs += [ ":procyon_private" ]
+  }
 
-executable("pn2json") {
-  sources = [
-    "src/pn2json.cpp",
-  ]
-  deps = [
-    ":cpp",
-    "../cpp:procyon-cpp",
-  ]
-  configs += [ ":procyon_private" ]
-}
+  executable("pn2json") {
+    sources = [
+      "src/pn2json.cpp",
+    ]
+    deps = [
+      ":cpp",
+      "../cpp:procyon-cpp",
+    ]
+    configs += [ ":procyon_private" ]
+  }
 
-executable("pntok") {
-  sources = [
-    "src/pntok.c",
-  ]
-  deps = [
-    "../c:procyon",
-  ]
-  configs += [ ":procyon_private" ]
-}
+  executable("pntok") {
+    sources = [
+      "src/pntok.c",
+    ]
+    deps = [
+      "../c:procyon",
+    ]
+    configs += [ ":procyon_private" ]
+  }
 
-executable("pnparse") {
-  sources = [
-    "src/pnparse.c",
-  ]
-  deps = [
-    "../c:procyon",
-  ]
-  configs += [ ":procyon_private" ]
-}
+  executable("pnparse") {
+    sources = [
+      "src/pnparse.c",
+    ]
+    deps = [
+      "../c:procyon",
+    ]
+    configs += [ ":procyon_private" ]
+  }
 
-executable("pndump") {
-  sources = [
-    "src/pndump.cpp",
-  ]
-  deps = [
-    "../cpp:procyon-cpp",
-  ]
-  configs += [ ":procyon_private" ]
+  executable("pndump") {
+    sources = [
+      "src/pndump.cpp",
+    ]
+    deps = [
+      "../cpp:procyon-cpp",
+    ]
+    configs += [ ":procyon_private" ]
+  }
 }
 
 static_library("cpp") {
