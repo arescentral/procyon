@@ -79,10 +79,10 @@ static bool skip_bytes(pn_file_t* file, size_t count) {
 }
 
 #define PN_READ_PRIMITIVE(FIELD, T) \
-    (read_primitive(file, sizeof(T), &p) ? (*va_arg(vl, T*) = p.FIELD, true) : false)
-#define PN_READ_BYTE(T) (((c = getc(file)) != EOF) ? (*va_arg(vl, T*) = c, true) : false)
+    (read_primitive(file, sizeof(T), &p) ? (*va_arg(*vl, T*) = p.FIELD, true) : false)
+#define PN_READ_BYTE(T) (((c = getc(file)) != EOF) ? (*va_arg(*vl, T*) = c, true) : false)
 
-bool pn_read_arg(pn_file_t* file, char format, va_list vl) {
+bool pn_read_arg(pn_file_t* file, char format, va_list* vl) {
     int                c;
     union pn_primitive p;
     switch (format) {
@@ -110,13 +110,13 @@ bool pn_read_arg(pn_file_t* file, char format, va_list vl) {
         case 'f': return PN_READ_PRIMITIVE(f, float);
         case 'd': return PN_READ_PRIMITIVE(d, double);
 
-        case 's': return read_bytes_strlen(file, va_arg(vl, char*));
-        case 'S': return read_bytes(file, va_arg(vl, char*), va_arg(vl, size_t));
-        case '$': return read_bytes(file, va_arg(vl, uint8_t*), va_arg(vl, size_t));
+        case 's': return read_bytes_strlen(file, va_arg(*vl, char*));
+        case 'S': return read_bytes(file, va_arg(*vl, char*), va_arg(*vl, size_t));
+        case '$': return read_bytes(file, va_arg(*vl, uint8_t*), va_arg(*vl, size_t));
         case 'c': return PN_READ_BYTE(char);
         case 'C': return PN_READ_PRIMITIVE(L, uint32_t);
 
-        case '#': return skip_bytes(file, va_arg(vl, size_t));
+        case '#': return skip_bytes(file, va_arg(*vl, size_t));
     }
     return false;
 }
@@ -125,7 +125,7 @@ bool pn_read(pn_file_t* file, const char* format, ...) {
     va_list vl;
     va_start(vl, format);
     for (size_t i = 0; i < strlen(format); ++i) {
-        if (!pn_read_arg(file, format[i], vl)) {
+        if (!pn_read_arg(file, format[i], &vl)) {
             return false;
         }
     }
@@ -165,19 +165,19 @@ static bool write_repeated(pn_file_t* file, int count) {
 }
 
 #define PN_WRITE_PRIMITIVE(FIELD, T, VA_T) \
-    (p.FIELD = va_arg(vl, VA_T), write_primitive(file, sizeof(T), &p))
+    (p.FIELD = va_arg(*vl, VA_T), write_primitive(file, sizeof(T), &p))
 
-static bool pn_write_arg(pn_file_t* file, char format, va_list vl) {
+static bool pn_write_arg(pn_file_t* file, char format, va_list* vl) {
     union pn_primitive p;
     switch (format) {
         case 'n': return true;
 
-        case '?': return write_byte(file, va_arg(vl, int));
+        case '?': return write_byte(file, va_arg(*vl, int));
 
         case 'i': return PN_WRITE_PRIMITIVE(i, int, int);
         case 'I': return PN_WRITE_PRIMITIVE(I, unsigned, unsigned);
-        case 'b': return write_byte(file, va_arg(vl, int));
-        case 'B': return write_byte(file, va_arg(vl, int));
+        case 'b': return write_byte(file, va_arg(*vl, int));
+        case 'B': return write_byte(file, va_arg(*vl, int));
         case 'h': return PN_WRITE_PRIMITIVE(h, int16_t, int);
         case 'H': return PN_WRITE_PRIMITIVE(H, uint16_t, int);
         case 'l': return PN_WRITE_PRIMITIVE(l, int32_t, int32_t);
@@ -192,13 +192,13 @@ static bool pn_write_arg(pn_file_t* file, char format, va_list vl) {
         case 'f': return PN_WRITE_PRIMITIVE(f, float, double);
         case 'd': return PN_WRITE_PRIMITIVE(d, double, double);
 
-        case 's': return write_bytes_strlen(file, va_arg(vl, const char*));
-        case 'S': return write_bytes(file, va_arg(vl, const char*), va_arg(vl, size_t));
-        case '$': return write_bytes(file, va_arg(vl, const uint8_t*), va_arg(vl, size_t));
-        case 'c': return write_byte(file, va_arg(vl, int));
+        case 's': return write_bytes_strlen(file, va_arg(*vl, const char*));
+        case 'S': return write_bytes(file, va_arg(*vl, const char*), va_arg(*vl, size_t));
+        case '$': return write_bytes(file, va_arg(*vl, const uint8_t*), va_arg(*vl, size_t));
+        case 'c': return write_byte(file, va_arg(*vl, int));
         case 'C': return PN_WRITE_PRIMITIVE(L, uint32_t, uint32_t);
 
-        case '#': return write_repeated(file, va_arg(vl, size_t));
+        case '#': return write_repeated(file, va_arg(*vl, size_t));
     }
     return false;
 }
@@ -207,7 +207,7 @@ bool pn_write(pn_file_t* file, const char* format, ...) {
     va_list vl;
     va_start(vl, format);
     for (size_t i = 0; i < strlen(format); ++i) {
-        if (!pn_write_arg(file, format[i], vl)) {
+        if (!pn_write_arg(file, format[i], &vl)) {
             return false;
         }
     }
