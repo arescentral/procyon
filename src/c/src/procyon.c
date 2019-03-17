@@ -83,60 +83,60 @@ static void pn_move(pn_value_t* dst, pn_value_t* src) {
     src->type = PN_NULL;
 }
 
-bool pn_vset(pn_value_t* dst, char format, va_list vl) {
+bool pn_vset(pn_value_t* dst, char format, va_list* vl) {
     switch (format) {
         // clang-format off
         default: dst->type = PN_NULL; return false;
         case 'n': dst->type = PN_NULL; return true;
-        case 'N': dst->type = PN_NULL; *va_arg(vl, pn_value_t**) = dst; return true;
+        case 'N': dst->type = PN_NULL; *va_arg(*vl, pn_value_t**) = dst; return true;
 
-        case '?': dst->type = PN_BOOL; dst->b = va_arg(vl, int); return true;
+        case '?': dst->type = PN_BOOL; dst->b = va_arg(*vl, int); return true;
 
-        case 'i': dst->type = PN_INT; dst->i = va_arg(vl, int); return true;
-        case 'I': dst->type = PN_INT; dst->i = va_arg(vl, unsigned int); return true;
-        case 'b': dst->type = PN_INT; dst->i = va_arg(vl, int); return true;
-        case 'B': dst->type = PN_INT; dst->i = va_arg(vl, int); return true;
-        case 'h': dst->type = PN_INT; dst->i = va_arg(vl, int); return true;
-        case 'H': dst->type = PN_INT; dst->i = va_arg(vl, int); return true;
-        case 'l': dst->type = PN_INT; dst->i = va_arg(vl, int32_t); return true;
-        case 'L': dst->type = PN_INT; dst->i = va_arg(vl, uint32_t); return true;
-        case 'q': dst->type = PN_INT; dst->i = va_arg(vl, int64_t); return true;
-        case 'Q': dst->type = PN_INT; dst->i = va_arg(vl, uint64_t); return true;
-        case 'p': dst->type = PN_INT; dst->i = va_arg(vl, intptr_t); return true;
-        case 'P': dst->type = PN_INT; dst->i = va_arg(vl, uintptr_t); return true;
-        case 'z': dst->type = PN_INT; dst->i = va_arg(vl, size_t); return true;
-        case 'Z': dst->type = PN_INT; dst->i = va_arg(vl, ssize_t); return true;
+        case 'i': dst->type = PN_INT; dst->i = va_arg(*vl, int); return true;
+        case 'I': dst->type = PN_INT; dst->i = va_arg(*vl, unsigned int); return true;
+        case 'b': dst->type = PN_INT; dst->i = va_arg(*vl, int); return true;
+        case 'B': dst->type = PN_INT; dst->i = va_arg(*vl, int); return true;
+        case 'h': dst->type = PN_INT; dst->i = va_arg(*vl, int); return true;
+        case 'H': dst->type = PN_INT; dst->i = va_arg(*vl, int); return true;
+        case 'l': dst->type = PN_INT; dst->i = va_arg(*vl, int32_t); return true;
+        case 'L': dst->type = PN_INT; dst->i = va_arg(*vl, uint32_t); return true;
+        case 'q': dst->type = PN_INT; dst->i = va_arg(*vl, int64_t); return true;
+        case 'Q': dst->type = PN_INT; dst->i = va_arg(*vl, uint64_t); return true;
+        case 'p': dst->type = PN_INT; dst->i = va_arg(*vl, intptr_t); return true;
+        case 'P': dst->type = PN_INT; dst->i = va_arg(*vl, uintptr_t); return true;
+        case 'z': dst->type = PN_INT; dst->i = va_arg(*vl, size_t); return true;
+        case 'Z': dst->type = PN_INT; dst->i = va_arg(*vl, ssize_t); return true;
 
-        case 'f': dst->type = PN_FLOAT; dst->f = va_arg(vl, double); return true;
-        case 'd': dst->type = PN_FLOAT; dst->f = va_arg(vl, double); return true;
+        case 'f': dst->type = PN_FLOAT; dst->f = va_arg(*vl, double); return true;
+        case 'd': dst->type = PN_FLOAT; dst->f = va_arg(*vl, double); return true;
 
-        case 'a': dst->type = PN_ARRAY, dst->a = pn_arraydup(va_arg(vl, const pn_array_t*)); return true;
-        case 'A': dst->type = PN_ARRAY, dst->a = va_arg(vl, pn_array_t*); return true;
-        case 'm': dst->type = PN_MAP, dst->m = pn_mapdup(va_arg(vl, const pn_map_t*)); return true;
-        case 'M': dst->type = PN_MAP, dst->m = va_arg(vl, pn_map_t*); return true;
+        case 'a': dst->type = PN_ARRAY, dst->a = pn_arraydup(va_arg(*vl, const pn_array_t*)); return true;
+        case 'A': dst->type = PN_ARRAY, dst->a = va_arg(*vl, pn_array_t*); return true;
+        case 'm': dst->type = PN_MAP, dst->m = pn_mapdup(va_arg(*vl, const pn_map_t*)); return true;
+        case 'M': dst->type = PN_MAP, dst->m = va_arg(*vl, pn_map_t*); return true;
 
-        case 'x': pn_copy(dst, va_arg(vl, const pn_value_t*)); return true;
-        case 'X': pn_move(dst, va_arg(vl, pn_value_t*)); return true;
+        case 'x': pn_copy(dst, va_arg(*vl, const pn_value_t*)); return true;
+        case 'X': pn_move(dst, va_arg(*vl, pn_value_t*)); return true;
         // clang-format on
 
         case 's': {
-            const char* arg = va_arg(vl, const char*);
+            const char* arg = va_arg(*vl, const char*);
             dst->type       = PN_STRING;
             dst->s          = pn_string_new(arg, strlen(arg));
             return true;
         }
 
         case 'S': {
-            const char*  data = va_arg(vl, const char*);
-            const size_t size = va_arg(vl, size_t);
+            const char*  data = va_arg(*vl, const char*);
+            const size_t size = va_arg(*vl, size_t);
             dst->type         = PN_STRING;
             dst->s            = pn_string_new(data, size);
             return true;
         }
 
         case '$': {
-            const uint8_t* data = va_arg(vl, const uint8_t*);
-            const size_t   size = va_arg(vl, size_t);
+            const uint8_t* data = va_arg(*vl, const uint8_t*);
+            const size_t   size = va_arg(*vl, size_t);
             dst->type           = PN_DATA;
             dst->d              = pn_data_new(data, size);
             return true;
@@ -145,7 +145,7 @@ bool pn_vset(pn_value_t* dst, char format, va_list vl) {
         case 'c': {
             char   data[4];
             size_t size;
-            pn_chr(va_arg(vl, int), data, &size);
+            pn_chr(va_arg(*vl, int), data, &size);
             dst->type = PN_STRING;
             dst->s    = pn_string_new(data, size);
             return true;
@@ -154,14 +154,14 @@ bool pn_vset(pn_value_t* dst, char format, va_list vl) {
         case 'C': {
             char   data[4];
             size_t size;
-            pn_unichr(va_arg(vl, uint32_t), data, &size);
+            pn_unichr(va_arg(*vl, uint32_t), data, &size);
             dst->type = PN_STRING;
             dst->s    = pn_string_new(data, size);
             return true;
         }
 
         case '#': {
-            int size  = va_arg(vl, size_t);
+            int size  = va_arg(*vl, size_t);
             dst->type = PN_DATA;
             VECTOR_INIT(&dst->d, size);
             memset(dst->d->values, 0, size);
@@ -173,7 +173,7 @@ bool pn_vset(pn_value_t* dst, char format, va_list vl) {
 void pn_set(pn_value_t* dst, int format, ...) {
     va_list vl;
     va_start(vl, format);
-    pn_vset(dst, format, vl);
+    pn_vset(dst, format, &vl);
     va_end(vl);
 }
 
@@ -185,7 +185,7 @@ void pn_setv(pn_value_t* dst, const char* format, ...) {
     va_start(vl, format);
     pn_value_t* x = dst->a->values;
     while (*format) {
-        if (!pn_vset(x, *(format++), vl)) {
+        if (!pn_vset(x, *(format++), &vl)) {
             --dst->a->count;
             continue;
         }
@@ -205,7 +205,7 @@ void pn_setkv(pn_value_t* dst, const char* format, ...) {
         char       key_format   = *(format++);
         char       value_format = *(format++);
         pn_value_t key;
-        if (!pn_vset(&key, key_format, vl)) {
+        if (!pn_vset(&key, key_format, &vl)) {
             --dst->m->count;
             continue;
         } else if (key.type != PN_STRING) {
@@ -214,7 +214,7 @@ void pn_setkv(pn_value_t* dst, const char* format, ...) {
             continue;
         }
         kv->key = key.s;
-        if (!pn_vset(&kv->value, value_format, vl)) {
+        if (!pn_vset(&kv->value, value_format, &vl)) {
             pn_clear(&key);
             --dst->m->count;
             continue;
@@ -389,7 +389,7 @@ void pn_arrayext(pn_array_t** a, const char* format, ...) {
     va_list vl;
     va_start(vl, format);
     for (size_t i = 0; i < count; ++i) {
-        pn_vset(&(*a)->values[start + i], format[i], vl);
+        pn_vset(&(*a)->values[start + i], format[i], &vl);
     }
     va_end(vl);
 }
@@ -403,7 +403,7 @@ void pn_arrayins(pn_array_t** a, size_t index, int format, ...) {
 
     va_list vl;
     va_start(vl, format);
-    pn_vset(&(*a)->values[index], format, vl);
+    pn_vset(&(*a)->values[index], format, &vl);
     va_end(vl);
 }
 
@@ -483,12 +483,12 @@ static bool map_find(pn_map_t* m, const char* key_data, size_t key_size, size_t*
 // Sets *key if no item was found, but the query is valid. Caller assumes ownership. Can be NULL.
 // Invalid queries are when key_format is not one of [csSxX], or when [xX] uses a non-string.
 static bool map_vfind(
-        pn_map_t** m, size_t* index, pn_string_t** key, char key_format, va_list vl) {
+        pn_map_t** m, size_t* index, pn_string_t** key, char key_format, va_list* vl) {
     switch (key_format) {
         case 'c': {
             char   arg_data[4];
             size_t arg_size;
-            pn_chr(va_arg(vl, int), arg_data, &arg_size);
+            pn_chr(va_arg(*vl, int), arg_data, &arg_size);
             if (map_find(*m, arg_data, arg_size, index)) {
                 return true;
             } else if (key) {
@@ -499,7 +499,7 @@ static bool map_vfind(
         case 'C': {
             char   arg_data[4];
             size_t arg_size;
-            pn_unichr(va_arg(vl, uint32_t), arg_data, &arg_size);
+            pn_unichr(va_arg(*vl, uint32_t), arg_data, &arg_size);
             if (map_find(*m, arg_data, arg_size, index)) {
                 return true;
             } else if (key) {
@@ -508,7 +508,7 @@ static bool map_vfind(
         } break;
 
         case 's': {
-            const char* arg_data = va_arg(vl, const char*);
+            const char* arg_data = va_arg(*vl, const char*);
             size_t      arg_size = strlen(arg_data);
             if (map_find(*m, arg_data, arg_size, index)) {
                 return true;
@@ -518,8 +518,8 @@ static bool map_vfind(
         } break;
 
         case 'S': {
-            const char* arg_data = va_arg(vl, const char*);
-            size_t      arg_size = va_arg(vl, size_t);
+            const char* arg_data = va_arg(*vl, const char*);
+            size_t      arg_size = va_arg(*vl, size_t);
             if (map_find(*m, arg_data, arg_size, index)) {
                 return true;
             } else if (key) {
@@ -528,7 +528,7 @@ static bool map_vfind(
         } break;
 
         case 'x': {
-            const pn_value_t* arg = va_arg(vl, const pn_value_t*);
+            const pn_value_t* arg = va_arg(*vl, const pn_value_t*);
             if (arg->type != PN_STRING) {
                 return false;
             } else if (map_find(*m, arg->s->values, arg->s->count - 1, index)) {
@@ -539,7 +539,7 @@ static bool map_vfind(
         } break;
 
         case 'X': {
-            pn_value_t* arg = va_arg(vl, pn_value_t*);
+            pn_value_t* arg = va_arg(*vl, pn_value_t*);
             if (arg->type != PN_STRING) {
                 pn_clear(arg);
                 return false;
@@ -561,7 +561,7 @@ pn_value_t* pn_mapget(pn_map_t* m, int key_format, ...) {
     va_start(vl, key_format);
     size_t      index;
     pn_value_t* value = NULL;
-    if (map_vfind(&m, &index, NULL, key_format, vl)) {
+    if (map_vfind(&m, &index, NULL, key_format, &vl)) {
         value = &m->values[index].value;
     }
     va_end(vl);
@@ -573,7 +573,7 @@ const pn_value_t* pn_mapget_const(const pn_map_t* m, int key_format, ...) {
     va_start(vl, key_format);
     size_t            index;
     const pn_value_t* value = NULL;
-    if (map_vfind((pn_map_t**)&m, &index, NULL, key_format, vl)) {
+    if (map_vfind((pn_map_t**)&m, &index, NULL, key_format, &vl)) {
         value = &m->values[index].value;
     }
     va_end(vl);
@@ -586,15 +586,15 @@ bool pn_mapset(pn_map_t** m, int key_format, int value_format, ...) {
     va_start(vl, value_format);
     size_t       index;
     pn_string_t* key = NULL;
-    if (map_vfind(m, &index, &key, key_format, vl)) {
+    if (map_vfind(m, &index, &key, key_format, &vl)) {
         is_new = false;
         pn_clear(&(*m)->values[index].value);
-        pn_vset(&(*m)->values[index].value, value_format, vl);
+        pn_vset(&(*m)->values[index].value, value_format, &vl);
     } else if (key) {
         is_new = true;
         VECTOR_EXTEND(m, 1);
         VECTOR_LAST(*m).key = key;
-        pn_vset(&VECTOR_LAST(*m).value, value_format, vl);
+        pn_vset(&VECTOR_LAST(*m).value, value_format, &vl);
     }
     va_end(vl);
     return is_new;
@@ -605,7 +605,7 @@ bool pn_mapdel(pn_map_t** m, int key_format, ...) {
     va_start(vl, key_format);
     size_t      index;
     pn_value_t* value = NULL;
-    if (map_vfind(m, &index, NULL, key_format, vl)) {
+    if (map_vfind(m, &index, NULL, key_format, &vl)) {
         --(*m)->count;
         free((*m)->values[index].key);
         value = &(*m)->values[index].value;
@@ -623,7 +623,7 @@ bool pn_mappop(pn_map_t** m, pn_value_t* x, int key_format, ...) {
     va_start(vl, key_format);
     size_t      index;
     pn_value_t* value = NULL;
-    if (map_vfind(m, &index, NULL, key_format, vl)) {
+    if (map_vfind(m, &index, NULL, key_format, &vl)) {
         --(*m)->count;
         free((*m)->values[index].key);
         value = &(*m)->values[index].value;

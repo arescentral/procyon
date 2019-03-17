@@ -57,52 +57,52 @@ struct format_arg {
 
 const struct format_arg null_arg = {.type = 'n'};
 
-static void set_arg(char format, struct format_arg* dst, va_list vl) {
+static void set_arg(char format, struct format_arg* dst, va_list* vl) {
     switch (format) {
         default: format = 'n'; break;
         case 'n': break;
 
-        case '?': dst->i = va_arg(vl, int); break;
+        case '?': dst->i = va_arg(*vl, int); break;
 
         case 'b':
         case 'B':
         case 'h':
         case 'H': format = 'i';
-        case 'i': dst->i = va_arg(vl, int); break;
-        case 'I': dst->I = va_arg(vl, unsigned int); break;
-        case 'l': dst->l = va_arg(vl, int32_t); break;
-        case 'L': dst->L = va_arg(vl, uint32_t); break;
-        case 'q': dst->q = va_arg(vl, int64_t); break;
-        case 'Q': dst->Q = va_arg(vl, uint64_t); break;
-        case 'p': dst->p = va_arg(vl, intptr_t); break;
-        case 'P': dst->P = va_arg(vl, uintptr_t); break;
-        case 'z': dst->z = va_arg(vl, size_t); break;
-        case 'Z': dst->Z = va_arg(vl, ssize_t); break;
+        case 'i': dst->i = va_arg(*vl, int); break;
+        case 'I': dst->I = va_arg(*vl, unsigned int); break;
+        case 'l': dst->l = va_arg(*vl, int32_t); break;
+        case 'L': dst->L = va_arg(*vl, uint32_t); break;
+        case 'q': dst->q = va_arg(*vl, int64_t); break;
+        case 'Q': dst->Q = va_arg(*vl, uint64_t); break;
+        case 'p': dst->p = va_arg(*vl, intptr_t); break;
+        case 'P': dst->P = va_arg(*vl, uintptr_t); break;
+        case 'z': dst->z = va_arg(*vl, size_t); break;
+        case 'Z': dst->Z = va_arg(*vl, ssize_t); break;
 
         case 'f': format = 'f';
-        case 'd': dst->d = va_arg(vl, double); break;
+        case 'd': dst->d = va_arg(*vl, double); break;
 
-        case 'a': dst->a = va_arg(vl, const pn_array_t*); break;
-        case 'm': dst->m = va_arg(vl, const pn_map_t*); break;
-        case 'r': dst->x = va_arg(vl, const pn_value_t*); break;
-        case 'x': dst->x = va_arg(vl, const pn_value_t*); break;
+        case 'a': dst->a = va_arg(*vl, const pn_array_t*); break;
+        case 'm': dst->m = va_arg(*vl, const pn_map_t*); break;
+        case 'r': dst->x = va_arg(*vl, const pn_value_t*); break;
+        case 'x': dst->x = va_arg(*vl, const pn_value_t*); break;
 
-        case 's': dst->s = va_arg(vl, const char*); break;
+        case 's': dst->s = va_arg(*vl, const char*); break;
 
         case 'S':
-            dst->S.data = va_arg(vl, const char*);
-            dst->S.size = va_arg(vl, size_t);
+            dst->S.data = va_arg(*vl, const char*);
+            dst->S.size = va_arg(*vl, size_t);
             break;
 
         case '$':
-            dst->D.data = va_arg(vl, const uint8_t*);
-            dst->D.size = va_arg(vl, size_t);
+            dst->D.data = va_arg(*vl, const uint8_t*);
+            dst->D.size = va_arg(*vl, size_t);
             break;
 
-        case 'c': dst->i = va_arg(vl, int); break;
-        case 'C': dst->L = va_arg(vl, uint32_t); break;
+        case 'c': dst->i = va_arg(*vl, int); break;
+        case 'C': dst->L = va_arg(*vl, uint32_t); break;
 
-        case '#': dst->z = va_arg(vl, size_t); break;
+        case '#': dst->z = va_arg(*vl, size_t); break;
     }
     dst->type = format;
 }
@@ -285,7 +285,7 @@ bool pn_format(pn_file_t* f, const char* output_format, const char* input_format
     va_list vl;
     va_start(vl, input_format);
     for (size_t i = 0; i < nargs; ++i) {
-        set_arg(input_format[i], &args[i], vl);
+        set_arg(input_format[i], &args[i], &vl);
     }
     va_end(vl);
 
