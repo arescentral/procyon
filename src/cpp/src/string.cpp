@@ -127,6 +127,7 @@ bool strtod(string_view s, double* f, pn_error_code_t* error) {
     return pn_strtod(s.data(), s.size(), f, error);
 }
 
+#ifndef _WIN32
 file string::open() const { return check_c_obj(file{pn_open_view(data(), size())}); }
 file string_ref::open() const { return check_c_obj(file{pn_open_view(data(), size())}); }
 file string_view::open() const { return check_c_obj(file{pn_open_view(data(), size())}); }
@@ -134,5 +135,6 @@ file string::open(const char* mode) { return check_c_obj(file{pn_open_string(c_o
 file string_ref::open(const char* mode) const {
     return check_c_obj(file{pn_open_string(c_obj(), mode)});
 }
+#endif
 
 }  // namespace pn
