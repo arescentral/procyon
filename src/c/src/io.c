@@ -14,10 +14,15 @@
 
 #include <pn/procyon.h>
 
-#include <arpa/inet.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
+
+#ifdef _WIN32
+#include <winsock.h>
+#else
+#include <arpa/inet.h>
+#endif
 
 union pn_primitive {
     int       i;
