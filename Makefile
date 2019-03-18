@@ -36,6 +36,14 @@ test-vim:
 	misc/vim/test/indent.vroom
 	misc/vim/test/syntax.vroom
 
+.PHONY: test-cpp
+test-cpp:
+	out/cur/procyon-cpp-test
+
+.PHONY: test-wine
+test-wine:
+	xvfb-run wine64 out/cur/procyon-cpp-test.exe
+
 .PHONY: regen
 regen:
 	src/c/scripts/gen.py \
