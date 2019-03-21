@@ -33,12 +33,12 @@ int main(int argc, const char** argv) {
     }
 
     if (argc != 0) {
-        pn_format(pn_wrap_file(stderr), "usage: {0}\n", "s", progname);
+        pn_format(pn_stderr, "usage: {0}\n", "s", progname);
         exit(64);
     }
 
     pn_lexer_t l;
-    pn_lexer_init(&l, pn_wrap_file(stdin));
+    pn_lexer_init(&l, pn_stdin);
     pn_parser_t p;
     pn_parser_init(&p, &l, 64);
 
@@ -47,7 +47,7 @@ int main(int argc, const char** argv) {
     while (pn_parser_next(&p, &error)) {
         if (p.evt.type == PN_EVT_ERROR) {
             pn_format(
-                    pn_wrap_file(stderr), "{0}:{1}: {2}\n", "zzs", error.lineno, error.column,
+                    pn_stderr, "{0}:{1}: {2}\n", "zzs", error.lineno, error.column,
                     pn_strerror(error.code));
             exit(1);
         }
@@ -55,16 +55,16 @@ int main(int argc, const char** argv) {
             --indent;
         }
         for (int i = 0; i < indent; ++i) {
-            pn_format(pn_wrap_file(stdout), "\t", "");
+            pn_format(pn_stdout, "\t", "");
         }
         if (p.evt.k.type) {
-            pn_format(pn_wrap_file(stdout), "KEY({0}) ", "r", &p.evt.k);
+            pn_format(pn_stdout, "KEY({0}) ", "r", &p.evt.k);
         }
-        pn_format(pn_wrap_file(stdout), "{0}", "s", event_names[p.evt.type]);
+        pn_format(pn_stdout, "{0}", "s", event_names[p.evt.type]);
         if (p.evt.x.type != PN_NULL) {
-            pn_format(pn_wrap_file(stdout), "({0})", "r", &p.evt.x);
+            pn_format(pn_stdout, "({0})", "r", &p.evt.x);
         }
-        pn_format(pn_wrap_file(stdout), "\n", "");
+        pn_format(pn_stdout, "\n", "");
         if ((p.evt.type == PN_EVT_ARRAY_IN) || (p.evt.type == PN_EVT_MAP_IN)) {
             ++indent;
         }

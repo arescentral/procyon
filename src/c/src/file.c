@@ -178,10 +178,42 @@ int pn_view_seek(void* cookie, int64_t* offset, int whence) {
 }
 
 pn_file_t pn_wrap_file(FILE* f) {
-    pn_file_t file = {f};
+    pn_file_t file = {
+            .type = f ? PN_FILE_TYPE_C_FILE : PN_FILE_TYPE_INVALID, .c_file = f,
+    };
     return file;
 }
 
-bool pn_close(pn_file_t file) { return !fclose(file.c_file); }
-bool pn_file_eof(pn_file_t file) { return feof(file.c_file); }
-bool pn_file_error(pn_file_t file) { return ferror(file.c_file); }
+bool pn_close(pn_file_t file) {
+    switch (file.type) {
+        case PN_FILE_TYPE_INVALID: return true;
+        case PN_FILE_TYPE_STDIN: return !fclose(stdin);
+        case PN_FILE_TYPE_STDOUT: return !fclose(stdout);
+        case PN_FILE_TYPE_STDERR: return !fclose(stderr);
+        case PN_FILE_TYPE_C_FILE: return !fclose(file.c_file);
+    }
+}
+
+bool pn_file_eof(pn_file_t file) {
+    switch (file.type) {
+        case PN_FILE_TYPE_INVALID: return true;
+        case PN_FILE_TYPE_STDIN: return feof(stdin);
+        case PN_FILE_TYPE_STDOUT: return feof(stdout);
+        case PN_FILE_TYPE_STDERR: return feof(stderr);
+        case PN_FILE_TYPE_C_FILE: return feof(file.c_file);
+    }
+}
+
+bool pn_file_error(pn_file_t file) {
+    switch (file.type) {
+        case PN_FILE_TYPE_INVALID: return true;
+        case PN_FILE_TYPE_STDIN: return ferror(stdin);
+        case PN_FILE_TYPE_STDOUT: return ferror(stdout);
+        case PN_FILE_TYPE_STDERR: return ferror(stderr);
+        case PN_FILE_TYPE_C_FILE: return ferror(file.c_file);
+    }
+}
+
+pn_file_t pn_stdin  = {.type = PN_FILE_TYPE_STDIN};
+pn_file_t pn_stdout = {.type = PN_FILE_TYPE_STDOUT};
+pn_file_t pn_stderr = {.type = PN_FILE_TYPE_STDERR};

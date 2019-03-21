@@ -220,7 +220,16 @@ bool pn_mapdel(pn_map_t** m, int key_format, ...);
 // Returns true if there was an element to pop.
 bool pn_mappop(pn_map_t** m, pn_value_t* x, int key_format, ...);
 
+typedef enum {
+    PN_FILE_TYPE_INVALID,
+    PN_FILE_TYPE_STDIN,
+    PN_FILE_TYPE_STDOUT,
+    PN_FILE_TYPE_STDERR,
+    PN_FILE_TYPE_C_FILE,
+} pn_file_type_t;
+
 struct pn_file {
+    pn_file_type_t type;
     union {
         FILE* c_file;
     };
@@ -256,6 +265,11 @@ pn_file_t pn_open_view(const void* data, size_t size);  // mode is always "r".
 bool      pn_close(pn_file_t file);
 bool      pn_file_eof(pn_file_t file);
 bool      pn_file_error(pn_file_t file);
+ssize_t   pn_getline(pn_file_t f, char** data, size_t* size);
+
+extern pn_file_t pn_stdin;
+extern pn_file_t pn_stdout;
+extern pn_file_t pn_stderr;
 
 // Format strings: "Hello, {0} {1}"
 bool pn_format(pn_file_t file, const char* output_format, const char* input_format, ...);

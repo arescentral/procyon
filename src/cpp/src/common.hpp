@@ -30,7 +30,7 @@ static T* vector_new(size_t n) {
 
 template <typename T>
 T check_c_obj(T t) {
-    if (!t.c_obj().c_file) {
+    if (!t.c_obj().type) {
         throw std::system_error(errno, std::system_category());
     }
     return t;

@@ -81,7 +81,7 @@ static bool next_line(pn_lexer_t* lex, pn_error_t* error) {
             ++lex->lineno;
         }
         lex->prev_width  = lex->line.end - lex->line.begin;
-        ssize_t size     = getline(&lex->buffer.data, &lex->buffer.size, lex->file.c_file);
+        ssize_t size     = pn_getline(lex->file, &lex->buffer.data, &lex->buffer.size);
         lex->token.begin = lex->token.end = lex->line.begin = lex->line.end = lex->buffer.data;
         if (size <= 0) {
             if (pn_file_error(lex->file)) {

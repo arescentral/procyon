@@ -211,13 +211,52 @@ bool pn_write(pn_file_t file, const char* format, ...) {
     return true;
 }
 
-int pn_getc(pn_file_t f) { return getc(f.c_file); }
-int pn_putc(int ch, pn_file_t f) { return putc(ch, f.c_file); }
+int pn_getc(pn_file_t f) {
+    switch (f.type) {
+        case PN_FILE_TYPE_INVALID: return EOF;
+        case PN_FILE_TYPE_STDIN: return getc(stdin);
+        case PN_FILE_TYPE_STDOUT: return getc(stdout);
+        case PN_FILE_TYPE_STDERR: return getc(stderr);
+        case PN_FILE_TYPE_C_FILE: return getc(f.c_file);
+    }
+}
+
+int pn_putc(int ch, pn_file_t f) {
+    switch (f.type) {
+        case PN_FILE_TYPE_INVALID: return EOF;
+        case PN_FILE_TYPE_STDIN: return putc(ch, stdin);
+        case PN_FILE_TYPE_STDOUT: return putc(ch, stdout);
+        case PN_FILE_TYPE_STDERR: return putc(ch, stderr);
+        case PN_FILE_TYPE_C_FILE: return putc(ch, f.c_file);
+    }
+}
 
 bool pn_raw_read(pn_file_t f, void* data, size_t size) {
-    return fread(data, 1, size, f.c_file) == size;
+    switch (f.type) {
+        case PN_FILE_TYPE_INVALID: return false;
+        case PN_FILE_TYPE_STDIN: return fread(data, 1, size, stdin) == size;
+        case PN_FILE_TYPE_STDOUT: return fread(data, 1, size, stdout) == size;
+        case PN_FILE_TYPE_STDERR: return fread(data, 1, size, stderr) == size;
+        case PN_FILE_TYPE_C_FILE: return fread(data, 1, size, f.c_file) == size;
+    }
 }
 
 bool pn_raw_write(pn_file_t f, const void* data, size_t size) {
-    return fwrite(data, 1, size, f.c_file) == size;
+    switch (f.type) {
+        case PN_FILE_TYPE_INVALID: return false;
+        case PN_FILE_TYPE_STDIN: return fwrite(data, 1, size, stdin) == size;
+        case PN_FILE_TYPE_STDOUT: return fwrite(data, 1, size, stdout) == size;
+        case PN_FILE_TYPE_STDERR: return fwrite(data, 1, size, stderr) == size;
+        case PN_FILE_TYPE_C_FILE: return fwrite(data, 1, size, f.c_file) == size;
+    }
+}
+
+ssize_t pn_getline(pn_file_t f, char** data, size_t* size) {
+    switch (f.type) {
+        case PN_FILE_TYPE_INVALID: return -1;
+        case PN_FILE_TYPE_STDIN: return getline(data, size, stdin);
+        case PN_FILE_TYPE_STDOUT: return getline(data, size, stdout);
+        case PN_FILE_TYPE_STDERR: return getline(data, size, stderr);
+        case PN_FILE_TYPE_C_FILE: return getline(data, size, f.c_file);
+    }
 }
