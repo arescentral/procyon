@@ -74,7 +74,7 @@ static bool read_primitive(pn_file_t file, size_t count, union pn_primitive* out
 
 static bool skip_bytes(pn_file_t file, size_t count) {
     for (size_t i = 0; i < count; ++i) {
-        if (getc(file.c_file) == EOF) {
+        if (pn_getc(file) == EOF) {
             return false;
         }
     }
@@ -83,7 +83,7 @@ static bool skip_bytes(pn_file_t file, size_t count) {
 
 #define PN_READ_PRIMITIVE(FIELD, T) \
     (read_primitive(file, sizeof(T), &p) ? (*va_arg(*vl, T*) = p.FIELD, true) : false)
-#define PN_READ_BYTE(T) (((c = getc(file.c_file)) != EOF) ? (*va_arg(*vl, T*) = c, true) : false)
+#define PN_READ_BYTE(T) (((c = pn_getc(file)) != EOF) ? (*va_arg(*vl, T*) = c, true) : false)
 
 bool pn_read_arg(pn_file_t file, char format, va_list* vl) {
     int                c;
@@ -136,7 +136,7 @@ bool pn_read(pn_file_t file, const char* format, ...) {
     return true;
 }
 
-static bool write_byte(pn_file_t file, uint8_t byte) { return putc(byte, file.c_file) != EOF; }
+static bool write_byte(pn_file_t file, uint8_t byte) { return pn_putc(byte, file) != EOF; }
 
 static bool write_bytes_strlen(pn_file_t file, const char* data) {
     return pn_raw_write(file, data, strlen(data));
@@ -153,7 +153,7 @@ static bool write_primitive(pn_file_t file, size_t count, union pn_primitive* ou
 
 static bool write_repeated(pn_file_t file, int count) {
     for (int i = 0; i < count; ++i) {
-        if (putc(0, file.c_file) == EOF) {
+        if (pn_putc(0, file) == EOF) {
             return false;
         }
     }
@@ -210,6 +210,9 @@ bool pn_write(pn_file_t file, const char* format, ...) {
     va_end(vl);
     return true;
 }
+
+int pn_getc(pn_file_t f) { return getc(f.c_file); }
+int pn_putc(int ch, pn_file_t f) { return putc(ch, f.c_file); }
 
 bool pn_raw_read(pn_file_t f, void* data, size_t size) {
     return fread(data, 1, size, f.c_file) == size;

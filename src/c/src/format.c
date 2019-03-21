@@ -164,7 +164,7 @@ static bool print_arg(pn_file_t f, const struct format_arg* arg) {
 
         case '#':
             for (size_t i = 0; i < arg->z; ++i) {
-                if (putc(0, f.c_file) == EOF) {
+                if (pn_putc(0, f) == EOF) {
                     return false;
                 }
             }
@@ -225,7 +225,7 @@ static bool format_segment(
     ++*format;
     if (**format == '{') {
         ++*format;
-        return fputc('{', f.c_file) != EOF;
+        return pn_putc('{', f) != EOF;
     }
 
     size_t      span       = strspn(*format, "0123456789");
@@ -311,7 +311,7 @@ bool pn_format(pn_file_t f, const char* output_format, const char* input_format,
                 break;
 
             case '}':
-                if (fputc('}', f.c_file) == EOF) {
+                if (pn_putc('}', f) == EOF) {
                     return false;
                 }
                 output_format += (output_format[1] == '}') ? 2 : 1;
