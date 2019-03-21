@@ -101,7 +101,7 @@ pn_file_t* pn_open_string(pn_string_t** s, const char* mode) {
 
     return open_cb(
             &cookie, sizeof(cookie), mode, read ? pn_linux_string_read : NULL,
-            write ? pn_linux_string_write : NULL, pn_linux_string_seek, pn_close);
+            write ? pn_linux_string_write : NULL, pn_linux_string_seek, pn_file_close);
 }
 
 ssize_t pn_linux_data_read(void* cookie, char* data, size_t size) {
@@ -156,7 +156,7 @@ pn_file_t* pn_open_data(pn_data_t** d, const char* mode) {
 
     return open_cb(
             &cookie, sizeof(cookie), mode, read ? pn_linux_data_read : NULL,
-            write ? pn_linux_data_write : NULL, pn_linux_data_seek, pn_close);
+            write ? pn_linux_data_write : NULL, pn_linux_data_seek, pn_file_close);
 }
 
 ssize_t pn_linux_view_read(void* cookie, char* data, size_t size) {
@@ -175,5 +175,6 @@ int pn_linux_view_seek(void* cookie, int64_t* offset, int whence) {
 pn_file_t* pn_open_view(const void* data, size_t size) {
     struct pn_view_cookie cookie = {.data = data, .size = size, .at = 0};
     return open_cb(
-            &cookie, sizeof(cookie), "r", pn_linux_view_read, NULL, pn_linux_view_seek, pn_close);
+            &cookie, sizeof(cookie), "r", pn_linux_view_read, NULL, pn_linux_view_seek,
+            pn_file_close);
 }

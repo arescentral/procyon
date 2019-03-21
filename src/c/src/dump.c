@@ -24,6 +24,7 @@
 #include <string.h>
 
 #include "./common.h"
+#include "./io.h"
 #include "./utf8.h"
 #include "./vector.h"
 
@@ -64,9 +65,6 @@ static void pn_indent(pn_string_t** s, int delta, char ch) {
     }
 }
 
-#define WRITE_CSTRING(S, FILE) (fwrite(S, 1, strlen(S), FILE) == strlen(S))
-#define WRITE_SPAN(DATA, SIZE, FILE) (fwrite(DATA, 1, SIZE, FILE) == SIZE)
-
 static bool should_dump_short_value(const pn_value_t* x) {
     switch (x->type) {
         case PN_DATA: return should_dump_short_data(x->d);
@@ -103,30 +101,26 @@ static bool dump_long_value(const pn_value_t* x, pn_string_t** indent, pn_file_t
     }
 }
 
-static bool dump_null(pn_file_t* file) { return fwrite("null", 1, 4, file) == 4; }
+static bool dump_null(pn_file_t* file) { return pn_raw_write(file, "null", 4); }
 
 static bool dump_bool(pn_bool_t b, pn_file_t* file) {
-    if (b) {
-        return fwrite("true", 1, 4, file) == 4;
-    } else {
-        return fwrite("false", 1, 5, file) == 5;
-    }
+    return pn_raw_write(file, b ? "true" : "false", b ? 4 : 5);
 }
 
 static bool dump_int(pn_int_t i, pn_file_t* file) {
     char    buf[32];
     ssize_t len;
-    return ((len = sprintf(buf, "%" PRId64, i)) > 0) && WRITE_SPAN(buf, (size_t)len, file);
+    return ((len = sprintf(buf, "%" PRId64, i)) > 0) && pn_raw_write(file, buf, len);
 }
 
 static bool dump_float(pn_float_t f, pn_file_t* file) {
     char repr[32];
     pn_dtoa(repr, f);
-    return WRITE_CSTRING(repr, file);
+    return pn_raw_write(file, repr, strlen(repr));
 }
 
 static bool start_line(pn_string_t* indent, pn_file_t* file) {
-    return (putc('\n', file) != EOF) && WRITE_SPAN(indent->values, indent->count - 1, file);
+    return (putc('\n', file) != EOF) && pn_raw_write(file, indent->values, indent->count - 1);
 }
 
 static bool should_dump_short_data_view(size_t size) { return size <= 4; }
@@ -139,7 +133,7 @@ static bool dump_repeated_data(size_t size, pn_file_t* file) {
         return false;
     }
     for (size_t i = 0; i < size; ++i) {
-        if (!WRITE_CSTRING("00", file)) {
+        if (!pn_raw_write(file, "00", 2)) {
             return false;
         }
     }
@@ -154,7 +148,7 @@ bool dump_hex(pn_file_t* file, uint64_t x, size_t len) {
         *(--ptr) = hex_digits[0x0f & x];
         x >>= 4;
     }
-    return WRITE_SPAN(ptr, len, file);
+    return pn_raw_write(file, ptr, len);
 }
 
 static bool dump_short_data_view(const uint8_t* data, size_t size, pn_file_t* file) {
@@ -179,7 +173,7 @@ static bool dump_long_data_view(
         if (i == 0) {
             pn_write(file, "S", "$\t", (size_t)2);
         } else if ((i % 16) == 0) {
-            if (!(start_line(*indent, file) && WRITE_CSTRING("$\t", file))) {
+            if (!(start_line(*indent, file) && pn_raw_write(file, "$\t", 2))) {
                 return false;
             }
         } else if ((i % 2) == 0) {
@@ -236,7 +230,7 @@ static bool dump_short_string_view(const char* data, size_t size, pn_file_t* fil
             case '\\': literal = "\\\\"; break;
             default:
                 if (pn_isprint(r)) {
-                    if (!WRITE_SPAN(data + i, next - i, file)) {
+                    if (!pn_raw_write(file, data + i, next - i)) {
                         return false;
                     }
                 } else if (r < 0x10000) {
@@ -250,7 +244,7 @@ static bool dump_short_string_view(const char* data, size_t size, pn_file_t* fil
                 }
                 continue;
         }
-        if (!WRITE_CSTRING(literal, file)) {
+        if (!pn_raw_write(file, literal, strlen(literal))) {
             return false;
         }
     }
@@ -352,18 +346,18 @@ static bool dump_long_string_view(
             }
             size_t split;
             while (split_line(data, line_size, &split)) {
-                if (!WRITE_SPAN(data, split, file)) {
+                if (!pn_raw_write(file, data, split)) {
                     return false;
                 }
                 ++split;  // cover space
                 data += split;
                 size -= split;
                 line_size -= split;
-                if (!(start_line(*indent, file) && WRITE_CSTRING(">\t", file))) {
+                if (!(start_line(*indent, file) && pn_raw_write(file, ">\t", 2))) {
                     return false;
                 }
             }
-            if (!WRITE_SPAN(data, line_size, file)) {
+            if (!pn_raw_write(file, data, line_size)) {
                 return false;
             }
             can_use_gt = false;
@@ -403,7 +397,7 @@ static bool dump_short_array(const pn_array_t* a, pn_file_t* file) {
     }
     for (const pn_value_t *x = a->values, *end = a->values + a->count; x != end; ++x) {
         if (x != a->values) {
-            if (!WRITE_CSTRING(", ", file)) {
+            if (!pn_raw_write(file, ", ", 2)) {
                 return false;
             }
         }
@@ -425,7 +419,7 @@ static bool dump_long_array(const pn_array_t* a, pn_string_t** indent, pn_file_t
             }
         }
         pn_indent(indent, +1, '\t');
-        if (!WRITE_CSTRING("*\t", file)) {
+        if (!pn_raw_write(file, "*\t", 2)) {
             return false;
         }
         if (should_dump_short_value(x)) {
@@ -470,7 +464,7 @@ static bool needs_quotes(const pn_string_t* key) {
 
 static bool write_padding(pn_file_t* file, size_t len) {
     for (size_t i = 0; i < len; ++i) {
-        if (!WRITE_SPAN(" ", 1, file)) {
+        if (!pn_raw_write(file, " ", 1)) {
             return false;
         }
     }
@@ -479,10 +473,10 @@ static bool write_padding(pn_file_t* file, size_t len) {
 
 static bool dump_key(const pn_string_t* key, int padding, pn_file_t* file) {
     if (needs_quotes(key)) {
-        return dump_short_string(key, file) && WRITE_SPAN(":", 1, file) &&
+        return dump_short_string(key, file) && pn_raw_write(file, ":", 1) &&
                write_padding(file, padding);
     } else {
-        return WRITE_SPAN(key->values, key->count - 1, file) && WRITE_SPAN(":", 1, file) &&
+        return pn_raw_write(file, key->values, key->count - 1) && pn_raw_write(file, ":", 1) &&
                write_padding(file, padding);
     }
 }
@@ -501,7 +495,7 @@ static bool dump_short_map(const pn_map_t* m, pn_file_t* file) {
     }
     for (const pn_kv_pair_t *x = m->values, *end = m->values + m->count; x != end; ++x) {
         if (x != m->values) {
-            if (!WRITE_CSTRING(", ", file)) {
+            if (!pn_raw_write(file, ", ", 2)) {
                 return false;
             }
         }

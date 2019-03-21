@@ -28,7 +28,7 @@ pn::value dump(const pn_value_t* x) {
     pn_set(out.c_obj(), 's', "");
     pn_file_t* f = pn_open_string(&out.c_obj()->s, "w");
     EXPECT_THAT(pn_dump(f, PN_DUMP_DEFAULT, 'x', x), Eq(true));
-    fclose(f);
+    pn_close(f);
     return out;
 }
 
@@ -38,7 +38,7 @@ pn::value dump(char format, const Args&... args) {
     pn_set(out.c_obj(), 's', "");
     pn_file_t* f = pn_open_string(&out.c_obj()->s, "w");
     EXPECT_THAT(pn_dump(f, PN_DUMP_DEFAULT, format, args...), Eq(true));
-    fclose(f);
+    pn_close(f);
     return out;
 }
 

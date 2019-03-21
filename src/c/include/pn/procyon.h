@@ -246,6 +246,7 @@ pn_file_t* pn_open_path(const char* path, const char* mode);
 pn_file_t* pn_open_data(pn_data_t** d, const char* mode);
 pn_file_t* pn_open_string(pn_string_t** s, const char* mode);
 pn_file_t* pn_open_view(const void* data, size_t size);  // mode is always "r".
+bool       pn_close(pn_file_t* file);
 
 // Format strings: "Hello, {0} {1}"
 bool pn_format(pn_file_t* file, const char* output_format, const char* input_format, ...);

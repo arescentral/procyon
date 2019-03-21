@@ -98,7 +98,7 @@ pn_file_t* pn_open_string(pn_string_t** s, const char* mode) {
 
     return open_cb(
             &cookie, sizeof(cookie), read ? pn_mac_string_read : NULL,
-            write ? pn_mac_string_write : NULL, pn_mac_string_seek, pn_close);
+            write ? pn_mac_string_write : NULL, pn_mac_string_seek, pn_file_close);
 }
 
 static int pn_mac_data_read(void* cookie, char* data, int size) {
@@ -152,7 +152,7 @@ pn_file_t* pn_open_data(pn_data_t** d, const char* mode) {
 
     return open_cb(
             &cookie, sizeof(cookie), read ? pn_mac_data_read : NULL,
-            write ? pn_mac_data_write : NULL, pn_mac_data_seek, pn_close);
+            write ? pn_mac_data_write : NULL, pn_mac_data_seek, pn_file_close);
 }
 
 static int pn_mac_view_read(void* cookie, char* data, int size) {
@@ -169,5 +169,6 @@ static fpos_t pn_mac_view_seek(void* cookie, fpos_t offset, int whence) {
 
 pn_file_t* pn_open_view(const void* data, size_t size) {
     struct pn_view_cookie cookie = {.data = data, .size = size, .at = 0};
-    return open_cb(&cookie, sizeof(cookie), pn_mac_view_read, NULL, pn_mac_view_seek, pn_close);
+    return open_cb(
+            &cookie, sizeof(cookie), pn_mac_view_read, NULL, pn_mac_view_seek, pn_file_close);
 }

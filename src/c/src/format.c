@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "./io.h"
 #include "./utf8.h"
 
 struct strsize {
@@ -107,8 +108,6 @@ static void set_arg(char format, struct format_arg* dst, va_list* vl) {
     dst->type = format;
 }
 
-#define LITERAL(f, s) (fwrite(s, 1, strlen(s), f) == strlen(s))
-
 static bool print_u(pn_file_t* f, uint64_t u) {
     char    buf[32];
     ssize_t len;
@@ -117,9 +116,9 @@ static bool print_u(pn_file_t* f, uint64_t u) {
 
 static bool print_arg(pn_file_t* f, const struct format_arg* arg) {
     switch (arg->type) {
-        case 'n': return LITERAL(f, "null");
+        case 'n': return pn_raw_write(f, "null", 4);
 
-        case '?': return LITERAL(f, arg->i ? "true" : "false");
+        case '?': return pn_raw_write(f, arg->i ? "true" : "false", arg->i ? 4 : 5);
 
         case 'i': return pn_dump(f, PN_DUMP_SHORT, 'i', arg->i);
         case 'I': return pn_dump(f, PN_DUMP_SHORT, 'I', arg->I);
@@ -142,25 +141,25 @@ static bool print_arg(pn_file_t* f, const struct format_arg* arg) {
         case 'x':
             if (arg->x->type == PN_STRING) {
                 size_t len = arg->x->s->count - 1;
-                return fwrite(arg->x->s->values, 1, len, f) == len;
+                return pn_raw_write(f, arg->x->s->values, len);
             }
             return pn_dump(f, PN_DUMP_SHORT, 'x', arg->x);
 
-        case 's': return LITERAL(f, arg->s);
-        case 'S': return fwrite(arg->S.data, 1, arg->S.size, f) == arg->S.size;
+        case 's': return pn_raw_write(f, arg->s, strlen(arg->s));
+        case 'S': return pn_raw_write(f, arg->S.data, arg->S.size);
 
         case 'c': {
             char   data[4];
             size_t size;
             pn_chr(arg->i, data, &size);
-            return fwrite(data, 1, size, f) == size;
+            return pn_raw_write(f, data, size);
         }
 
         case 'C': {
             char   data[4];
             size_t size;
             pn_unichr(arg->L, data, &size);
-            return fwrite(data, 1, size, f) == size;
+            return pn_raw_write(f, data, size);
         }
 
         case '#':
@@ -274,7 +273,7 @@ static bool format_segment(
 fail:
     --*format;
     size_t len = format_end - *format;
-    if (fwrite(*format, 1, len, f) < len) {
+    if (!pn_raw_write(f, *format, len)) {
         return false;
     }
     *format = format_end;
@@ -299,7 +298,7 @@ bool pn_format(pn_file_t* f, const char* output_format, const char* input_format
     while (*output_format) {
         size_t span = strcspn(output_format, "{}");
         if (span) {
-            if (fwrite(output_format, 1, span, f) < span) {
+            if (!pn_raw_write(f, output_format, span)) {
                 return false;
             }
             output_format += span;

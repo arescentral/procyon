@@ -34,7 +34,7 @@ struct pn_view_cookie {
 };
 
 char pn_file_mode(const char* mode);
-int  pn_close(void* cookie);
+int  pn_file_close(void* cookie);
 
 ssize_t pn_string_read(void* cookie, char* data, size_t size);
 ssize_t pn_string_write(void* cookie, const char* data, size_t size);

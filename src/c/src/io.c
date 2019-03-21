@@ -24,6 +24,8 @@
 #include <arpa/inet.h>
 #endif
 
+#include "./io.h"
+
 union pn_primitive {
     int       i;
     unsigned  I;
@@ -54,16 +56,12 @@ static void swap64(union pn_primitive* x) {
     }
 }
 
-static bool read_bytes(pn_file_t* file, void* data, size_t size) {
-    return fread(data, 1, size, file) == size;
-}
-
 static bool read_bytes_strlen(pn_file_t* file, char* data) {
-    return read_bytes(file, data, strlen(data));
+    return pn_raw_read(file, data, strlen(data));
 }
 
 static bool read_primitive(pn_file_t* file, size_t count, union pn_primitive* out) {
-    if (fread(out->data, 1, count, file) < count) {
+    if (!pn_raw_read(file, out->data, count)) {
         return false;
     }
     switch (count) {
@@ -116,8 +114,8 @@ bool pn_read_arg(pn_file_t* file, char format, va_list* vl) {
         case 'd': return PN_READ_PRIMITIVE(d, double);
 
         case 's': return read_bytes_strlen(file, va_arg(*vl, char*));
-        case 'S': return read_bytes(file, va_arg(*vl, char*), va_arg(*vl, size_t));
-        case '$': return read_bytes(file, va_arg(*vl, uint8_t*), va_arg(*vl, size_t));
+        case 'S': return pn_raw_read(file, va_arg(*vl, char*), va_arg(*vl, size_t));
+        case '$': return pn_raw_read(file, va_arg(*vl, uint8_t*), va_arg(*vl, size_t));
         case 'c': return PN_READ_BYTE(char);
         case 'C': return PN_READ_PRIMITIVE(L, uint32_t);
 
@@ -140,12 +138,8 @@ bool pn_read(pn_file_t* file, const char* format, ...) {
 
 static bool write_byte(pn_file_t* file, uint8_t byte) { return putc(byte, file) != EOF; }
 
-static bool write_bytes(pn_file_t* file, const void* data, size_t size) {
-    return fwrite(data, 1, size, file) == size;
-}
-
 static bool write_bytes_strlen(pn_file_t* file, const char* data) {
-    return write_bytes(file, data, strlen(data));
+    return pn_raw_write(file, data, strlen(data));
 }
 
 static bool write_primitive(pn_file_t* file, size_t count, union pn_primitive* out) {
@@ -154,10 +148,7 @@ static bool write_primitive(pn_file_t* file, size_t count, union pn_primitive* o
         case 4: swap32(out); break;
         case 8: swap64(out); break;
     }
-    if (fwrite(out->data, 1, count, file) < count) {
-        return false;
-    }
-    return true;
+    return pn_raw_write(file, out->data, count);
 }
 
 static bool write_repeated(pn_file_t* file, int count) {
@@ -198,8 +189,8 @@ static bool pn_write_arg(pn_file_t* file, char format, va_list* vl) {
         case 'd': return PN_WRITE_PRIMITIVE(d, double, double);
 
         case 's': return write_bytes_strlen(file, va_arg(*vl, const char*));
-        case 'S': return write_bytes(file, va_arg(*vl, const char*), va_arg(*vl, size_t));
-        case '$': return write_bytes(file, va_arg(*vl, const uint8_t*), va_arg(*vl, size_t));
+        case 'S': return pn_raw_write(file, va_arg(*vl, const char*), va_arg(*vl, size_t));
+        case '$': return pn_raw_write(file, va_arg(*vl, const uint8_t*), va_arg(*vl, size_t));
         case 'c': return write_byte(file, va_arg(*vl, int));
         case 'C': return PN_WRITE_PRIMITIVE(L, uint32_t, uint32_t);
 
@@ -218,4 +209,10 @@ bool pn_write(pn_file_t* file, const char* format, ...) {
     }
     va_end(vl);
     return true;
+}
+
+bool pn_raw_read(pn_file_t* f, void* data, size_t size) { return fread(data, 1, size, f) == size; }
+
+bool pn_raw_write(pn_file_t* f, const void* data, size_t size) {
+    return fwrite(data, 1, size, f) == size;
 }

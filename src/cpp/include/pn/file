@@ -42,7 +42,7 @@ class file {
     file& operator               =(file&& other) { return std::swap(_c_obj, other._c_obj), *this; }
     ~file() {
         if (_c_obj) {
-            fclose(_c_obj);
+            pn_close(_c_obj);
         }
     }
 

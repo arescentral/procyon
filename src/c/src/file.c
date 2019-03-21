@@ -41,7 +41,7 @@ char pn_file_mode(const char* mode) {
     return ch_mode;
 }
 
-int pn_close(void* cookie) {
+int pn_file_close(void* cookie) {
     free(cookie);
     return 0;
 }
@@ -176,3 +176,5 @@ int pn_view_seek(void* cookie, int64_t* offset, int whence) {
     *offset = c->at = base + *offset;
     return 0;
 }
+
+bool pn_close(pn_file_t* file) { return !fclose(file); }
