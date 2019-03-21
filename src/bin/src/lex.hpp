@@ -15,6 +15,7 @@
 #ifndef PROCYON_LEX_HPP_
 #define PROCYON_LEX_HPP_
 
+#include <pn/file>
 #include <pn/fwd>
 
 #include "../../c/src/lex.h"
@@ -38,7 +39,8 @@ class lexer {
     const pn_lexer_t* c_obj() const { return &_c_obj; }
 
   private:
-    pn_lexer_t _c_obj;
+    pn::file_view _file;
+    pn_lexer_t    _c_obj;
 };
 
 #endif  // PROCYON_LEX_HPP_

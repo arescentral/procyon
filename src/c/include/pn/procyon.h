@@ -235,13 +235,13 @@ struct pn_file {
     };
 };
 
-bool pn_parse(pn_file_t file, pn_value_t* out, pn_error_t* error);
+bool pn_parse(pn_file_t* file, pn_value_t* out, pn_error_t* error);
 
 enum {
     PN_DUMP_DEFAULT = 0,
     PN_DUMP_SHORT   = 1,
 };
-bool pn_dump(pn_file_t file, int flags, int format, ...);
+bool pn_dump(pn_file_t* file, int flags, int format, ...);
 
 // Opens a procyon string for stdio reading and writing.
 // `d` or `s` must point to valid values of the given type.
@@ -262,20 +262,20 @@ pn_file_t pn_open_path(const char* path, const char* mode);
 pn_file_t pn_open_data(pn_data_t** d, const char* mode);
 pn_file_t pn_open_string(pn_string_t** s, const char* mode);
 pn_file_t pn_open_view(const void* data, size_t size);  // mode is always "r".
-bool      pn_close(pn_file_t file);
-bool      pn_file_eof(pn_file_t file);
-bool      pn_file_error(pn_file_t file);
-ssize_t   pn_getline(pn_file_t f, char** data, size_t* size);
+bool      pn_close(pn_file_t* file);
+bool      pn_file_eof(const pn_file_t* file);
+bool      pn_file_error(const pn_file_t* file);
+ssize_t   pn_getline(pn_file_t* f, char** data, size_t* size);
 
 extern pn_file_t pn_stdin;
 extern pn_file_t pn_stdout;
 extern pn_file_t pn_stderr;
 
 // Format strings: "Hello, {0} {1}"
-bool pn_format(pn_file_t file, const char* output_format, const char* input_format, ...);
+bool pn_format(pn_file_t* file, const char* output_format, const char* input_format, ...);
 
-bool pn_read(pn_file_t file, const char* format, ...);
-bool pn_write(pn_file_t file, const char* format, ...);
+bool pn_read(pn_file_t* file, const char* format, ...);
+bool pn_write(pn_file_t* file, const char* format, ...);
 
 #ifdef __cplusplus
 }  // extern "C"

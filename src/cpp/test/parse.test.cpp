@@ -31,8 +31,8 @@ std::pair<pn::value, pn_error_t> parse(const std::string& arg) {
     pn_set(in.c_obj(), 'S', arg.data(), arg.size());
     pn_error_t error;
     pn_file_t  f      = pn_open_string(&in.c_obj()->s, "r");
-    bool       parsed = pn_parse(f, x.c_obj(), &error);
-    pn_close(f);
+    bool       parsed = pn_parse(&f, x.c_obj(), &error);
+    pn_close(&f);
     if (parsed) {
         return std::make_pair(std::move(x), pn_error_t{PN_OK, 0, 0});
     }

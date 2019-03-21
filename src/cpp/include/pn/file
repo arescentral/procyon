@@ -43,11 +43,11 @@ class file {
     file& operator               =(file&& other) { return std::swap(_c_obj, other._c_obj), *this; }
     ~file() {
         if (_c_obj.type == PN_FILE_TYPE_C_FILE) {
-            pn_close(_c_obj);
+            pn_close(&_c_obj);
         }
     }
 
-          operator bool() const { return c_obj().type && !eof() && !error(); }
+          operator bool() const { return c_obj()->type && !eof() && !error(); }
     file& check() &;
     file  check() && { return check(), std::move(*this); }
 
@@ -66,7 +66,8 @@ class file {
     bool error() const { return pn_file_error(c_obj()); }
     bool eof() const { return pn_file_eof(c_obj()); }
 
-    pn_file_t c_obj() const { return _c_obj; }
+    pn_file_t*       c_obj() { return &_c_obj; }
+    const pn_file_t* c_obj() const { return &_c_obj; }
 
   private:
     void check_ok();
@@ -77,11 +78,11 @@ class file {
 class file_view {
   public:
     file_view() : _c_obj{pn_wrap_file(nullptr)} {}
-    file_view(const file& f) : _c_obj{f.c_obj()} {}
+    file_view(const file& f) : _c_obj{*f.c_obj()} {}
     file_view(FILE* f) : _c_obj{pn_wrap_file(f)} {}
     file_view(pn_file_t f) : _c_obj{f} {}
 
-              operator bool() const { return c_obj().type && !eof() && !error(); }
+              operator bool() const { return c_obj()->type && !eof() && !error(); }
     file_view check();
 
     template <typename... arguments>
@@ -99,7 +100,8 @@ class file_view {
     bool error() const { return pn_file_error(c_obj()); }
     bool eof() const { return pn_file_eof(c_obj()); }
 
-    pn_file_t c_obj() const { return _c_obj; }
+    pn_file_t*       c_obj() { return &_c_obj; }
+    const pn_file_t* c_obj() const { return &_c_obj; }
 
   private:
     pn_file_t _c_obj;

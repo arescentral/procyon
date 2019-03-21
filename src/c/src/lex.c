@@ -169,7 +169,7 @@ void pn_lexer_next(pn_lexer_t* lex, pn_error_t* error) {
     return lexer_fail(lex, error, at, state & PN_TOK_FLAG_VALUE);
 }
 
-void pn_lexer_init(pn_lexer_t* lex, pn_file_t file) {
+void pn_lexer_init(pn_lexer_t* lex, pn_file_t* file) {
     pn_lexer_t l = {.file = file, .indent = -1, .lineno = 1};
     VECTOR_INIT(&l.levels, 1);
     VECTOR_LAST(l.levels) = -1;

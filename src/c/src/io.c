@@ -56,11 +56,11 @@ static void swap64(union pn_primitive* x) {
     }
 }
 
-static bool read_bytes_strlen(pn_file_t file, char* data) {
+static bool read_bytes_strlen(pn_file_t* file, char* data) {
     return pn_raw_read(file, data, strlen(data));
 }
 
-static bool read_primitive(pn_file_t file, size_t count, union pn_primitive* out) {
+static bool read_primitive(pn_file_t* file, size_t count, union pn_primitive* out) {
     if (!pn_raw_read(file, out->data, count)) {
         return false;
     }
@@ -72,7 +72,7 @@ static bool read_primitive(pn_file_t file, size_t count, union pn_primitive* out
     return true;
 }
 
-static bool skip_bytes(pn_file_t file, size_t count) {
+static bool skip_bytes(pn_file_t* file, size_t count) {
     for (size_t i = 0; i < count; ++i) {
         if (pn_getc(file) == EOF) {
             return false;
@@ -85,7 +85,7 @@ static bool skip_bytes(pn_file_t file, size_t count) {
     (read_primitive(file, sizeof(T), &p) ? (*va_arg(*vl, T*) = p.FIELD, true) : false)
 #define PN_READ_BYTE(T) (((c = pn_getc(file)) != EOF) ? (*va_arg(*vl, T*) = c, true) : false)
 
-bool pn_read_arg(pn_file_t file, char format, va_list* vl) {
+bool pn_read_arg(pn_file_t* file, char format, va_list* vl) {
     int                c;
     union pn_primitive p;
     switch (format) {
@@ -124,7 +124,7 @@ bool pn_read_arg(pn_file_t file, char format, va_list* vl) {
     return false;
 }
 
-bool pn_read(pn_file_t file, const char* format, ...) {
+bool pn_read(pn_file_t* file, const char* format, ...) {
     va_list vl;
     va_start(vl, format);
     for (size_t i = 0; i < strlen(format); ++i) {
@@ -136,13 +136,13 @@ bool pn_read(pn_file_t file, const char* format, ...) {
     return true;
 }
 
-static bool write_byte(pn_file_t file, uint8_t byte) { return pn_putc(byte, file) != EOF; }
+static bool write_byte(pn_file_t* file, uint8_t byte) { return pn_putc(byte, file) != EOF; }
 
-static bool write_bytes_strlen(pn_file_t file, const char* data) {
+static bool write_bytes_strlen(pn_file_t* file, const char* data) {
     return pn_raw_write(file, data, strlen(data));
 }
 
-static bool write_primitive(pn_file_t file, size_t count, union pn_primitive* out) {
+static bool write_primitive(pn_file_t* file, size_t count, union pn_primitive* out) {
     switch (count) {
         case 2: swap16(out); break;
         case 4: swap32(out); break;
@@ -151,7 +151,7 @@ static bool write_primitive(pn_file_t file, size_t count, union pn_primitive* ou
     return pn_raw_write(file, out->data, count);
 }
 
-static bool write_repeated(pn_file_t file, int count) {
+static bool write_repeated(pn_file_t* file, int count) {
     for (int i = 0; i < count; ++i) {
         if (pn_putc(0, file) == EOF) {
             return false;
@@ -163,7 +163,7 @@ static bool write_repeated(pn_file_t file, int count) {
 #define PN_WRITE_PRIMITIVE(FIELD, T, VA_T) \
     (p.FIELD = va_arg(*vl, VA_T), write_primitive(file, sizeof(T), &p))
 
-static bool pn_write_arg(pn_file_t file, char format, va_list* vl) {
+static bool pn_write_arg(pn_file_t* file, char format, va_list* vl) {
     union pn_primitive p;
     switch (format) {
         case 'n': return true;
@@ -199,7 +199,7 @@ static bool pn_write_arg(pn_file_t file, char format, va_list* vl) {
     return false;
 }
 
-bool pn_write(pn_file_t file, const char* format, ...) {
+bool pn_write(pn_file_t* file, const char* format, ...) {
     va_list vl;
     va_start(vl, format);
     for (size_t i = 0; i < strlen(format); ++i) {
@@ -211,52 +211,52 @@ bool pn_write(pn_file_t file, const char* format, ...) {
     return true;
 }
 
-int pn_getc(pn_file_t f) {
-    switch (f.type) {
+int pn_getc(pn_file_t* f) {
+    switch (f->type) {
         case PN_FILE_TYPE_INVALID: return EOF;
         case PN_FILE_TYPE_STDIN: return getc(stdin);
         case PN_FILE_TYPE_STDOUT: return getc(stdout);
         case PN_FILE_TYPE_STDERR: return getc(stderr);
-        case PN_FILE_TYPE_C_FILE: return getc(f.c_file);
+        case PN_FILE_TYPE_C_FILE: return getc(f->c_file);
     }
 }
 
-int pn_putc(int ch, pn_file_t f) {
-    switch (f.type) {
+int pn_putc(int ch, pn_file_t* f) {
+    switch (f->type) {
         case PN_FILE_TYPE_INVALID: return EOF;
         case PN_FILE_TYPE_STDIN: return putc(ch, stdin);
         case PN_FILE_TYPE_STDOUT: return putc(ch, stdout);
         case PN_FILE_TYPE_STDERR: return putc(ch, stderr);
-        case PN_FILE_TYPE_C_FILE: return putc(ch, f.c_file);
+        case PN_FILE_TYPE_C_FILE: return putc(ch, f->c_file);
     }
 }
 
-bool pn_raw_read(pn_file_t f, void* data, size_t size) {
-    switch (f.type) {
+bool pn_raw_read(pn_file_t* f, void* data, size_t size) {
+    switch (f->type) {
         case PN_FILE_TYPE_INVALID: return false;
         case PN_FILE_TYPE_STDIN: return fread(data, 1, size, stdin) == size;
         case PN_FILE_TYPE_STDOUT: return fread(data, 1, size, stdout) == size;
         case PN_FILE_TYPE_STDERR: return fread(data, 1, size, stderr) == size;
-        case PN_FILE_TYPE_C_FILE: return fread(data, 1, size, f.c_file) == size;
+        case PN_FILE_TYPE_C_FILE: return fread(data, 1, size, f->c_file) == size;
     }
 }
 
-bool pn_raw_write(pn_file_t f, const void* data, size_t size) {
-    switch (f.type) {
+bool pn_raw_write(pn_file_t* f, const void* data, size_t size) {
+    switch (f->type) {
         case PN_FILE_TYPE_INVALID: return false;
         case PN_FILE_TYPE_STDIN: return fwrite(data, 1, size, stdin) == size;
         case PN_FILE_TYPE_STDOUT: return fwrite(data, 1, size, stdout) == size;
         case PN_FILE_TYPE_STDERR: return fwrite(data, 1, size, stderr) == size;
-        case PN_FILE_TYPE_C_FILE: return fwrite(data, 1, size, f.c_file) == size;
+        case PN_FILE_TYPE_C_FILE: return fwrite(data, 1, size, f->c_file) == size;
     }
 }
 
-ssize_t pn_getline(pn_file_t f, char** data, size_t* size) {
-    switch (f.type) {
+ssize_t pn_getline(pn_file_t* f, char** data, size_t* size) {
+    switch (f->type) {
         case PN_FILE_TYPE_INVALID: return -1;
         case PN_FILE_TYPE_STDIN: return getline(data, size, stdin);
         case PN_FILE_TYPE_STDOUT: return getline(data, size, stdout);
         case PN_FILE_TYPE_STDERR: return getline(data, size, stderr);
-        case PN_FILE_TYPE_C_FILE: return getline(data, size, f.c_file);
+        case PN_FILE_TYPE_C_FILE: return getline(data, size, f->c_file);
     }
 }

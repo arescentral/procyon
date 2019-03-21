@@ -34,7 +34,7 @@ static_assert(std::is_same<index_range<4>::type, indexes<0, 1, 2, 3>>::value, ""
 }  // namespace internal
 
 file& file::check() & {
-    if (!c_obj().type || error()) {
+    if (!c_obj()->type || error()) {
         throw std::system_error(errno, std::system_category());
     } else if (eof()) {
         throw std::runtime_error("unexpected eof");
@@ -43,7 +43,7 @@ file& file::check() & {
 }
 
 file_view file_view::check() {
-    if (!c_obj().type || error()) {
+    if (!c_obj()->type || error()) {
         throw std::system_error(errno, std::system_category());
     } else if (eof()) {
         throw std::runtime_error("unexpected eof");
