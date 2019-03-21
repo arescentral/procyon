@@ -84,7 +84,7 @@ static bool next_line(pn_lexer_t* lex, pn_error_t* error) {
         ssize_t size     = getline(&lex->buffer.data, &lex->buffer.size, lex->file);
         lex->token.begin = lex->token.end = lex->line.begin = lex->line.end = lex->buffer.data;
         if (size <= 0) {
-            if (ferror(lex->file)) {
+            if (pn_file_error(lex->file)) {
                 lexer_fail(lex, error, NULL, PN_ERROR_SYSTEM);
                 return true;
             }

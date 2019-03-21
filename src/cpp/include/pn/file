@@ -62,8 +62,8 @@ class file {
     template <typename... arguments>
     file& format(const char* fmt, const arguments&... arg);
 
-    bool error() const { return ferror(c_obj()); }
-    bool eof() const { return feof(c_obj()); }
+    bool error() const { return pn_file_error(c_obj()); }
+    bool eof() const { return pn_file_eof(c_obj()); }
 
     pn_file_t* c_obj() const { return _c_obj; }
 
@@ -94,8 +94,8 @@ class file_view {
     template <typename... arguments>
     file_view& format(const char* fmt, const arguments&... arg);
 
-    bool error() const { return ferror(c_obj()); }
-    bool eof() const { return feof(c_obj()); }
+    bool error() const { return pn_file_error(c_obj()); }
+    bool eof() const { return pn_file_eof(c_obj()); }
 
     pn_file_t* c_obj() const { return _c_obj; }
 
