@@ -68,7 +68,6 @@ executable("procyon-cpp-test") {
   } else {
     sources += [
       "test/dump.test.cpp",
-      "test/file.test.cpp",
       "test/format.test.cpp",
       "test/io.test.cpp",
       "test/lex.test.cpp",

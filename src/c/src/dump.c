@@ -113,7 +113,11 @@ static bool dump_bool(pn_bool_t b, pn_file_t* file) {
     }
 }
 
-static bool dump_int(pn_int_t i, pn_file_t* file) { return fprintf(file, "%" PRId64, i) > 0; }
+static bool dump_int(pn_int_t i, pn_file_t* file) {
+    char    buf[32];
+    ssize_t len;
+    return ((len = sprintf(buf, "%" PRId64, i)) > 0) && WRITE_SPAN(buf, (size_t)len, file);
+}
 
 static bool dump_float(pn_float_t f, pn_file_t* file) {
     char repr[32];
@@ -142,12 +146,23 @@ static bool dump_repeated_data(size_t size, pn_file_t* file) {
     return true;
 }
 
+bool dump_hex(pn_file_t* file, uint64_t x, size_t len) {
+    static const char hex_digits[] = "0123456789abcdef";
+    char              buf[16];
+    char*             ptr = buf + 16;
+    for (size_t i = 0; i < len; ++i) {
+        *(--ptr) = hex_digits[0x0f & x];
+        x >>= 4;
+    }
+    return WRITE_SPAN(ptr, len, file);
+}
+
 static bool dump_short_data_view(const uint8_t* data, size_t size, pn_file_t* file) {
     if (putc('$', file) == EOF) {
         return false;
     }
     for (size_t i = 0; i < size; ++i) {
-        if (fprintf(file, "%02x", data[i]) <= 0) {
+        if (!dump_hex(file, data[i], 2)) {
             return false;
         }
     }
@@ -162,7 +177,7 @@ static bool dump_long_data_view(
         const uint8_t* data, size_t size, pn_string_t** indent, pn_file_t* file) {
     for (size_t i = 0; i < size; ++i) {
         if (i == 0) {
-            fprintf(file, "$\t");
+            pn_write(file, "S", "$\t", (size_t)2);
         } else if ((i % 16) == 0) {
             if (!(start_line(*indent, file) && WRITE_CSTRING("$\t", file))) {
                 return false;
@@ -172,7 +187,7 @@ static bool dump_long_data_view(
                 return false;
             }
         }
-        if (fprintf(file, "%02x", data[i]) <= 0) {
+        if (!dump_hex(file, data[i], 2)) {
             return false;
         }
     }
@@ -225,11 +240,11 @@ static bool dump_short_string_view(const char* data, size_t size, pn_file_t* fil
                         return false;
                     }
                 } else if (r < 0x10000) {
-                    if (fprintf(file, "\\u%04x", r) <= 0) {
+                    if (!(pn_write(file, "S", "\\u", (size_t)2) && dump_hex(file, r, 4))) {
                         return false;
                     }
                 } else {
-                    if (fprintf(file, "\\U%08x", r) <= 0) {
+                    if (!(pn_write(file, "S", "\\U", (size_t)2) && dump_hex(file, r, 8))) {
                         return false;
                     }
                 }
@@ -453,17 +468,23 @@ static bool needs_quotes(const pn_string_t* key) {
     return false;
 }
 
-static bool dump_key(const pn_string_t* key, int padding, pn_file_t* file) {
-    if (needs_quotes(key)) {
-        if (!dump_short_string(key, file)) {
-            return false;
-        }
-    } else {
-        if (!WRITE_SPAN(key->values, key->count - 1, file)) {
+static bool write_padding(pn_file_t* file, size_t len) {
+    for (size_t i = 0; i < len; ++i) {
+        if (!WRITE_SPAN(" ", 1, file)) {
             return false;
         }
     }
-    return fprintf(file, ":%*s", padding, "") > 0;
+    return true;
+}
+
+static bool dump_key(const pn_string_t* key, int padding, pn_file_t* file) {
+    if (needs_quotes(key)) {
+        return dump_short_string(key, file) && WRITE_SPAN(":", 1, file) &&
+               write_padding(file, padding);
+    } else {
+        return WRITE_SPAN(key->values, key->count - 1, file) && WRITE_SPAN(":", 1, file) &&
+               write_padding(file, padding);
+    }
 }
 
 static size_t key_width(const pn_string_t* key) {
