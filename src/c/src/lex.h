@@ -68,7 +68,7 @@ enum {
 };
 
 typedef struct {
-    pn_file_t* file;
+    pn_file_t file;
 
     struct {
         pn_token_type_t type;
@@ -97,7 +97,7 @@ typedef struct {
     } * levels;
 } pn_lexer_t;
 
-void pn_lexer_init(pn_lexer_t* lex, pn_file_t* file);
+void pn_lexer_init(pn_lexer_t* lex, pn_file_t file);
 void pn_lexer_clear(pn_lexer_t* lex);
 void pn_lexer_next(pn_lexer_t* lex, pn_error_t* error);
 

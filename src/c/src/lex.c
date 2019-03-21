@@ -81,7 +81,7 @@ static bool next_line(pn_lexer_t* lex, pn_error_t* error) {
             ++lex->lineno;
         }
         lex->prev_width  = lex->line.end - lex->line.begin;
-        ssize_t size     = getline(&lex->buffer.data, &lex->buffer.size, lex->file);
+        ssize_t size     = getline(&lex->buffer.data, &lex->buffer.size, lex->file.c_file);
         lex->token.begin = lex->token.end = lex->line.begin = lex->line.end = lex->buffer.data;
         if (size <= 0) {
             if (pn_file_error(lex->file)) {
@@ -169,7 +169,7 @@ void pn_lexer_next(pn_lexer_t* lex, pn_error_t* error) {
     return lexer_fail(lex, error, at, state & PN_TOK_FLAG_VALUE);
 }
 
-void pn_lexer_init(pn_lexer_t* lex, pn_file_t* file) {
+void pn_lexer_init(pn_lexer_t* lex, pn_file_t file) {
     pn_lexer_t l = {.file = file, .indent = -1, .lineno = 1};
     VECTOR_INIT(&l.levels, 1);
     VECTOR_LAST(l.levels) = -1;

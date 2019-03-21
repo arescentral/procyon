@@ -29,11 +29,11 @@ typedef struct pn_string  pn_string_t;
 typedef struct pn_array   pn_array_t;
 typedef struct pn_map     pn_map_t;
 typedef struct pn_kv_pair pn_kv_pair_t;
+typedef struct pn_file    pn_file_t;
 
 typedef bool    pn_bool_t;
 typedef int64_t pn_int_t;
 typedef double  pn_float_t;
-typedef FILE    pn_file_t;
 
 typedef struct pn_error pn_error_t;
 
@@ -220,13 +220,19 @@ bool pn_mapdel(pn_map_t** m, int key_format, ...);
 // Returns true if there was an element to pop.
 bool pn_mappop(pn_map_t** m, pn_value_t* x, int key_format, ...);
 
-bool pn_parse(pn_file_t* file, pn_value_t* out, pn_error_t* error);
+struct pn_file {
+    union {
+        FILE* c_file;
+    };
+};
+
+bool pn_parse(pn_file_t file, pn_value_t* out, pn_error_t* error);
 
 enum {
     PN_DUMP_DEFAULT = 0,
     PN_DUMP_SHORT   = 1,
 };
-bool pn_dump(pn_file_t* file, int flags, int format, ...);
+bool pn_dump(pn_file_t file, int flags, int format, ...);
 
 // Opens a procyon string for stdio reading and writing.
 // `d` or `s` must point to valid values of the given type.
@@ -242,19 +248,20 @@ bool pn_dump(pn_file_t* file, int flags, int format, ...);
 //     a     N     Y      N         end of argument
 //     a+    Y     Y      N         end of argument
 //
-pn_file_t* pn_open_path(const char* path, const char* mode);
-pn_file_t* pn_open_data(pn_data_t** d, const char* mode);
-pn_file_t* pn_open_string(pn_string_t** s, const char* mode);
-pn_file_t* pn_open_view(const void* data, size_t size);  // mode is always "r".
-bool       pn_close(pn_file_t* file);
-bool       pn_file_eof(pn_file_t* file);
-bool       pn_file_error(pn_file_t* file);
+pn_file_t pn_wrap_file(FILE* f);
+pn_file_t pn_open_path(const char* path, const char* mode);
+pn_file_t pn_open_data(pn_data_t** d, const char* mode);
+pn_file_t pn_open_string(pn_string_t** s, const char* mode);
+pn_file_t pn_open_view(const void* data, size_t size);  // mode is always "r".
+bool      pn_close(pn_file_t file);
+bool      pn_file_eof(pn_file_t file);
+bool      pn_file_error(pn_file_t file);
 
 // Format strings: "Hello, {0} {1}"
-bool pn_format(pn_file_t* file, const char* output_format, const char* input_format, ...);
+bool pn_format(pn_file_t file, const char* output_format, const char* input_format, ...);
 
-bool pn_read(pn_file_t* file, const char* format, ...);
-bool pn_write(pn_file_t* file, const char* format, ...);
+bool pn_read(pn_file_t file, const char* format, ...);
+bool pn_write(pn_file_t file, const char* format, ...);
 
 #ifdef __cplusplus
 }  // extern "C"

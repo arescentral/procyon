@@ -180,9 +180,10 @@ Token error(const std::string& content, pn_error_t error) {
 }
 
 TEST_F(LexTest, CreateClear) {
+    pn_file_t  f   = {NULL};
     pn_lexer_t lex = {};
     pn_lexer_clear(&lex);  // OK to clear zeroed-out lexer.
-    pn_lexer_init(&lex, NULL);
+    pn_lexer_init(&lex, f);
     pn_lexer_clear(&lex);
 }
 

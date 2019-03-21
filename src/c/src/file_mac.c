@@ -25,9 +25,11 @@
 #include "./file.h"
 #include "./vector.h"
 
-pn_file_t* pn_open_path(const char* path, const char* mode) { return fopen(path, mode); }
+pn_file_t pn_open_path(const char* path, const char* mode) {
+    return pn_wrap_file(fopen(path, mode));
+}
 
-static pn_file_t* open_cb(
+static pn_file_t open_cb(
         void* cookie, size_t cookie_size,                        //
         int    read(void* cookie, char* data, int size),         //
         int    write(void* cookie, const char* data, int size),  //
@@ -35,16 +37,16 @@ static pn_file_t* open_cb(
         int    close(void* cookie)) {
     void* c = malloc(cookie_size);
     memcpy(c, cookie, cookie_size);
-    pn_file_t* f = funopen(c, read, write, seek, close);
+    FILE* f = funopen(c, read, write, seek, close);
     if (f) {
         if (setvbuf(f, NULL, _IONBF, 0) == 0) {
-            return f;
+            return pn_wrap_file(f);
         }
         fclose(f);
     } else {
         free(c);
     }
-    return NULL;
+    return pn_wrap_file(NULL);
 }
 
 static int pn_mac_string_read(void* cookie, char* data, int size) {
@@ -63,14 +65,14 @@ static fpos_t pn_mac_string_seek(void* cookie, fpos_t offset, int whence) {
     return -1;
 }
 
-pn_file_t* pn_open_string(pn_string_t** s, const char* mode) {
+pn_file_t pn_open_string(pn_string_t** s, const char* mode) {
     struct pn_string_cookie cookie = {.s = s};
     bool                    read   = false;
     bool                    write  = false;
 
     if (!s || !mode) {
         errno = EINVAL;
-        return NULL;
+        return pn_wrap_file(NULL);
     }
 
     switch (pn_file_mode(mode)) {
@@ -93,7 +95,7 @@ pn_file_t* pn_open_string(pn_string_t** s, const char* mode) {
             cookie.at = (*s)->count - 1;
             break;
 
-        default: errno = EINVAL; return NULL;
+        default: errno = EINVAL; return pn_wrap_file(NULL);
     }
 
     return open_cb(
@@ -117,14 +119,14 @@ static fpos_t pn_mac_data_seek(void* cookie, fpos_t offset, int whence) {
     return -1;
 }
 
-pn_file_t* pn_open_data(pn_data_t** d, const char* mode) {
+pn_file_t pn_open_data(pn_data_t** d, const char* mode) {
     struct pn_data_cookie cookie = {.d = d};
     bool                  read   = false;
     bool                  write  = false;
 
     if (!d || !mode) {
         errno = EINVAL;
-        return NULL;
+        return pn_wrap_file(NULL);
     }
 
     switch (pn_file_mode(mode)) {
@@ -147,7 +149,7 @@ pn_file_t* pn_open_data(pn_data_t** d, const char* mode) {
             cookie.at = (*d)->count;
             break;
 
-        default: errno = EINVAL; return NULL;
+        default: errno = EINVAL; return pn_wrap_file(NULL);
     }
 
     return open_cb(
@@ -167,7 +169,7 @@ static fpos_t pn_mac_view_seek(void* cookie, fpos_t offset, int whence) {
     return -1;
 }
 
-pn_file_t* pn_open_view(const void* data, size_t size) {
+pn_file_t pn_open_view(const void* data, size_t size) {
     struct pn_view_cookie cookie = {.data = data, .size = size, .at = 0};
     return open_cb(
             &cookie, sizeof(cookie), pn_mac_view_read, NULL, pn_mac_view_seek, pn_file_close);

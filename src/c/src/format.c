@@ -108,13 +108,13 @@ static void set_arg(char format, struct format_arg* dst, va_list* vl) {
     dst->type = format;
 }
 
-static bool print_u(pn_file_t* f, uint64_t u) {
+static bool print_u(pn_file_t f, uint64_t u) {
     char    buf[32];
     ssize_t len;
     return ((len = sprintf(buf, "%" PRIu64, u)) > 0) && pn_write(f, "S", buf, (size_t)len);
 }
 
-static bool print_arg(pn_file_t* f, const struct format_arg* arg) {
+static bool print_arg(pn_file_t f, const struct format_arg* arg) {
     switch (arg->type) {
         case 'n': return pn_raw_write(f, "null", 4);
 
@@ -164,7 +164,7 @@ static bool print_arg(pn_file_t* f, const struct format_arg* arg) {
 
         case '#':
             for (size_t i = 0; i < arg->z; ++i) {
-                if (putc(0, f) == EOF) {
+                if (putc(0, f.c_file) == EOF) {
                     return false;
                 }
             }
@@ -220,12 +220,12 @@ static const struct format_arg* get_subscript(
 }
 
 static bool format_segment(
-        pn_file_t* f, const char** format, const struct format_arg* args, size_t nargs,
+        pn_file_t f, const char** format, const struct format_arg* args, size_t nargs,
         const struct format_arg** next_arg) {
     ++*format;
     if (**format == '{') {
         ++*format;
-        return fputc('{', f) != EOF;
+        return fputc('{', f.c_file) != EOF;
     }
 
     size_t      span       = strspn(*format, "0123456789");
@@ -281,7 +281,7 @@ fail:
 }
 
 #define NSTACKARGS 8
-bool pn_format(pn_file_t* f, const char* output_format, const char* input_format, ...) {
+bool pn_format(pn_file_t f, const char* output_format, const char* input_format, ...) {
     struct format_arg  stack_args[NSTACKARGS];
     struct format_arg* heap_args = NULL;
     size_t             nargs     = strlen(input_format);
@@ -311,7 +311,7 @@ bool pn_format(pn_file_t* f, const char* output_format, const char* input_format
                 break;
 
             case '}':
-                if (fputc('}', f) == EOF) {
+                if (fputc('}', f.c_file) == EOF) {
                     return false;
                 }
                 output_format += (output_format[1] == '}') ? 2 : 1;

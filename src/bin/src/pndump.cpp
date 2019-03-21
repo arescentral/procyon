@@ -41,7 +41,7 @@ void main(int argc, char* const* argv) {
     }
 
     if (argc != 0) {
-        pn_format(stderr, "usage: {0}\n", "s", progname);
+        pn_format(pn_wrap_file(stderr), "usage: {0}\n", "s", progname);
         exit(64);
     }
 

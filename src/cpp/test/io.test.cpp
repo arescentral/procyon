@@ -125,7 +125,6 @@ TEST_F(IoTest, ReadCpp) {
 TEST_F(IoTest, WriteC) {
     pn::string data;
     pn::file   f = data.open("w");
-    setbuf(f.c_obj(), NULL);
     EXPECT_THAT(pn_write(f.c_obj(), ""), Eq(true));
 
     EXPECT_THAT(pn_write(f.c_obj(), "n"), Eq(true));
@@ -159,7 +158,6 @@ TEST_F(IoTest, WriteC) {
 TEST_F(IoTest, WriteCpp) {
     pn::string data;
     pn::file   f = data.open("w");
-    setbuf(f.c_obj(), NULL);
     EXPECT_THAT(pn_write(f.c_obj(), ""), Eq(true));
 
     EXPECT_THAT(f.write(nullptr), Eq(true));

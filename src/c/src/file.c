@@ -177,6 +177,11 @@ int pn_view_seek(void* cookie, int64_t* offset, int whence) {
     return 0;
 }
 
-bool pn_close(pn_file_t* file) { return !fclose(file); }
-bool pn_file_eof(pn_file_t* file) { return feof(file); }
-bool pn_file_error(pn_file_t* file) { return ferror(file); }
+pn_file_t pn_wrap_file(FILE* f) {
+    pn_file_t file = {f};
+    return file;
+}
+
+bool pn_close(pn_file_t file) { return !fclose(file.c_file); }
+bool pn_file_eof(pn_file_t file) { return feof(file.c_file); }
+bool pn_file_error(pn_file_t file) { return ferror(file.c_file); }

@@ -35,18 +35,19 @@ enum {
 class file {
   public:
     file() : _c_obj{nullptr} {}
-    explicit file(pn_file_t* f) : _c_obj{f} {}
+    explicit file(FILE* f) : _c_obj{pn_wrap_file(f)} {}
+    explicit file(pn_file_t f) : _c_obj{f} {}
     file(const file&) = delete;
     file(file&& other) : _c_obj{nullptr} { std::swap(_c_obj, other._c_obj); }
     file& operator=(const file&) = delete;
     file& operator               =(file&& other) { return std::swap(_c_obj, other._c_obj), *this; }
     ~file() {
-        if (_c_obj) {
+        if (_c_obj.c_file) {
             pn_close(_c_obj);
         }
     }
 
-          operator bool() const { return c_obj() && !eof() && !error(); }
+          operator bool() const { return c_obj().c_file && !eof() && !error(); }
     file& check() &;
     file  check() && { return check(), std::move(*this); }
 
@@ -65,21 +66,22 @@ class file {
     bool error() const { return pn_file_error(c_obj()); }
     bool eof() const { return pn_file_eof(c_obj()); }
 
-    pn_file_t* c_obj() const { return _c_obj; }
+    pn_file_t c_obj() const { return _c_obj; }
 
   private:
     void check_ok();
 
-    pn_file_t* _c_obj;
+    pn_file_t _c_obj;
 };
 
 class file_view {
   public:
     file_view() : _c_obj{nullptr} {}
     file_view(const file& f) : _c_obj{f.c_obj()} {}
-    file_view(pn_file_t* f) : _c_obj{f} {}
+    file_view(FILE* f) : _c_obj{pn_wrap_file(f)} {}
+    file_view(pn_file_t f) : _c_obj{f} {}
 
-              operator bool() const { return c_obj() && !eof() && !error(); }
+              operator bool() const { return c_obj().c_file && !eof() && !error(); }
     file_view check();
 
     template <typename... arguments>
@@ -97,10 +99,10 @@ class file_view {
     bool error() const { return pn_file_error(c_obj()); }
     bool eof() const { return pn_file_eof(c_obj()); }
 
-    pn_file_t* c_obj() const { return _c_obj; }
+    pn_file_t c_obj() const { return _c_obj; }
 
   private:
-    pn_file_t* _c_obj;
+    pn_file_t _c_obj;
 };
 
 [[clang::warn_unused_result]] file open(string_view path, const char* mode);

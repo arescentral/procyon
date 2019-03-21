@@ -21,8 +21,8 @@
 extern "C" {
 #endif  // __cplusplus
 
-bool pn_raw_read(pn_file_t* f, void* data, size_t size);
-bool pn_raw_write(pn_file_t* f, const void* data, size_t size);
+bool pn_raw_read(pn_file_t f, void* data, size_t size);
+bool pn_raw_write(pn_file_t f, const void* data, size_t size);
 
 #ifdef __cplusplus
 }  // extern "C"
