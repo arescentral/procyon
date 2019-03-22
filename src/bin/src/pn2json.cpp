@@ -49,13 +49,13 @@ struct option opts[] = {
         {},
 };
 
-void dump_traditional_json(pn::file_view out, parser* prs, pn_error_t* error);
-void dump_comma_first_json(pn::file_view out, parser* prs, pn_error_t* error);
-void dump_minified_json(pn::file_view out, parser* prs, pn_error_t* error);
-void dump_json_root(pn::file_view out, parser* prs, pn_error_t* error);
+void dump_traditional_json(pn::output_view out, parser* prs, pn_error_t* error);
+void dump_comma_first_json(pn::output_view out, parser* prs, pn_error_t* error);
+void dump_minified_json(pn::output_view out, parser* prs, pn_error_t* error);
+void dump_json_root(pn::output_view out, parser* prs, pn_error_t* error);
 
-void usage(pn::file_view out, int status) {
-    pn::file_view{out}.format(
+void usage(pn::output_view out, int status) {
+    out.format(
             "usage: {0} [options] [FILE.pn]\n"
             "\n"
             "options:\n"
@@ -81,9 +81,9 @@ void main(int argc, char* const* argv) {
         switch (ch) {
             case 'r': style = ROOT; break;
             case 'm': style = MINIFIED; break;
-            case 'h': usage(stdout, 0); break;
+            case 'h': usage(pn::out, 0); break;
             case 0: break;
-            default: usage(stderr, 64); break;
+            default: usage(pn::err, 64); break;
         }
     }
 
@@ -93,55 +93,55 @@ void main(int argc, char* const* argv) {
     pn::string_view filename;
     pn_error_t      error{};
     try {
-        pn::file      open_in;
-        pn::file_view in;
+        pn::input      open_in;
+        pn::input_view in;
         switch (argc) {
             case 0:
                 filename = "-";
-                in       = stdin;
+                in       = pn::in;
                 break;
 
             case 1:
                 filename = argv[0];
                 if (filename == "-") {
-                    in = stdin;
+                    in = pn::in;
                 } else {
-                    in = open_in = pn::open(argv[0], "r").check();
+                    in = open_in = pn::open_r(argv[0]).check();
                 }
                 break;
 
-            default: usage(stderr, 64); break;
+            default: usage(pn::err, 64); break;
         }
 
         lexer  lex(in);
         parser prs(&lex, 64);
         switch (style) {
-            case TRADITIONAL: dump_traditional_json(stdout, &prs, &error); break;
-            case COMMA_FIRST: dump_comma_first_json(stdout, &prs, &error); break;
-            case MINIFIED: dump_minified_json(stdout, &prs, &error); break;
-            case ROOT: dump_json_root(stdout, &prs, &error); break;
+            case TRADITIONAL: dump_traditional_json(pn::out, &prs, &error); break;
+            case COMMA_FIRST: dump_comma_first_json(pn::out, &prs, &error); break;
+            case MINIFIED: dump_minified_json(pn::out, &prs, &error); break;
+            case ROOT: dump_json_root(pn::out, &prs, &error); break;
         }
     } catch (...) {
         std::throw_with_nested(std::runtime_error(filename.copy().c_str()));
     }
 }
 
-void nl_indent(pn::file_view out, int depth) {
+void nl_indent(pn::output_view out, int depth) {
     out.write(pn::rune{'\n'}).check();
     for (int i = 0; i < depth; ++i) {
         out.write(pn::rune{'\t'}).check();
     }
 }
 
-void dump_float(pn::file_view out, double f) {
+void dump_float(pn::output_view out, double f) {
     switch (std::fpclassify(f)) {
         case FP_NAN: out.write("null").check(); break;
-        case FP_INFINITE: pn::file_view{stdout}.format("{0}1e999", (f < 0) ? "-" : ""); break;
-        default: pn::file_view{stdout}.dump(f, pn::dump_short); break;
+        case FP_INFINITE: pn::out.format("{0}1e999", (f < 0) ? "-" : ""); break;
+        default: pn::out.dump(f, pn::dump_short); break;
     }
 }
 
-void dump_data(pn::file_view out, pn::data_view d) {
+void dump_data(pn::output_view out, pn::data_view d) {
     static const char hex[] = "0123456789abcdef";
     out.write('"').check();
     for (int i = 0; i < d.size(); ++i) {
@@ -150,7 +150,7 @@ void dump_data(pn::file_view out, pn::data_view d) {
     out.write('"').check();
 }
 
-void dump_string(pn::file_view out, pn::string_view s) {
+void dump_string(pn::output_view out, pn::string_view s) {
     out.write('"').check();
     for (int i = 0; i < s.size(); ++i) {
         switch (s.data()[i]) {
@@ -213,7 +213,7 @@ bool is_sequence_out(pn_event_type_t t) {
 
 bool is_sequence(pn_event_type_t t) { return is_sequence_in(t) || is_sequence_out(t); }
 
-void dump_token(pn::file_view out, pn_event_type_t t, pn::value_cref x) {
+void dump_token(pn::output_view out, pn_event_type_t t, pn::value_cref x) {
     switch (t) {
         case PN_EVT_NULL:
         case PN_EVT_BOOL:
@@ -232,7 +232,7 @@ void dump_token(pn::file_view out, pn_event_type_t t, pn::value_cref x) {
 // Prints \n on destruction if !*is_first_event.
 class line_finisher {
   public:
-    line_finisher(pn::file_view out, bool* is_first_event)
+    line_finisher(pn::output_view out, bool* is_first_event)
             : _out(out), _is_first_event(is_first_event) {}
 
     ~line_finisher() {
@@ -242,11 +242,11 @@ class line_finisher {
     }
 
   private:
-    pn::file_view _out;
-    bool*         _is_first_event;
+    pn::output_view _out;
+    bool*           _is_first_event;
 };
 
-void dump_json_root(pn::file_view out, parser* prs, pn_error_t* error) {
+void dump_json_root(pn::output_view out, parser* prs, pn_error_t* error) {
     if (!prs->next(error)) {
         throw std::runtime_error("internal error: no events?");
     }
@@ -258,7 +258,7 @@ void dump_json_root(pn::file_view out, parser* prs, pn_error_t* error) {
     }
 }
 
-void dump_minified_json(pn::file_view out, parser* prs, pn_error_t* error) {
+void dump_minified_json(pn::output_view out, parser* prs, pn_error_t* error) {
     bool          is_first_event = true;
     bool          is_first_item  = true;
     line_finisher lf(out, &is_first_event);
@@ -282,7 +282,7 @@ void dump_minified_json(pn::file_view out, parser* prs, pn_error_t* error) {
     }
 }
 
-void dump_traditional_json(pn::file_view out, parser* prs, pn_error_t* error) {
+void dump_traditional_json(pn::output_view out, parser* prs, pn_error_t* error) {
     int           long_depth     = 0;
     int           short_depth    = 0;
     bool          is_first_item  = true;
@@ -328,7 +328,7 @@ void dump_traditional_json(pn::file_view out, parser* prs, pn_error_t* error) {
     }
 }
 
-void dump_comma_first_json(pn::file_view out, parser* prs, pn_error_t* error) {
+void dump_comma_first_json(pn::output_view out, parser* prs, pn_error_t* error) {
     int           long_depth     = 0;
     int           short_depth    = 0;
     bool          is_first_item  = true;
@@ -385,7 +385,7 @@ void dump_comma_first_json(pn::file_view out, parser* prs, pn_error_t* error) {
 }
 
 void print_nested_exception(const std::exception& e) {
-    pn::file_view{stderr}.format(": {0}", e.what());
+    pn::err.format(": {0}", e.what());
     try {
         std::rethrow_if_nested(e);
     } catch (const std::exception& e) {
@@ -394,13 +394,13 @@ void print_nested_exception(const std::exception& e) {
 }
 
 void print_exception(const std::exception& e) {
-    pn::file_view{stderr}.format("{0}: {1}", progname, e.what());
+    pn::err.format("{0}: {1}", progname, e.what());
     try {
         std::rethrow_if_nested(e);
     } catch (const std::exception& e) {
         print_nested_exception(e);
     }
-    pn::file_view{stderr}.format("\n");
+    pn::err.format("\n");
 }
 
 }  // namespace

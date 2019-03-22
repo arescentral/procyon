@@ -29,11 +29,12 @@ typedef struct pn_string  pn_string_t;
 typedef struct pn_array   pn_array_t;
 typedef struct pn_map     pn_map_t;
 typedef struct pn_kv_pair pn_kv_pair_t;
+typedef struct pn_input   pn_input_t;
+typedef struct pn_output  pn_output_t;
 
 typedef bool    pn_bool_t;
 typedef int64_t pn_int_t;
 typedef double  pn_float_t;
-typedef FILE    pn_file_t;
 
 typedef struct pn_error pn_error_t;
 
@@ -220,38 +221,78 @@ bool pn_mapdel(pn_map_t** m, int key_format, ...);
 // Returns true if there was an element to pop.
 bool pn_mappop(pn_map_t** m, pn_value_t* x, int key_format, ...);
 
-bool pn_parse(pn_file_t* file, pn_value_t* out, pn_error_t* error);
+typedef enum {
+    PN_INPUT_TYPE_INVALID = 0,
+    PN_INPUT_TYPE_C_FILE  = 1,
+    PN_INPUT_TYPE_STDIN   = 2,
+    PN_INPUT_TYPE_VIEW    = 5,
+} pn_input_type_t;
+
+struct pn_input {
+    pn_input_type_t type;
+    union {
+        FILE* c_file;
+        struct {
+            const void* view_data;
+            size_t      view_size;
+        };
+    };
+};
+
+typedef enum {
+    PN_OUTPUT_TYPE_INVALID = 0,
+    PN_OUTPUT_TYPE_C_FILE  = 1,
+    PN_OUTPUT_TYPE_STDOUT  = 3,
+    PN_OUTPUT_TYPE_STDERR  = 4,
+    PN_OUTPUT_TYPE_DATA    = 6,
+    PN_OUTPUT_TYPE_STRING  = 7,
+} pn_output_type_t;
+
+struct pn_output {
+    pn_output_type_t type;
+    union {
+        FILE*         c_file;
+        pn_data_t**   data;
+        pn_string_t** string;
+    };
+};
+
+bool pn_parse(pn_input_t* input, pn_value_t* out, pn_error_t* error);
 
 enum {
     PN_DUMP_DEFAULT = 0,
     PN_DUMP_SHORT   = 1,
 };
-bool pn_dump(pn_file_t* file, int flags, int format, ...);
+bool pn_dump(pn_output_t* output, int flags, int format, ...);
 
-// Opens a procyon string for stdio reading and writing.
-// `d` or `s` must point to valid values of the given type.
-//
-// Supported modes:
-//
-//     mode  read  write  truncate  initial position
-//     ----  ----  -----  --------  ----------------
-//     r     Y     N      N         start of argument
-//     r+    Y     Y      N         start of argument
-//     w     N     Y      Y         start of argument
-//     w+    Y     Y      Y         start of argument
-//     a     N     Y      N         end of argument
-//     a+    Y     Y      N         end of argument
-//
-pn_file_t* pn_open_path(const char* path, const char* mode);
-pn_file_t* pn_open_data(pn_data_t** d, const char* mode);
-pn_file_t* pn_open_string(pn_string_t** s, const char* mode);
-pn_file_t* pn_open_view(const void* data, size_t size);  // mode is always "r".
+pn_input_t pn_open_r(const char* path);
+pn_input_t pn_file_input(FILE* f);
+pn_input_t pn_data_input(const pn_data_t* d);
+pn_input_t pn_string_input(const pn_string_t* s);
+pn_input_t pn_view_input(const void* data, size_t size);
+
+pn_output_t pn_open_w(const char* path);
+pn_output_t pn_open_a(const char* path);
+pn_output_t pn_file_output(FILE* f);
+pn_output_t pn_data_output(pn_data_t** d);
+pn_output_t pn_string_output(pn_string_t** s);
+
+bool pn_input_close(pn_input_t* in);
+bool pn_input_eof(const pn_input_t* in);
+bool pn_input_error(const pn_input_t* in);
+bool pn_output_close(pn_output_t* out);
+bool pn_output_eof(const pn_output_t* out);
+bool pn_output_error(const pn_output_t* out);
+
+extern pn_input_t  pn_stdin;
+extern pn_output_t pn_stdout;
+extern pn_output_t pn_stderr;
 
 // Format strings: "Hello, {0} {1}"
-bool pn_format(pn_file_t* file, const char* output_format, const char* input_format, ...);
+bool pn_format(pn_output_t* out, const char* output_format, const char* input_format, ...);
 
-bool pn_read(pn_file_t* file, const char* format, ...);
-bool pn_write(pn_file_t* file, const char* format, ...);
+bool pn_read(pn_input_t* in, const char* format, ...);
+bool pn_write(pn_output_t* out, const char* format, ...);
 
 #ifdef __cplusplus
 }  // extern "C"

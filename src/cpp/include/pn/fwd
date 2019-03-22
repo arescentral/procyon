@@ -42,13 +42,14 @@ class key_value_cref;
 class map;
 class map_ref;
 class map_cref;
-class file;
-class file_view;
+class input;
+class input_view;
+class output;
+class output_view;
 
 template <typename P>
 class byte_iterator;
 class rune_iterator;
-class file;
 
 using type = pn_type_t;
 

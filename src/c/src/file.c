@@ -20,159 +20,121 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "./file.h"
+pn_input_t pn_open_r(const char* path) { return pn_file_input(fopen(path, "r")); }
 
-char pn_file_mode(const char* mode) {
-    char ch_mode;
-    switch (*mode) {
-        case 'r':
-        case 'w':
-        case 'a': ch_mode = *(mode++); break;
-        default: return 0;
-    }
-    switch (*mode) {
-        case '+': ch_mode = toupper(ch_mode); ++mode;
-        case '\0': break;
-        default: return 0;
-    }
-    if (*mode) {
-        return 0;
-    }
-    return ch_mode;
+pn_input_t pn_file_input(FILE* f) {
+    pn_input_t in = {.type = f ? PN_INPUT_TYPE_C_FILE : PN_INPUT_TYPE_INVALID, .c_file = f};
+    return in;
 }
 
-int pn_close(void* cookie) {
-    free(cookie);
-    return 0;
-}
-
-ssize_t pn_string_read(void* cookie, char* data, size_t size) {
-    struct pn_string_cookie* c         = cookie;
-    size_t                   len       = (*c->s)->count - 1;
-    size_t                   remainder = len - c->at;
-    if (remainder < size) {
-        size = remainder;
-    }
-    memcpy(data, (*c->s)->values + c->at, size);
-    c->at += size;
-    return size;
-}
-
-ssize_t pn_string_write(void* cookie, const char* data, size_t size) {
-    struct pn_string_cookie* c         = cookie;
-    size_t                   save_size = size;
-    while (c->at > (int64_t)(*c->s)->count - 1) {
-        pn_strncat(c->s, "\0", 1);
-    }
-    int64_t len = (*c->s)->count - 1;
-    if (c->at < len) {
-        size_t overwrite_size = len - c->at;
-        if (overwrite_size > size) {
-            overwrite_size = size;
-        }
-        memcpy(&(*c->s)->values[c->at], data, overwrite_size);
-        data += overwrite_size;
-        size -= overwrite_size;
-        c->at += overwrite_size;
-    }
-    pn_strncat(c->s, data, size);
-    c->at += size;
-    return save_size;
-}
-
-int pn_string_seek(void* cookie, int64_t* offset, int whence) {
-    struct pn_string_cookie* c = cookie;
-    int64_t                  base;
-    switch (whence) {
-        case SEEK_CUR: base = c->at; break;
-        case SEEK_END: base = (*c->s)->count - 1; break;
-        case SEEK_SET: base = 0; break;
-        default: errno = EINVAL; return -1;
-    }
-    if ((*offset < 0) && (-*offset > base)) {
+pn_input_t pn_data_input(const pn_data_t* d) {
+    if (!d) {
         errno = EINVAL;
-        return -1;
+        return pn_file_input(NULL);
     }
-    *offset = c->at = base + *offset;
-    return 0;
+    return pn_view_input(d->values, d->count);
 }
 
-ssize_t pn_data_read(void* cookie, char* data, size_t size) {
-    struct pn_data_cookie* c         = cookie;
-    size_t                 len       = (*c->d)->count;
-    size_t                 remainder = len - c->at;
-    if (remainder < size) {
-        size = remainder;
-    }
-    memcpy(data, (*c->d)->values + c->at, size);
-    c->at += size;
-    return size;
-}
-
-ssize_t pn_data_write(void* cookie, const char* data, size_t size) {
-    struct pn_data_cookie* c         = cookie;
-    size_t                 save_size = size;
-    while (c->at > (int64_t)(*c->d)->count) {
-        uint8_t nul = 0;
-        pn_datacat(c->d, &nul, 1);
-    }
-    int64_t len = (*c->d)->count;
-    if (c->at < len) {
-        size_t overwrite_size = len - c->at;
-        if (overwrite_size > size) {
-            overwrite_size = size;
-        }
-        memcpy(&(*c->d)->values[c->at], data, overwrite_size);
-        data += overwrite_size;
-        size -= overwrite_size;
-        c->at += overwrite_size;
-    }
-    pn_datacat(c->d, (uint8_t*)data, size);
-    c->at += size;
-    return save_size;
-}
-
-int pn_data_seek(void* cookie, int64_t* offset, int whence) {
-    struct pn_data_cookie* c = cookie;
-    int64_t                base;
-    switch (whence) {
-        case SEEK_CUR: base = c->at; break;
-        case SEEK_END: base = (*c->d)->count; break;
-        case SEEK_SET: base = 0; break;
-        default: errno = EINVAL; return -1;
-    }
-    if ((*offset < 0) && (-*offset > base)) {
+pn_input_t pn_string_input(const pn_string_t* s) {
+    if (!s) {
         errno = EINVAL;
-        return -1;
+        return pn_file_input(NULL);
     }
-    *offset = c->at = base + *offset;
-    return 0;
+    return pn_view_input(s->values, s->count);
 }
 
-ssize_t pn_view_read(void* cookie, char* data, size_t size) {
-    struct pn_view_cookie* c         = cookie;
-    size_t                 remainder = c->size - c->at;
-    if (remainder < size) {
-        size = remainder;
-    }
-    memcpy(data, c->data + c->at, size);
-    c->at += size;
-    return size;
+pn_input_t pn_view_input(const void* data, size_t size) {
+    pn_input_t in = {.type = PN_INPUT_TYPE_VIEW, .view_data = data, .view_size = size};
+    return in;
 }
 
-int pn_view_seek(void* cookie, int64_t* offset, int whence) {
-    struct pn_view_cookie* c = cookie;
-    size_t                 base;
-    switch (whence) {
-        case SEEK_CUR: base = c->at; break;
-        case SEEK_END: base = c->size; break;
-        case SEEK_SET: base = 0; break;
-        default: errno = EINVAL; return -1;
-    }
-    if ((*offset < 0) && ((uint64_t)(-*offset) > base)) {
+pn_output_t pn_open_w(const char* path) { return pn_file_output(fopen(path, "w")); }
+
+pn_output_t pn_open_a(const char* path) { return pn_file_output(fopen(path, "a")); }
+
+pn_output_t pn_file_output(FILE* f) {
+    pn_output_t out = {.type = f ? PN_OUTPUT_TYPE_C_FILE : PN_OUTPUT_TYPE_INVALID, .c_file = f};
+    return out;
+}
+
+pn_output_t pn_data_output(pn_data_t** d) {
+    if (!d || !*d) {
         errno = EINVAL;
-        return -1;
+        return pn_file_output(NULL);
     }
-    *offset = c->at = base + *offset;
-    return 0;
+    pn_output_t out = {.type = PN_OUTPUT_TYPE_DATA, .data = d};
+    return out;
 }
+
+pn_output_t pn_string_output(pn_string_t** s) {
+    if (!s || !*s) {
+        errno = EINVAL;
+        return pn_file_output(NULL);
+    }
+    pn_output_t out = {.type = PN_OUTPUT_TYPE_STRING, .string = s};
+    return out;
+}
+
+bool pn_input_close(pn_input_t* in) {
+    switch (in->type) {
+        case PN_INPUT_TYPE_INVALID: return true;
+        case PN_INPUT_TYPE_C_FILE: return !fclose(in->c_file);
+        case PN_INPUT_TYPE_STDIN: return !fclose(stdin);
+        case PN_INPUT_TYPE_VIEW: return true;
+    }
+}
+
+bool pn_input_eof(const pn_input_t* in) {
+    switch (in->type) {
+        case PN_INPUT_TYPE_INVALID: return true;
+        case PN_INPUT_TYPE_C_FILE: return feof(in->c_file);
+        case PN_INPUT_TYPE_STDIN: return feof(stdin);
+        case PN_INPUT_TYPE_VIEW: return !in->view_data;
+    }
+}
+
+bool pn_input_error(const pn_input_t* in) {
+    switch (in->type) {
+        case PN_INPUT_TYPE_INVALID: return true;
+        case PN_INPUT_TYPE_C_FILE: return ferror(in->c_file);
+        case PN_INPUT_TYPE_STDIN: return ferror(stdin);
+        case PN_INPUT_TYPE_VIEW: return false;
+    }
+}
+
+bool pn_output_close(pn_output_t* out) {
+    switch (out->type) {
+        case PN_OUTPUT_TYPE_INVALID: return true;
+        case PN_OUTPUT_TYPE_C_FILE: return !fclose(out->c_file);
+        case PN_OUTPUT_TYPE_STDOUT: return !fclose(stdout);
+        case PN_OUTPUT_TYPE_STDERR: return !fclose(stderr);
+        case PN_OUTPUT_TYPE_DATA: return true;
+        case PN_OUTPUT_TYPE_STRING: return true;
+    }
+}
+
+bool pn_output_eof(const pn_output_t* out) {
+    switch (out->type) {
+        case PN_OUTPUT_TYPE_INVALID: return true;
+        case PN_OUTPUT_TYPE_C_FILE: return feof(out->c_file);
+        case PN_OUTPUT_TYPE_STDOUT: return feof(stdout);
+        case PN_OUTPUT_TYPE_STDERR: return feof(stderr);
+        case PN_OUTPUT_TYPE_DATA: return !out->data;
+        case PN_OUTPUT_TYPE_STRING: return !out->string;
+    }
+}
+
+bool pn_output_error(const pn_output_t* out) {
+    switch (out->type) {
+        case PN_OUTPUT_TYPE_INVALID: return true;
+        case PN_OUTPUT_TYPE_C_FILE: return ferror(out->c_file);
+        case PN_OUTPUT_TYPE_STDOUT: return ferror(stdout);
+        case PN_OUTPUT_TYPE_STDERR: return ferror(stderr);
+        case PN_OUTPUT_TYPE_DATA: return false;
+        case PN_OUTPUT_TYPE_STRING: return false;
+    }
+}
+
+pn_input_t  pn_stdin  = {.type = PN_INPUT_TYPE_STDIN};
+pn_output_t pn_stdout = {.type = PN_OUTPUT_TYPE_STDOUT};
+pn_output_t pn_stderr = {.type = PN_OUTPUT_TYPE_STDERR};

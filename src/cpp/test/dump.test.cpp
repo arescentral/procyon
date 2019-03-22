@@ -24,22 +24,20 @@ using ::testing::Eq;
 namespace pntest {
 
 pn::value dump(const pn_value_t* x) {
-    pn::value out;
-    pn_set(out.c_obj(), 's', "");
-    pn_file_t* f = pn_open_string(&out.c_obj()->s, "w");
-    EXPECT_THAT(pn_dump(f, PN_DUMP_DEFAULT, 'x', x), Eq(true));
-    fclose(f);
-    return out;
+    pn::value o;
+    pn_set(o.c_obj(), 's', "");
+    pn_output_t out = pn_string_output(&o.c_obj()->s);
+    EXPECT_THAT(pn_dump(&out, PN_DUMP_DEFAULT, 'x', x), Eq(true));
+    return o;
 }
 
 template <typename... Args>
 pn::value dump(char format, const Args&... args) {
-    pn::value out;
-    pn_set(out.c_obj(), 's', "");
-    pn_file_t* f = pn_open_string(&out.c_obj()->s, "w");
-    EXPECT_THAT(pn_dump(f, PN_DUMP_DEFAULT, format, args...), Eq(true));
-    fclose(f);
-    return out;
+    pn::value x;
+    pn_set(x.c_obj(), 's', "");
+    pn_output_t out = pn_string_output(&x.c_obj()->s);
+    EXPECT_THAT(pn_dump(&out, PN_DUMP_DEFAULT, format, args...), Eq(true));
+    return x;
 }
 
 template <typename... Args>
@@ -473,24 +471,6 @@ TEST_F(DumpTest, AllCppTypes) {
     EXPECT_THAT(pn::dump(x.copy()), IsString("true\n"));
     EXPECT_THAT(pn::dump(pn::value_ref{x}), IsString("true\n"));
     EXPECT_THAT(pn::dump(pn::value_cref{x}), IsString("true\n"));
-}
-
-TEST_F(DumpTest, CFailure) {
-    pn::string_view ro = "";
-    EXPECT_THAT(pn_dump(ro.open().c_obj(), 0, 'n'), Eq(false));
-    EXPECT_THAT(pn_dump(ro.open().c_obj(), 0, '?', true), Eq(false));
-    EXPECT_THAT(pn_dump(ro.open().c_obj(), 0, '?', false), Eq(false));
-    EXPECT_THAT(pn_dump(ro.open().c_obj(), 0, 'i', 1), Eq(false));
-    EXPECT_THAT(pn_dump(ro.open().c_obj(), 0, 'f', 1.0), Eq(false));
-}
-
-TEST_F(DumpTest, CppFailure) {
-    pn::string_view ro = "";
-    EXPECT_THAT(ro.open().dump(nullptr, pn::dump_default), Eq(false));
-    EXPECT_THAT(ro.open().dump(true, pn::dump_default), Eq(false));
-    EXPECT_THAT(ro.open().dump(false, pn::dump_default), Eq(false));
-    EXPECT_THAT(ro.open().dump(1, pn::dump_default), Eq(false));
-    EXPECT_THAT(ro.open().dump(1.0, pn::dump_default), Eq(false));
 }
 
 }  // namespace pntest

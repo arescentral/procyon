@@ -179,8 +179,8 @@ class string {
     void swap(string& other) noexcept { std::swap(*c_obj(), *other.c_obj()); }
     void swap(string&& other) noexcept { std::swap(*c_obj(), *other.c_obj()); }
 
-    file open() const;
-    file open(const char* mode);
+    ::pn::input  input() const;
+    ::pn::output output();
 
     const char*             c_str() const { return data(); }
     std::string             cpp_str() const { return std::string(data(), size()); }
@@ -237,8 +237,8 @@ class string_ref {
     void swap(string& other) const noexcept { std::swap(*c_obj(), *other.c_obj()); }
     void swap(string&& other) const noexcept { std::swap(*c_obj(), *other.c_obj()); }
 
-    file open() const;
-    file open(const char* mode) const;
+    ::pn::input  input() const;
+    ::pn::output output() const;
 
     const char* c_str() const { return data(); }
     std::string cpp_str() const { return std::string(data(), size()); }
@@ -282,7 +282,7 @@ class string_view {
 
     string copy() const { return string{data(), size()}; }
 
-    file open() const;
+    ::pn::input input() const;
 
     std::string cpp_str() const { return std::string(data(), size()); }
 

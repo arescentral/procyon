@@ -82,35 +82,35 @@ int main(int argc, const char** argv) {
     }
 
     if (argc != 0) {
-        pn_format(stderr, "usage: {0}\n", "s", progname);
+        pn_format(&pn_stderr, "usage: {0}\n", "s", progname);
         exit(64);
     }
 
     pn_lexer_t lex;
-    pn_lexer_init(&lex, stdin);
+    pn_lexer_init(&lex, &pn_stdin);
     pn_error_t error;
     int        indent_level = 0;
     while (true) {
         pn_lexer_next(&lex, &error);
         pn_format(
-                stdout, "{0}:{1}\t{2}", "zzs", lex.lineno, lex.token.begin - lex.line.begin + 1,
-                token_types[lex.token.type]);
+                &pn_stdout, "{0}:{1}\t{2}", "zzs", lex.lineno,
+                lex.token.begin - lex.line.begin + 1, token_types[lex.token.type]);
         if (lex.token.type == PN_TOK_ERROR) {
             pn_format(
-                    stdout, "\t{0}:{1}:{2}", "zzs", error.lineno, error.column,
+                    &pn_stdout, "\t{0}:{1}:{2}", "zzs", error.lineno, error.column,
                     pn_strerror(error.code));
         }
         if (lex.token.type >= PN_TOK_STAR) {
-            pn_format(stdout, "\t", "");
+            pn_format(&pn_stdout, "\t", "");
             if (is_utf8(lex.token.begin, lex.token.end)) {
-                pn_dump(stdout, PN_DUMP_SHORT, 'S', lex.token.begin,
+                pn_dump(&pn_stdout, PN_DUMP_SHORT, 'S', lex.token.begin,
                         lex.token.end - lex.token.begin);
             } else {
-                pn_dump(stdout, PN_DUMP_SHORT, '$', lex.token.begin,
+                pn_dump(&pn_stdout, PN_DUMP_SHORT, '$', lex.token.begin,
                         lex.token.end - lex.token.begin);
             }
         }
-        pn_format(stdout, "\n", "");
+        pn_format(&pn_stdout, "\n", "");
 
         switch (lex.token.type) {
             case PN_TOK_LINE_IN: ++indent_level; break;

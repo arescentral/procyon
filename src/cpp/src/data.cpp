@@ -59,14 +59,10 @@ int data_view::compare(data_view other) const {
     return pn_memncmp(data(), size(), other.data(), other.size());
 }
 
-#ifndef _WIN32
-file data::open() const { return check_c_obj(file{pn_open_view(data(), size())}); }
-file data_ref::open() const { return check_c_obj(file{pn_open_view(data(), size())}); }
-file data_view::open() const { return check_c_obj(file{pn_open_view(data(), size())}); }
-file data::open(const char* mode) { return check_c_obj(file{pn_open_data(c_obj(), mode)}); }
-file data_ref::open(const char* mode) const {
-    return check_c_obj(file{pn_open_data(c_obj(), mode)});
-}
-#endif
+input  data::input() const { return check_c_obj(::pn::input{pn_view_input(data(), size())}); }
+input  data_ref::input() const { return check_c_obj(::pn::input{pn_view_input(data(), size())}); }
+input  data_view::input() const { return check_c_obj(::pn::input{pn_view_input(data(), size())}); }
+output data::output() { return check_c_obj(::pn::output{pn_data_output(c_obj())}); }
+output data_ref::output() const { return check_c_obj(::pn::output{pn_data_output(c_obj())}); }
 
 }  // namespace pn

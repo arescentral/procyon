@@ -24,33 +24,34 @@
 #include <string.h>
 
 #include "./common.h"
+#include "./io.h"
 #include "./utf8.h"
 #include "./vector.h"
 
-static bool dump_null(pn_file_t* file);
-static bool dump_bool(pn_bool_t b, pn_file_t* file);
-static bool dump_int(pn_int_t i, pn_file_t* file);
-static bool dump_float(pn_float_t f, pn_file_t* file);
+static bool dump_null(pn_output_t* out);
+static bool dump_bool(pn_bool_t b, pn_output_t* out);
+static bool dump_int(pn_int_t i, pn_output_t* out);
+static bool dump_float(pn_float_t f, pn_output_t* out);
 static bool should_dump_short_data_view(size_t size);
 static bool should_dump_short_data(const pn_data_t* d);
-static bool dump_short_data_view(const uint8_t* data, size_t size, pn_file_t* file);
-static bool dump_short_data(const pn_data_t* d, pn_file_t* file);
+static bool dump_short_data_view(const uint8_t* data, size_t size, pn_output_t* out);
+static bool dump_short_data(const pn_data_t* d, pn_output_t* out);
 static bool dump_long_data_view(
-        const uint8_t* data, size_t size, pn_string_t** indent, pn_file_t* file);
-static bool dump_long_data(const pn_data_t* d, pn_string_t** indent, pn_file_t* file);
+        const uint8_t* data, size_t size, pn_string_t** indent, pn_output_t* out);
+static bool dump_long_data(const pn_data_t* d, pn_string_t** indent, pn_output_t* out);
 static bool should_dump_short_string_view(const char* data, size_t size);
 static bool should_dump_short_string(const pn_string_t* s);
-static bool dump_short_string_view(const char* data, size_t size, pn_file_t* file);
-static bool dump_short_string(const pn_string_t* s, pn_file_t* file);
+static bool dump_short_string_view(const char* data, size_t size, pn_output_t* out);
+static bool dump_short_string(const pn_string_t* s, pn_output_t* out);
 static bool dump_long_string_view(
-        const char* data, size_t size, pn_string_t** indent, pn_file_t* file);
-static bool dump_long_string(const pn_string_t* s, pn_string_t** indent, pn_file_t* file);
+        const char* data, size_t size, pn_string_t** indent, pn_output_t* out);
+static bool dump_long_string(const pn_string_t* s, pn_string_t** indent, pn_output_t* out);
 static bool should_dump_short_array(const pn_array_t* a);
-static bool dump_short_array(const pn_array_t* a, pn_file_t* file);
-static bool dump_long_array(const pn_array_t* a, pn_string_t** indent, pn_file_t* file);
+static bool dump_short_array(const pn_array_t* a, pn_output_t* out);
+static bool dump_long_array(const pn_array_t* a, pn_string_t** indent, pn_output_t* out);
 static bool should_dump_short_map(const pn_map_t* m);
-static bool dump_short_map(const pn_map_t* m, pn_file_t* file);
-static bool dump_long_map(const pn_map_t* m, pn_string_t** indent, pn_file_t* file);
+static bool dump_short_map(const pn_map_t* m, pn_output_t* out);
+static bool dump_long_map(const pn_map_t* m, pn_string_t** indent, pn_output_t* out);
 
 static void pn_indent(pn_string_t** s, int delta, char ch) {
     if (delta < 0) {
@@ -64,9 +65,6 @@ static void pn_indent(pn_string_t** s, int delta, char ch) {
     }
 }
 
-#define WRITE_CSTRING(S, FILE) (fwrite(S, 1, strlen(S), FILE) == strlen(S))
-#define WRITE_SPAN(DATA, SIZE, FILE) (fwrite(DATA, 1, SIZE, FILE) == SIZE)
-
 static bool should_dump_short_value(const pn_value_t* x) {
     switch (x->type) {
         case PN_DATA: return should_dump_short_data(x->d);
@@ -77,52 +75,52 @@ static bool should_dump_short_value(const pn_value_t* x) {
     }
 }
 
-static bool dump_short_value(const pn_value_t* x, pn_file_t* file) {
+static bool dump_short_value(const pn_value_t* x, pn_output_t* out) {
     switch (x->type) {
-        case PN_NULL: return dump_null(file);
-        case PN_BOOL: return dump_bool(x->b, file);
-        case PN_INT: return dump_int(x->i, file);
-        case PN_FLOAT: return dump_float(x->f, file);
-        case PN_DATA: return dump_short_data(x->d, file);
-        case PN_STRING: return dump_short_string(x->s, file);
-        case PN_ARRAY: return dump_short_array(x->a, file);
-        case PN_MAP: return dump_short_map(x->m, file);
+        case PN_NULL: return dump_null(out);
+        case PN_BOOL: return dump_bool(x->b, out);
+        case PN_INT: return dump_int(x->i, out);
+        case PN_FLOAT: return dump_float(x->f, out);
+        case PN_DATA: return dump_short_data(x->d, out);
+        case PN_STRING: return dump_short_string(x->s, out);
+        case PN_ARRAY: return dump_short_array(x->a, out);
+        case PN_MAP: return dump_short_map(x->m, out);
     }
 }
 
-static bool dump_long_value(const pn_value_t* x, pn_string_t** indent, pn_file_t* file) {
+static bool dump_long_value(const pn_value_t* x, pn_string_t** indent, pn_output_t* out) {
     switch (x->type) {
-        case PN_NULL: return dump_null(file);
-        case PN_BOOL: return dump_bool(x->b, file);
-        case PN_INT: return dump_int(x->i, file);
-        case PN_FLOAT: return dump_float(x->f, file);
-        case PN_DATA: return dump_long_data(x->d, indent, file);
-        case PN_STRING: return dump_long_string(x->s, indent, file);
-        case PN_ARRAY: return dump_long_array(x->a, indent, file);
-        case PN_MAP: return dump_long_map(x->m, indent, file);
+        case PN_NULL: return dump_null(out);
+        case PN_BOOL: return dump_bool(x->b, out);
+        case PN_INT: return dump_int(x->i, out);
+        case PN_FLOAT: return dump_float(x->f, out);
+        case PN_DATA: return dump_long_data(x->d, indent, out);
+        case PN_STRING: return dump_long_string(x->s, indent, out);
+        case PN_ARRAY: return dump_long_array(x->a, indent, out);
+        case PN_MAP: return dump_long_map(x->m, indent, out);
     }
 }
 
-static bool dump_null(pn_file_t* file) { return fwrite("null", 1, 4, file) == 4; }
+static bool dump_null(pn_output_t* out) { return pn_raw_write(out, "null", 4); }
 
-static bool dump_bool(pn_bool_t b, pn_file_t* file) {
-    if (b) {
-        return fwrite("true", 1, 4, file) == 4;
-    } else {
-        return fwrite("false", 1, 5, file) == 5;
-    }
+static bool dump_bool(pn_bool_t b, pn_output_t* out) {
+    return pn_raw_write(out, b ? "true" : "false", b ? 4 : 5);
 }
 
-static bool dump_int(pn_int_t i, pn_file_t* file) { return fprintf(file, "%" PRId64, i) > 0; }
+static bool dump_int(pn_int_t i, pn_output_t* out) {
+    char    buf[32];
+    ssize_t len;
+    return ((len = sprintf(buf, "%" PRId64, i)) > 0) && pn_raw_write(out, buf, len);
+}
 
-static bool dump_float(pn_float_t f, pn_file_t* file) {
+static bool dump_float(pn_float_t f, pn_output_t* out) {
     char repr[32];
     pn_dtoa(repr, f);
-    return WRITE_CSTRING(repr, file);
+    return pn_raw_write(out, repr, strlen(repr));
 }
 
-static bool start_line(pn_string_t* indent, pn_file_t* file) {
-    return (putc('\n', file) != EOF) && WRITE_SPAN(indent->values, indent->count - 1, file);
+static bool start_line(pn_string_t* indent, pn_output_t* out) {
+    return (pn_putc('\n', out) != EOF) && pn_raw_write(out, indent->values, indent->count - 1);
 }
 
 static bool should_dump_short_data_view(size_t size) { return size <= 4; }
@@ -130,57 +128,68 @@ static bool should_dump_short_data(const pn_data_t* d) {
     return should_dump_short_data_view(d->count);
 }
 
-static bool dump_repeated_data(size_t size, pn_file_t* file) {
-    if (putc('$', file) == EOF) {
+static bool dump_repeated_data(size_t size, pn_output_t* out) {
+    if (pn_putc('$', out) == EOF) {
         return false;
     }
     for (size_t i = 0; i < size; ++i) {
-        if (!WRITE_CSTRING("00", file)) {
+        if (!pn_raw_write(out, "00", 2)) {
             return false;
         }
     }
     return true;
 }
 
-static bool dump_short_data_view(const uint8_t* data, size_t size, pn_file_t* file) {
-    if (putc('$', file) == EOF) {
+bool dump_hex(pn_output_t* out, uint64_t x, size_t len) {
+    static const char hex_digits[] = "0123456789abcdef";
+    char              buf[16];
+    char*             ptr = buf + 16;
+    for (size_t i = 0; i < len; ++i) {
+        *(--ptr) = hex_digits[0x0f & x];
+        x >>= 4;
+    }
+    return pn_raw_write(out, ptr, len);
+}
+
+static bool dump_short_data_view(const uint8_t* data, size_t size, pn_output_t* out) {
+    if (pn_putc('$', out) == EOF) {
         return false;
     }
     for (size_t i = 0; i < size; ++i) {
-        if (fprintf(file, "%02x", data[i]) <= 0) {
+        if (!dump_hex(out, data[i], 2)) {
             return false;
         }
     }
     return true;
 }
 
-static bool dump_short_data(const pn_data_t* d, pn_file_t* file) {
-    return dump_short_data_view(d->values, d->count, file);
+static bool dump_short_data(const pn_data_t* d, pn_output_t* out) {
+    return dump_short_data_view(d->values, d->count, out);
 }
 
 static bool dump_long_data_view(
-        const uint8_t* data, size_t size, pn_string_t** indent, pn_file_t* file) {
+        const uint8_t* data, size_t size, pn_string_t** indent, pn_output_t* out) {
     for (size_t i = 0; i < size; ++i) {
         if (i == 0) {
-            fprintf(file, "$\t");
+            pn_write(out, "S", "$\t", (size_t)2);
         } else if ((i % 16) == 0) {
-            if (!(start_line(*indent, file) && WRITE_CSTRING("$\t", file))) {
+            if (!(start_line(*indent, out) && pn_raw_write(out, "$\t", 2))) {
                 return false;
             }
         } else if ((i % 2) == 0) {
-            if (putc(' ', file) == EOF) {
+            if (pn_putc(' ', out) == EOF) {
                 return false;
             }
         }
-        if (fprintf(file, "%02x", data[i]) <= 0) {
+        if (!dump_hex(out, data[i], 2)) {
             return false;
         }
     }
     return true;
 }
 
-static bool dump_long_data(const pn_data_t* d, pn_string_t** indent, pn_file_t* file) {
-    return dump_long_data_view(d->values, d->count, indent, file);
+static bool dump_long_data(const pn_data_t* d, pn_string_t** indent, pn_output_t* out) {
+    return dump_long_data_view(d->values, d->count, indent, out);
 }
 
 static bool should_dump_short_string_view(const char* data, size_t size) {
@@ -203,8 +212,8 @@ static bool should_dump_short_string(const pn_string_t* s) {
     return should_dump_short_string_view(s->values, s->count - 1);
 }
 
-static bool dump_short_string_view(const char* data, size_t size, pn_file_t* file) {
-    if (putc('"', file) == EOF) {
+static bool dump_short_string_view(const char* data, size_t size, pn_output_t* out) {
+    if (pn_putc('"', out) == EOF) {
         return false;
     }
     for (size_t i = 0, next; i < size; i = next) {
@@ -221,32 +230,32 @@ static bool dump_short_string_view(const char* data, size_t size, pn_file_t* fil
             case '\\': literal = "\\\\"; break;
             default:
                 if (pn_isprint(r)) {
-                    if (!WRITE_SPAN(data + i, next - i, file)) {
+                    if (!pn_raw_write(out, data + i, next - i)) {
                         return false;
                     }
                 } else if (r < 0x10000) {
-                    if (fprintf(file, "\\u%04x", r) <= 0) {
+                    if (!(pn_write(out, "S", "\\u", (size_t)2) && dump_hex(out, r, 4))) {
                         return false;
                     }
                 } else {
-                    if (fprintf(file, "\\U%08x", r) <= 0) {
+                    if (!(pn_write(out, "S", "\\U", (size_t)2) && dump_hex(out, r, 8))) {
                         return false;
                     }
                 }
                 continue;
         }
-        if (!WRITE_CSTRING(literal, file)) {
+        if (!pn_raw_write(out, literal, strlen(literal))) {
             return false;
         }
     }
-    if (putc('"', file) == EOF) {
+    if (pn_putc('"', out) == EOF) {
         return false;
     }
     return true;
 }
 
-static bool dump_short_string(const pn_string_t* s, pn_file_t* file) {
-    return dump_short_string_view(s->values, s->count - 1, file);
+static bool dump_short_string(const pn_string_t* s, pn_output_t* out) {
+    return dump_short_string_view(s->values, s->count - 1, out);
 }
 
 static size_t short_string_width(const pn_string_t* s) {
@@ -310,45 +319,45 @@ static bool split_line(const char* data, size_t size, size_t* part) {
 }
 
 static bool dump_long_string_view(
-        const char* data, size_t size, pn_string_t** indent, pn_file_t* file) {
+        const char* data, size_t size, pn_string_t** indent, pn_output_t* out) {
     const char* const begin      = data;
     bool              can_use_gt = true;
     ++size;
     while (true) {
         size_t line_size = strcspn(data, "\n");
         if (data != begin) {
-            if (!start_line(*indent, file)) {
+            if (!start_line(*indent, out)) {
                 return false;
             }
         }
         if (can_use_gt || (line_size == 0)) {
-            if (putc('>', file) == EOF) {
+            if (pn_putc('>', out) == EOF) {
                 return false;
             }
         } else {
-            if (putc('|', file) == EOF) {
+            if (pn_putc('|', out) == EOF) {
                 return false;
             }
         }
 
         if (line_size > 0) {
-            if (putc('\t', file) == EOF) {
+            if (pn_putc('\t', out) == EOF) {
                 return false;
             }
             size_t split;
             while (split_line(data, line_size, &split)) {
-                if (!WRITE_SPAN(data, split, file)) {
+                if (!pn_raw_write(out, data, split)) {
                     return false;
                 }
                 ++split;  // cover space
                 data += split;
                 size -= split;
                 line_size -= split;
-                if (!(start_line(*indent, file) && WRITE_CSTRING(">\t", file))) {
+                if (!(start_line(*indent, out) && pn_raw_write(out, ">\t", 2))) {
                     return false;
                 }
             }
-            if (!WRITE_SPAN(data, line_size, file)) {
+            if (!pn_raw_write(out, data, line_size)) {
                 return false;
             }
             can_use_gt = false;
@@ -360,7 +369,7 @@ static bool dump_long_string_view(
         size -= line_size + 1;
         if (size <= 1) {
             if (size == 0) {
-                if (!(start_line(*indent, file) && (putc('!', file) != EOF))) {
+                if (!(start_line(*indent, out) && (pn_putc('!', out) != EOF))) {
                     return false;
                 }
             }
@@ -369,8 +378,8 @@ static bool dump_long_string_view(
     }
 }
 
-static bool dump_long_string(const pn_string_t* s, pn_string_t** indent, pn_file_t* file) {
-    return dump_long_string_view(s->values, s->count - 1, indent, file);
+static bool dump_long_string(const pn_string_t* s, pn_string_t** indent, pn_output_t* out) {
+    return dump_long_string_view(s->values, s->count - 1, indent, out);
 }
 
 static bool should_dump_short_array(const pn_array_t* a) {
@@ -382,43 +391,43 @@ static bool should_dump_short_array(const pn_array_t* a) {
     return true;
 }
 
-static bool dump_short_array(const pn_array_t* a, pn_file_t* file) {
-    if (putc('[', file) == EOF) {
+static bool dump_short_array(const pn_array_t* a, pn_output_t* out) {
+    if (pn_putc('[', out) == EOF) {
         return false;
     }
     for (const pn_value_t *x = a->values, *end = a->values + a->count; x != end; ++x) {
         if (x != a->values) {
-            if (!WRITE_CSTRING(", ", file)) {
+            if (!pn_raw_write(out, ", ", 2)) {
                 return false;
             }
         }
-        if (!dump_short_value(x, file)) {
+        if (!dump_short_value(x, out)) {
             return false;
         }
     }
-    if (putc(']', file) == EOF) {
+    if (pn_putc(']', out) == EOF) {
         return false;
     }
     return true;
 }
 
-static bool dump_long_array(const pn_array_t* a, pn_string_t** indent, pn_file_t* file) {
+static bool dump_long_array(const pn_array_t* a, pn_string_t** indent, pn_output_t* out) {
     for (const pn_value_t *x = a->values, *end = a->values + a->count; x != end; ++x) {
         if (x != a->values) {
-            if (!start_line(*indent, file)) {
+            if (!start_line(*indent, out)) {
                 return false;
             }
         }
         pn_indent(indent, +1, '\t');
-        if (!WRITE_CSTRING("*\t", file)) {
+        if (!pn_raw_write(out, "*\t", 2)) {
             return false;
         }
         if (should_dump_short_value(x)) {
-            if (!dump_short_value(x, file)) {
+            if (!dump_short_value(x, out)) {
                 return false;
             }
         } else {
-            if (!dump_long_value(x, indent, file)) {
+            if (!dump_long_value(x, indent, out)) {
                 return false;
             }
         }
@@ -453,17 +462,23 @@ static bool needs_quotes(const pn_string_t* key) {
     return false;
 }
 
-static bool dump_key(const pn_string_t* key, int padding, pn_file_t* file) {
-    if (needs_quotes(key)) {
-        if (!dump_short_string(key, file)) {
-            return false;
-        }
-    } else {
-        if (!WRITE_SPAN(key->values, key->count - 1, file)) {
+static bool write_padding(pn_output_t* out, size_t len) {
+    for (size_t i = 0; i < len; ++i) {
+        if (!pn_raw_write(out, " ", 1)) {
             return false;
         }
     }
-    return fprintf(file, ":%*s", padding, "") > 0;
+    return true;
+}
+
+static bool dump_key(const pn_string_t* key, int padding, pn_output_t* out) {
+    if (needs_quotes(key)) {
+        return dump_short_string(key, out) && pn_raw_write(out, ":", 1) &&
+               write_padding(out, padding);
+    } else {
+        return pn_raw_write(out, key->values, key->count - 1) && pn_raw_write(out, ":", 1) &&
+               write_padding(out, padding);
+    }
 }
 
 static size_t key_width(const pn_string_t* key) {
@@ -474,27 +489,27 @@ static size_t key_width(const pn_string_t* key) {
     }
 }
 
-static bool dump_short_map(const pn_map_t* m, pn_file_t* file) {
-    if (putc('{', file) == EOF) {
+static bool dump_short_map(const pn_map_t* m, pn_output_t* out) {
+    if (pn_putc('{', out) == EOF) {
         return false;
     }
     for (const pn_kv_pair_t *x = m->values, *end = m->values + m->count; x != end; ++x) {
         if (x != m->values) {
-            if (!WRITE_CSTRING(", ", file)) {
+            if (!pn_raw_write(out, ", ", 2)) {
                 return false;
             }
         }
-        if (!(dump_key(x->key, 1, file) && dump_short_value(&x->value, file))) {
+        if (!(dump_key(x->key, 1, out) && dump_short_value(&x->value, out))) {
             return false;
         }
     }
-    if (putc('}', file) == EOF) {
+    if (pn_putc('}', out) == EOF) {
         return false;
     }
     return true;
 }
 
-static bool dump_long_map(const pn_map_t* m, pn_string_t** indent, pn_file_t* file) {
+static bool dump_long_map(const pn_map_t* m, pn_string_t** indent, pn_output_t* out) {
     size_t padding = 0;
     for (const pn_kv_pair_t *x = m->values, *end = m->values + m->count; x != end; ++x) {
         if (should_dump_short_value(&x->value)) {
@@ -508,20 +523,20 @@ static bool dump_long_map(const pn_map_t* m, pn_string_t** indent, pn_file_t* fi
 
     for (const pn_kv_pair_t *x = m->values, *end = m->values + m->count; x != end; ++x) {
         if (x != m->values) {
-            if (!start_line(*indent, file)) {
+            if (!start_line(*indent, out)) {
                 return false;
             }
         }
         size_t width = key_width(x->key);
         if (should_dump_short_value(&x->value)) {
-            if (!(dump_key(x->key, padding - 1 - width, file) &&
-                  dump_short_value(&x->value, file))) {
+            if (!(dump_key(x->key, padding - 1 - width, out) &&
+                  dump_short_value(&x->value, out))) {
                 return false;
             }
         } else {
             pn_indent(indent, +1, '\t');
-            if (!(dump_key(x->key, 0, file) && start_line(*indent, file) &&
-                  dump_long_value(&x->value, indent, file))) {
+            if (!(dump_key(x->key, 0, out) && start_line(*indent, out) &&
+                  dump_long_value(&x->value, indent, out))) {
                 return false;
             }
             pn_indent(indent, -1, 0);
@@ -530,7 +545,7 @@ static bool dump_long_map(const pn_map_t* m, pn_string_t** indent, pn_file_t* fi
     return true;
 }
 
-bool pn_dump(pn_file_t* file, int flags, int format, ...) {
+bool pn_dump(pn_output_t* out, int flags, int format, ...) {
     pn_value_t     x;
     char           ch[4];
     const char*    s = NULL;
@@ -586,37 +601,37 @@ bool pn_dump(pn_file_t* file, int flags, int format, ...) {
     bool result = false;
     if (s) {
         if ((flags & PN_DUMP_SHORT) || should_dump_short_string_view(s, size)) {
-            result = dump_short_string_view(s, size, file);
+            result = dump_short_string_view(s, size, out);
         } else {
             pn_value_t indent;
             pn_set(&indent, 's', "");
-            result = dump_long_string_view(s, size, &indent.s, file);
+            result = dump_long_string_view(s, size, &indent.s, out);
             pn_clear(&indent);
         }
     } else if (d) {
         if ((flags & PN_DUMP_SHORT) || should_dump_short_data_view(size)) {
-            result = dump_short_data_view(d, size, file);
+            result = dump_short_data_view(d, size, out);
         } else {
             pn_value_t indent;
             pn_set(&indent, 's', "");
-            result = dump_long_data_view(d, size, &indent.s, file);
+            result = dump_long_data_view(d, size, &indent.s, out);
             pn_clear(&indent);
         }
     } else if (z) {
-        result = dump_repeated_data(size, file);
+        result = dump_repeated_data(size, out);
     } else {
         if ((flags & PN_DUMP_SHORT) || should_dump_short_value(&x)) {
-            result = dump_short_value(&x, file);
+            result = dump_short_value(&x, out);
         } else {
             pn_value_t indent;
             pn_set(&indent, 's', "");
-            result = dump_long_value(&x, &indent.s, file);
+            result = dump_long_value(&x, &indent.s, out);
             pn_clear(&indent);
         }
     }
 
     if (result && !(flags & PN_DUMP_SHORT)) {
-        result = (putc('\n', file) != EOF);
+        result = (pn_putc('\n', out) != EOF);
     }
     return result;
 }

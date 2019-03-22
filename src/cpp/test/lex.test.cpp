@@ -84,7 +84,7 @@ using Tokens = std::vector<Token>;
 using Errors = std::vector<pn_error_t>;
 
 Tokens lex(pn::string_view data) {
-    pn::file   f = data.open();
+    pn::input  f = data.input();
     pn_lexer_t lex;
     pn_lexer_init(&lex, f.c_obj());
 
@@ -180,9 +180,10 @@ Token error(const std::string& content, pn_error_t error) {
 }
 
 TEST_F(LexTest, CreateClear) {
+    pn_input_t in  = pn_file_input(nullptr);
     pn_lexer_t lex = {};
     pn_lexer_clear(&lex);  // OK to clear zeroed-out lexer.
-    pn_lexer_init(&lex, NULL);
+    pn_lexer_init(&lex, &in);
     pn_lexer_clear(&lex);
 }
 

@@ -1,4 +1,4 @@
-// Copyright 2017 The Procyon Authors
+// Copyright 2019 The Procyon Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,11 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "./lex.hpp"
+#ifndef PROCYON_IO_H_
+#define PROCYON_IO_H_
 
-#include <pn/file>
+#include <pn/procyon.h>
 
-lexer::lexer(pn::input_view in) : _input{in} { pn_lexer_init(c_obj(), _input.c_obj()); }
-lexer::~lexer() { pn_lexer_clear(c_obj()); }
+#ifdef __cplusplus
+extern "C" {
+#endif  // __cplusplus
 
-void lexer::next(pn_error_t* error) { pn_lexer_next(c_obj(), error); }
+int     pn_getc(pn_input_t* in);
+int     pn_putc(int ch, pn_output_t* out);
+bool    pn_raw_read(pn_input_t* in, void* data, size_t size);
+bool    pn_raw_write(pn_output_t* out, const void* data, size_t size);
+ssize_t pn_getline(pn_input_t* in, char** data, size_t* size);
+
+#ifdef __cplusplus
+}  // extern "C"
+#endif  // __cplusplus
+
+#endif  // PROCYON_IO_H_
