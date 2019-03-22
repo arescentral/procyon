@@ -59,10 +59,10 @@ int data_view::compare(data_view other) const {
     return pn_memncmp(data(), size(), other.data(), other.size());
 }
 
-file data::input() const { return check_c_obj(file{pn_view_input(data(), size())}); }
-file data_ref::input() const { return check_c_obj(file{pn_view_input(data(), size())}); }
-file data_view::input() const { return check_c_obj(file{pn_view_input(data(), size())}); }
-file data::output() { return check_c_obj(file{pn_data_output(c_obj())}); }
-file data_ref::output() const { return check_c_obj(file{pn_data_output(c_obj())}); }
+input  data::input() const { return check_c_obj(::pn::input{pn_view_input(data(), size())}); }
+input  data_ref::input() const { return check_c_obj(::pn::input{pn_view_input(data(), size())}); }
+input  data_view::input() const { return check_c_obj(::pn::input{pn_view_input(data(), size())}); }
+output data::output() { return check_c_obj(::pn::output{pn_data_output(c_obj())}); }
+output data_ref::output() const { return check_c_obj(::pn::output{pn_data_output(c_obj())}); }
 
 }  // namespace pn

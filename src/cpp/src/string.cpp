@@ -127,10 +127,12 @@ bool strtod(string_view s, double* f, pn_error_code_t* error) {
     return pn_strtod(s.data(), s.size(), f, error);
 }
 
-file string::input() const { return check_c_obj(file{pn_view_input(data(), size())}); }
-file string_ref::input() const { return check_c_obj(file{pn_view_input(data(), size())}); }
-file string_view::input() const { return check_c_obj(file{pn_view_input(data(), size())}); }
-file string::output() { return check_c_obj(file{pn_string_output(c_obj())}); }
-file string_ref::output() const { return check_c_obj(file{pn_string_output(c_obj())}); }
+input string::input() const { return check_c_obj(::pn::input{pn_view_input(data(), size())}); }
+input string_ref::input() const { return check_c_obj(::pn::input{pn_view_input(data(), size())}); }
+input string_view::input() const {
+    return check_c_obj(::pn::input{pn_view_input(data(), size())});
+}
+output string::output() { return check_c_obj(::pn::output{pn_string_output(c_obj())}); }
+output string_ref::output() const { return check_c_obj(::pn::output{pn_string_output(c_obj())}); }
 
 }  // namespace pn

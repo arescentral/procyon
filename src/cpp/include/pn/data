@@ -79,8 +79,8 @@ class data_ {
     void swap(data_& other) { std::swap(*c_obj(), *other.c_obj()); }
     void swap(data_&& other) { std::swap(*c_obj(), *other.c_obj()); }
 
-    file input() const;
-    file output();
+    ::pn::input  input() const;
+    ::pn::output output();
 
     c_obj_type*             c_obj() { return &_c_obj; }
     c_obj_const_type const* c_obj() const { return &_c_obj; }
@@ -136,8 +136,8 @@ class data_ref {
     iterator begin() const { return iterator{data()}; }
     iterator end() const { return iterator{data() + size()}; }
 
-    file input() const;
-    file output() const;
+    ::pn::input  input() const;
+    ::pn::output output() const;
 
     c_obj_type* c_obj() const { return _c_obj; }
 
@@ -180,7 +180,7 @@ class data_view {
 
     ::pn::data copy() { return ::pn::data{data(), size()}; }
 
-    file input() const;
+    ::pn::input input() const;
 
   private:
     const value_type* _data;

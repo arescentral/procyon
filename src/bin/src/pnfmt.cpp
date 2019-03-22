@@ -49,10 +49,11 @@ struct line {
     std::vector<line>  children;
 };
 
-static void usage(pn::file_view out, int status);
+static void usage(pn::output_view out, int status);
 static void format_file(
-        pn::string_view path, pn::file_view in, bool dump, bool in_place, const pn::value& output);
-static void      lex_file(pn::string_view path, pn::file_view in, std::vector<line>* roots);
+        pn::string_view path, pn::input_view in, bool dump, bool in_place,
+        const pn::value& output);
+static void      lex_file(pn::string_view path, pn::input_view in, std::vector<line>* roots);
 static void      join_tokens(std::vector<line>* lines);
 static void      simplify_tokens(std::vector<line>* lines);
 static void      wrap_tokens(std::vector<line>* lines);
@@ -64,7 +65,7 @@ static void      output_tokens(
              const std::vector<line>& roots, bool in_place, pn::string_view path,
              pn::value_cref output);
 static void format_tokens(
-        const std::vector<line>& lines, pn::file_view out, int* lineno, int indent, int column);
+        const std::vector<line>& lines, pn::output_view out, int* lineno, int indent, int column);
 
 #ifndef NDEBUG
 static void check_invariants(const std::vector<line>& lines);
@@ -105,13 +106,14 @@ void main(int argc, char* const* argv) {
     argv += optind;
 
     if (in_place && !output.is_null()) {
-        pn::file_view{stderr}.format("{0}: --in-place conflicts with --output\n", progname);
+        pn::output_view{stderr}.format("{0}: --in-place conflicts with --output\n", progname);
         exit(64);
     } else if (in_place && (argc == 0)) {
-        pn::file_view{stderr}.format("{0}: --in-place requires an input path\n", progname);
+        pn::output_view{stderr}.format("{0}: --in-place requires an input path\n", progname);
         exit(64);
     } else if (!output.is_null() && (argc > 1)) {
-        pn::file_view{stderr}.format("{0}: --output requires at most one input path\n", progname);
+        pn::output_view{stderr}.format(
+                "{0}: --output requires at most one input path\n", progname);
         exit(64);
     }
 
@@ -120,11 +122,11 @@ void main(int argc, char* const* argv) {
     } else {
         for (int i = 0; i < argc; ++i) {
             pn::string_view path = argv[i];
-            pn::file        f;
+            pn::input       f;
             try {
-                f = pn::open(path, "r").check();
+                f = pn::open_r(path).check();
             } catch (std::runtime_error& e) {
-                pn::file_view{stderr}.format("{0}: {1}: {2}\n", progname, path, e.what());
+                pn::output_view{stderr}.format("{0}: {1}: {2}\n", progname, path, e.what());
                 exit(64);
             }
             format_file(path, f, dump, in_place, output);
@@ -133,7 +135,7 @@ void main(int argc, char* const* argv) {
 }
 
 static void format_file(
-        pn::string_view path, pn::file_view in, bool dump, bool in_place,
+        pn::string_view path, pn::input_view in, bool dump, bool in_place,
         const pn::value& output) {
     std::vector<line> roots;
     lex_file(path, in, &roots);
@@ -148,14 +150,14 @@ static void format_file(
     set_indent(&roots, 0);
     set_column(&roots);
     if (dump) {
-        pn::file_view{stdout}.dump(repr(roots));
+        pn::output_view{stdout}.dump(repr(roots));
     } else {
         output_tokens(roots, in_place, path, output);
     }
 }
 
-static void usage(pn::file_view out, int status) {
-    pn::file_view{out}.format(
+static void usage(pn::output_view out, int status) {
+    out.format(
             "usage: {0} [-i | -o OUT] [IN]\n"
             "\n"
             "options:\n"
@@ -208,24 +210,24 @@ static void output_tokens(
         {
             int fd = mkstemp(tmp.data());
             if (fd < 0) {
-                pn::file_view{stderr}.format("{0}: {1}: {2}\n", progname, tmp, strerror(errno));
+                pn::output_view{stderr}.format("{0}: {1}: {2}\n", progname, tmp, strerror(errno));
                 exit(1);
             }
-            pn::file out(fdopen(fd, "w"));
+            pn::output out(fdopen(fd, "w"));
             format_tokens(roots, out, &lineno, 0, 0);
             out.write('\n').check();
         }
         if (rename(tmp.c_str(), path.copy().c_str()) < 0) {
-            pn::file_view{stderr}.format("{0}: {1}: {2}\n", progname, path, strerror(errno));
+            pn::output_view{stderr}.format("{0}: {1}: {2}\n", progname, path, strerror(errno));
             unlink(tmp.c_str());
             exit(1);
         }
     } else if (!output.is_null()) {
-        pn::file out;
+        pn::output out;
         try {
-            out = pn::open(output.as_string(), "w").check();
+            out = pn::open_w(output.as_string()).check();
         } catch (std::runtime_error& e) {
-            pn::file_view{stderr}.format(
+            pn::output_view{stderr}.format(
                     "{0}: {1}: {2}\n", progname, output.as_string(), e.what());
             exit(1);
         }
@@ -233,7 +235,7 @@ static void output_tokens(
         out.write('\n').check();
     } else {
         format_tokens(roots, stdout, &lineno, 0, 0);
-        pn::file_view{stdout}.write('\n').check();
+        pn::output_view{stdout}.write('\n').check();
     }
 }
 
@@ -277,7 +279,7 @@ static void lex_block(
                 continue;
 
             case PN_TOK_ERROR:
-                pn::file_view{stderr}.format(
+                pn::output_view{stderr}.format(
                         "{0}:{1}:{2}: {3}\n", path.copy().c_str(), lex->lineno(), lex->column(),
                         pn_strerror(error.code));
                 break;
@@ -293,7 +295,7 @@ static void lex_block(
     }
 }
 
-static void lex_file(pn::string_view path, pn::file_view in, std::vector<line>* roots) {
+static void lex_file(pn::string_view path, pn::input_view in, std::vector<line>* roots) {
     bool       need_newline = false;
     lexer      lex(in);
     pn_error_t error;
@@ -813,7 +815,7 @@ static void set_column(std::vector<line>* lines) {
 }
 
 static void format_tokens(
-        const std::vector<line>& lines, pn::file_view out, int* lineno, int indent, int column) {
+        const std::vector<line>& lines, pn::output_view out, int* lineno, int indent, int column) {
     for (const line& l : lines) {
         for (; *lineno < l.lineno; ++*lineno) {
             out.write('\n').check();
@@ -838,7 +840,7 @@ static void format_tokens(
 }
 
 void print_nested_exception(const std::exception& e) {
-    pn::file_view{stderr}.format(": {0}", e.what());
+    pn::output_view{stderr}.format(": {0}", e.what());
     try {
         std::rethrow_if_nested(e);
     } catch (const std::exception& e) {
@@ -847,13 +849,13 @@ void print_nested_exception(const std::exception& e) {
 }
 
 void print_exception(const std::exception& e) {
-    pn::file_view{stderr}.format("{0}: {1}", progname, e.what());
+    pn::output_view{stderr}.format("{0}: {1}", progname, e.what());
     try {
         std::rethrow_if_nested(e);
     } catch (const std::exception& e) {
         print_nested_exception(e);
     }
-    pn::file_view{stderr}.format("\n");
+    pn::output_view{stderr}.format("\n");
 }
 
 }  // namespace

@@ -475,22 +475,4 @@ TEST_F(DumpTest, AllCppTypes) {
     EXPECT_THAT(pn::dump(pn::value_cref{x}), IsString("true\n"));
 }
 
-TEST_F(DumpTest, CFailure) {
-    pn::string_view ro = "";
-    EXPECT_THAT(pn_dump(ro.input().c_obj(), 0, 'n'), Eq(false));
-    EXPECT_THAT(pn_dump(ro.input().c_obj(), 0, '?', true), Eq(false));
-    EXPECT_THAT(pn_dump(ro.input().c_obj(), 0, '?', false), Eq(false));
-    EXPECT_THAT(pn_dump(ro.input().c_obj(), 0, 'i', 1), Eq(false));
-    EXPECT_THAT(pn_dump(ro.input().c_obj(), 0, 'f', 1.0), Eq(false));
-}
-
-TEST_F(DumpTest, CppFailure) {
-    pn::string_view ro = "";
-    EXPECT_THAT(ro.input().dump(nullptr, pn::dump_default), Eq(false));
-    EXPECT_THAT(ro.input().dump(true, pn::dump_default), Eq(false));
-    EXPECT_THAT(ro.input().dump(false, pn::dump_default), Eq(false));
-    EXPECT_THAT(ro.input().dump(1, pn::dump_default), Eq(false));
-    EXPECT_THAT(ro.input().dump(1.0, pn::dump_default), Eq(false));
-}
-
 }  // namespace pntest

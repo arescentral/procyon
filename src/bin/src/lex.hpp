@@ -24,7 +24,7 @@ class lexer {
   public:
     using token_t = decltype(pn_lexer_t::token);
 
-    lexer(pn::file_view in);
+    lexer(pn::input_view in);
     ~lexer();
 
     lexer(const lexer&) = delete;
@@ -39,8 +39,8 @@ class lexer {
     const pn_lexer_t* c_obj() const { return &_c_obj; }
 
   private:
-    pn::file_view _file;
-    pn_lexer_t    _c_obj;
+    pn::input_view _input;
+    pn_lexer_t     _c_obj;
 };
 
 #endif  // PROCYON_LEX_HPP_

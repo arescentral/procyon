@@ -16,7 +16,7 @@
 
 #include <pn/file>
 
-lexer::lexer(pn::file_view in) : _file{in} { pn_lexer_init(c_obj(), _file.c_obj()); }
+lexer::lexer(pn::input_view in) : _input{in} { pn_lexer_init(c_obj(), _input.c_obj()); }
 lexer::~lexer() { pn_lexer_clear(c_obj()); }
 
 void lexer::next(pn_error_t* error) { pn_lexer_next(c_obj(), error); }

@@ -33,7 +33,7 @@ static_assert(std::is_same<index_range<4>::type, indexes<0, 1, 2, 3>>::value, ""
 
 }  // namespace internal
 
-file& file::check() & {
+input& input::check() & {
     if (!c_obj()->type || error()) {
         throw std::system_error(errno, std::system_category());
     } else if (eof()) {
@@ -42,7 +42,7 @@ file& file::check() & {
     return *this;
 }
 
-file_view file_view::check() {
+input_view input_view::check() {
     if (!c_obj()->type || error()) {
         throw std::system_error(errno, std::system_category());
     } else if (eof()) {
@@ -51,9 +51,29 @@ file_view file_view::check() {
     return *this;
 }
 
-file open(string_view path, const char* mode) { return file{fopen(path.copy().c_str(), mode)}; }
+output& output::check() & {
+    if (!c_obj()->type || error()) {
+        throw std::system_error(errno, std::system_category());
+    } else if (eof()) {
+        throw std::runtime_error("unexpected eof");
+    }
+    return *this;
+}
 
-bool parse(file_view in, value_ptr out, pn_error_t* error) {
+output_view output_view::check() {
+    if (!c_obj()->type || error()) {
+        throw std::system_error(errno, std::system_category());
+    } else if (eof()) {
+        throw std::runtime_error("unexpected eof");
+    }
+    return *this;
+}
+
+input  open_r(string_view path) { return input{fopen(path.copy().c_str(), "r")}; }
+output open_w(string_view path) { return output{fopen(path.copy().c_str(), "w")}; }
+output open_a(string_view path) { return output{fopen(path.copy().c_str(), "a")}; }
+
+bool parse(input_view in, value_ptr out, pn_error_t* error) {
     return pn_parse(in.c_obj(), out->c_obj(), error);
 }
 
