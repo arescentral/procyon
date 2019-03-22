@@ -84,7 +84,7 @@ using Tokens = std::vector<Token>;
 using Errors = std::vector<pn_error_t>;
 
 Tokens lex(pn::string_view data) {
-    pn::file   f = data.open();
+    pn::file   f = data.input();
     pn_lexer_t lex;
     pn_lexer_init(&lex, f.c_obj());
 

@@ -252,25 +252,13 @@ enum {
 };
 bool pn_dump(pn_file_t* file, int flags, int format, ...);
 
-// Opens a procyon string for stdio reading and writing.
-// `d` or `s` must point to valid values of the given type.
-//
-// Supported modes:
-//
-//     mode  read  write  truncate  initial position
-//     ----  ----  -----  --------  ----------------
-//     r     Y     N      N         start of argument
-//     r+    Y     Y      N         start of argument
-//     w     N     Y      Y         start of argument
-//     w+    Y     Y      Y         start of argument
-//     a     N     Y      N         end of argument
-//     a+    Y     Y      N         end of argument
-//
 pn_file_t pn_wrap_file(FILE* f);
 pn_file_t pn_open_path(const char* path, const char* mode);
-pn_file_t pn_open_data(pn_data_t** d, const char* mode);
-pn_file_t pn_open_string(pn_string_t** s, const char* mode);
-pn_file_t pn_open_view(const void* data, size_t size);  // mode is always "r".
+pn_file_t pn_data_input(const pn_data_t* d);             // mode is always "r".
+pn_file_t pn_string_input(const pn_string_t* s);         // mode is always "r".
+pn_file_t pn_view_input(const void* data, size_t size);  // mode is always "r".
+pn_file_t pn_data_output(pn_data_t** d);                 // mode is always "a"
+pn_file_t pn_string_output(pn_string_t** s);             // mode is always "a"
 bool      pn_close(pn_file_t* file);
 bool      pn_file_eof(const pn_file_t* file);
 bool      pn_file_error(const pn_file_t* file);

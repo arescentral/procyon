@@ -169,14 +169,14 @@ void read(pn_file_t* f, const char* format, const tuple& args) {
 template <typename... args>
 string format(const char* fmt, const args&... arg) {
     string out;
-    out.open("w").check().format(fmt, std::forward<const args&>(arg)...).check();
+    out.output().format(fmt, std::forward<const args&>(arg)...).check();
     return out;
 }
 
 template <typename arg>
 string dump(const arg& x, int flags) {
     string out;
-    out.open("w").check().dump(x, flags).check();
+    out.output().dump(x, flags).check();
     return out;
 }
 

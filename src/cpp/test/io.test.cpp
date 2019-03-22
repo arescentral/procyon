@@ -31,7 +31,7 @@ TEST_F(IoTest, ReadC) {
             "\021\022\023\024\025\026\027\030"
             "\031\032\033\034\035\036\037\040"
             "\041\042\043\044"};
-    pn::file f = data.open();
+    pn::file f = data.input();
     EXPECT_THAT(pn_read(f.c_obj(), ""), Eq(true));
 
     int8_t  i8 = 0;
@@ -80,7 +80,7 @@ TEST_F(IoTest, ReadCpp) {
             "\021\022\023\024\025\026\027\030"
             "\031\032\033\034\035\036\037\040"
             "\041\042\043\044"};
-    pn::file f = data.open();
+    pn::file f = data.input();
     EXPECT_THAT(f.read(), Eq(true));
 
     int8_t  i8 = 0;
@@ -124,7 +124,7 @@ TEST_F(IoTest, ReadCpp) {
 
 TEST_F(IoTest, WriteC) {
     pn::string data;
-    pn::file   f = data.open("w");
+    pn::file   f = data.output();
     EXPECT_THAT(pn_write(f.c_obj(), ""), Eq(true));
 
     EXPECT_THAT(pn_write(f.c_obj(), "n"), Eq(true));
@@ -157,7 +157,7 @@ TEST_F(IoTest, WriteC) {
 
 TEST_F(IoTest, WriteCpp) {
     pn::string data;
-    pn::file   f = data.open("w");
+    pn::file   f = data.output();
     EXPECT_THAT(pn_write(f.c_obj(), ""), Eq(true));
 
     EXPECT_THAT(f.write(nullptr), Eq(true));
@@ -185,7 +185,7 @@ TEST_F(IoTest, WriteCpp) {
 template <typename... arguments>
 pn::string write(const arguments&... args) {
     pn::string data;
-    pn::file   f = data.open("w");
+    pn::file   f = data.output();
     EXPECT_THAT(f.write(args...), Eq(true));
     return data;
 }
@@ -231,7 +231,7 @@ TEST_F(IoTest, WriteLimits) {
 
 TEST_F(IoTest, ReadData) {
     pn::string_view data{"\001\002\003\004\005\006"};
-    pn::file        f = data.open();
+    pn::file        f = data.input();
 
     char d[2];
     EXPECT_THAT(pn_read(f.c_obj(), "$", (void*)d, (size_t)2), Eq(true));
@@ -246,7 +246,7 @@ TEST_F(IoTest, ReadData) {
 
 TEST_F(IoTest, WriteData) {
     pn::data data;
-    pn::file f = data.open("w");
+    pn::file f = data.output();
 
     EXPECT_THAT(pn_write(f.c_obj(), "$", "\001\002", (size_t)2), Eq(true));
     EXPECT_THAT(f.write(pn::string{"\003\004"}.as_data()), Eq(true));
@@ -256,7 +256,7 @@ TEST_F(IoTest, WriteData) {
 
 TEST_F(IoTest, WriteString) {
     pn::string data;
-    pn::file   f = data.open("w");
+    pn::file   f = data.output();
 
     EXPECT_THAT(pn_write(f.c_obj(), "S", "\001\002", (size_t)2), Eq(true));
     EXPECT_THAT(pn_write(f.c_obj(), "s", "\003\004"), Eq(true));

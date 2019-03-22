@@ -128,13 +128,11 @@ bool strtod(string_view s, double* f, pn_error_code_t* error) {
 }
 
 #ifndef _WIN32
-file string::open() const { return check_c_obj(file{pn_open_view(data(), size())}); }
-file string_ref::open() const { return check_c_obj(file{pn_open_view(data(), size())}); }
-file string_view::open() const { return check_c_obj(file{pn_open_view(data(), size())}); }
-file string::open(const char* mode) { return check_c_obj(file{pn_open_string(c_obj(), mode)}); }
-file string_ref::open(const char* mode) const {
-    return check_c_obj(file{pn_open_string(c_obj(), mode)});
-}
+file string::input() const { return check_c_obj(file{pn_view_input(data(), size())}); }
+file string_ref::input() const { return check_c_obj(file{pn_view_input(data(), size())}); }
+file string_view::input() const { return check_c_obj(file{pn_view_input(data(), size())}); }
+file string::output() { return check_c_obj(file{pn_string_output(c_obj())}); }
+file string_ref::output() const { return check_c_obj(file{pn_string_output(c_obj())}); }
 #endif
 
 }  // namespace pn

@@ -26,7 +26,7 @@ namespace pntest {
 pn::value dump(const pn_value_t* x) {
     pn::value out;
     pn_set(out.c_obj(), 's', "");
-    pn_file_t f = pn_open_string(&out.c_obj()->s, "w");
+    pn_file_t f = pn_string_output(&out.c_obj()->s);
     EXPECT_THAT(pn_dump(&f, PN_DUMP_DEFAULT, 'x', x), Eq(true));
     pn_close(&f);
     return out;
@@ -36,7 +36,7 @@ template <typename... Args>
 pn::value dump(char format, const Args&... args) {
     pn::value out;
     pn_set(out.c_obj(), 's', "");
-    pn_file_t f = pn_open_string(&out.c_obj()->s, "w");
+    pn_file_t f = pn_string_output(&out.c_obj()->s);
     EXPECT_THAT(pn_dump(&f, PN_DUMP_DEFAULT, format, args...), Eq(true));
     pn_close(&f);
     return out;
@@ -477,20 +477,20 @@ TEST_F(DumpTest, AllCppTypes) {
 
 TEST_F(DumpTest, CFailure) {
     pn::string_view ro = "";
-    EXPECT_THAT(pn_dump(ro.open().c_obj(), 0, 'n'), Eq(false));
-    EXPECT_THAT(pn_dump(ro.open().c_obj(), 0, '?', true), Eq(false));
-    EXPECT_THAT(pn_dump(ro.open().c_obj(), 0, '?', false), Eq(false));
-    EXPECT_THAT(pn_dump(ro.open().c_obj(), 0, 'i', 1), Eq(false));
-    EXPECT_THAT(pn_dump(ro.open().c_obj(), 0, 'f', 1.0), Eq(false));
+    EXPECT_THAT(pn_dump(ro.input().c_obj(), 0, 'n'), Eq(false));
+    EXPECT_THAT(pn_dump(ro.input().c_obj(), 0, '?', true), Eq(false));
+    EXPECT_THAT(pn_dump(ro.input().c_obj(), 0, '?', false), Eq(false));
+    EXPECT_THAT(pn_dump(ro.input().c_obj(), 0, 'i', 1), Eq(false));
+    EXPECT_THAT(pn_dump(ro.input().c_obj(), 0, 'f', 1.0), Eq(false));
 }
 
 TEST_F(DumpTest, CppFailure) {
     pn::string_view ro = "";
-    EXPECT_THAT(ro.open().dump(nullptr, pn::dump_default), Eq(false));
-    EXPECT_THAT(ro.open().dump(true, pn::dump_default), Eq(false));
-    EXPECT_THAT(ro.open().dump(false, pn::dump_default), Eq(false));
-    EXPECT_THAT(ro.open().dump(1, pn::dump_default), Eq(false));
-    EXPECT_THAT(ro.open().dump(1.0, pn::dump_default), Eq(false));
+    EXPECT_THAT(ro.input().dump(nullptr, pn::dump_default), Eq(false));
+    EXPECT_THAT(ro.input().dump(true, pn::dump_default), Eq(false));
+    EXPECT_THAT(ro.input().dump(false, pn::dump_default), Eq(false));
+    EXPECT_THAT(ro.input().dump(1, pn::dump_default), Eq(false));
+    EXPECT_THAT(ro.input().dump(1.0, pn::dump_default), Eq(false));
 }
 
 }  // namespace pntest

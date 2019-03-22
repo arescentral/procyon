@@ -20,80 +20,38 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "./file.h"
-
-char pn_file_mode(const char* mode) {
-    char ch_mode;
-    switch (*mode) {
-        case 'r':
-        case 'w':
-        case 'a': ch_mode = *(mode++); break;
-        default: return 0;
-    }
-    switch (*mode) {
-        case '+': ch_mode = toupper(ch_mode); ++mode;
-        case '\0': break;
-        default: return 0;
-    }
-    if (*mode) {
-        return 0;
-    }
-    return ch_mode;
-}
-
 pn_file_t pn_open_path(const char* path, const char* mode) {
     return pn_wrap_file(fopen(path, mode));
 }
 
 pn_file_t pn_wrap_file(FILE* f) {
-    pn_file_t file = {
-            .type = f ? PN_FILE_TYPE_C_FILE : PN_FILE_TYPE_INVALID, .c_file = f,
-    };
+    pn_file_t file = {.type = f ? PN_FILE_TYPE_C_FILE : PN_FILE_TYPE_INVALID, .c_file = f};
     return file;
 }
 
-pn_file_t pn_open_view(const void* data, size_t size) {
-    pn_file_t f = {
-            .type = PN_FILE_TYPE_VIEW, .view_data = data, .view_size = size,
-    };
+pn_file_t pn_view_input(const void* data, size_t size) {
+    pn_file_t f = {.type = PN_FILE_TYPE_VIEW, .view_data = data, .view_size = size};
     return f;
 }
 
-pn_file_t pn_open_data(pn_data_t** d, const char* mode) {
-    if (!d || !mode) {
+pn_file_t pn_data_input(const pn_data_t* d) { return pn_view_input(d->values, d->count); }
+pn_file_t pn_string_input(const pn_string_t* s) { return pn_view_input(s->values, s->count - 1); }
+
+pn_file_t pn_data_output(pn_data_t** d) {
+    if (!d || !*d) {
         errno = EINVAL;
         return pn_wrap_file(NULL);
     }
-
-    switch (pn_file_mode(mode)) {
-        case 'r': return pn_open_view((*d)->values, (*d)->count);
-        case 'w': (*d)->count = 0; break;
-        case 'a': break;
-        default: errno = EINVAL; return pn_wrap_file(NULL);
-    }
-
-    pn_file_t f = {
-            .type = PN_FILE_TYPE_DATA, .data = d,
-    };
+    pn_file_t f = {.type = PN_FILE_TYPE_DATA, .data = d};
     return f;
 }
 
-pn_file_t pn_open_string(pn_string_t** s, const char* mode) {
-    if (!s || !mode) {
+pn_file_t pn_string_output(pn_string_t** s) {
+    if (!s || !*s) {
         errno = EINVAL;
         return pn_wrap_file(NULL);
     }
-
-    switch (pn_file_mode(mode)) {
-        case 'r': return pn_open_view((*s)->values, (*s)->count - 1);
-        case 'w': (*s)->values[0] = '\0', (*s)->count = 1; break;
-        case 'a': break;
-        default: errno = EINVAL; return pn_wrap_file(NULL);
-    }
-
-    pn_file_t f = {
-            .type = PN_FILE_TYPE_STRING, .string = s,
-    };
+    pn_file_t f = {.type = PN_FILE_TYPE_STRING, .string = s};
     return f;
 }
 
