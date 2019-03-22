@@ -58,6 +58,7 @@ executable("procyon-cpp-test") {
   testonly = true
   sources = [
     "test/float.test.cpp",
+    "test/lex.test.cpp",
     "test/matchers.cpp",
     "test/matchers.hpp",
     "test/utf8.test.cpp",
@@ -70,7 +71,6 @@ executable("procyon-cpp-test") {
       "test/dump.test.cpp",
       "test/format.test.cpp",
       "test/io.test.cpp",
-      "test/lex.test.cpp",
       "test/parse.test.cpp",
       "test/valuepp.test.cpp",
     ]
