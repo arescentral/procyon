@@ -262,7 +262,6 @@ pn_file_t pn_string_output(pn_string_t** s);             // mode is always "a"
 bool      pn_close(pn_file_t* file);
 bool      pn_file_eof(const pn_file_t* file);
 bool      pn_file_error(const pn_file_t* file);
-ssize_t   pn_getline(pn_file_t* f, char** data, size_t* size);
 
 extern pn_file_t pn_stdin;
 extern pn_file_t pn_stdout;

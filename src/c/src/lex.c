@@ -18,6 +18,7 @@
 #include <string.h>
 
 #include "./gen_table.h"
+#include "./io.h"
 #include "./lex.h"
 #include "./vector.h"
 

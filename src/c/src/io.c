@@ -15,6 +15,7 @@
 #include <pn/procyon.h>
 
 #include <errno.h>
+#include <limits.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -296,13 +297,43 @@ bool pn_raw_write(pn_file_t* f, const void* data, size_t size) {
     }
 }
 
+ssize_t pn_file_getline(FILE* f, char** data, size_t* size) {
+    if (!(data && size)) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    int    ch;
+    size_t len = 0;
+    do {
+        ch = getc(f);
+        if (ch == EOF) {
+            if (!len) {
+                return -1;
+            }
+            break;
+        } else if (len == SSIZE_MAX) {
+            errno = EOVERFLOW;
+            return -1;
+        } else if (*size == 0) {
+            *size = 16;
+            *data = realloc(*data, *size);
+        } else if (*size <= len) {
+            *size = 2 * *size;
+            *data = realloc(*data, *size);
+        }
+        (*data)[len++] = ch;
+    } while (ch != '\n');
+    return len;
+}
+
 ssize_t pn_getline(pn_file_t* f, char** data, size_t* size) {
     switch (f->type) {
         case PN_FILE_TYPE_INVALID: return -1;
-        case PN_FILE_TYPE_STDIN: return getline(data, size, stdin);
-        case PN_FILE_TYPE_STDOUT: return getline(data, size, stdout);
-        case PN_FILE_TYPE_STDERR: return getline(data, size, stderr);
-        case PN_FILE_TYPE_C_FILE: return getline(data, size, f->c_file);
+        case PN_FILE_TYPE_STDIN: return pn_file_getline(stdin, data, size);
+        case PN_FILE_TYPE_STDOUT: return pn_file_getline(stdout, data, size);
+        case PN_FILE_TYPE_STDERR: return pn_file_getline(stderr, data, size);
+        case PN_FILE_TYPE_C_FILE: return pn_file_getline(f->c_file, data, size);
 
         case PN_FILE_TYPE_VIEW: {
             if (!(data && size)) {
