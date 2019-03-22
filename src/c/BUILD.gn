@@ -41,12 +41,6 @@ static_library("procyon") {
     ]
   }
 
-  if (target_os == "mac") {
-    sources += [ "src/file_mac.c" ]
-  } else if (target_os == "linux") {
-    sources += [ "src/file_linux.c" ]
-  }
-
   public_configs = [ ":procyon_public" ]
   configs += [ ":procyon_private" ]
 }

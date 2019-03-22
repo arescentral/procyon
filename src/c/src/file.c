@@ -41,140 +41,8 @@ char pn_file_mode(const char* mode) {
     return ch_mode;
 }
 
-int pn_file_close(void* cookie) {
-    free(cookie);
-    return 0;
-}
-
-ssize_t pn_string_read(void* cookie, char* data, size_t size) {
-    struct pn_string_cookie* c         = cookie;
-    size_t                   len       = (*c->s)->count - 1;
-    size_t                   remainder = len - c->at;
-    if (remainder < size) {
-        size = remainder;
-    }
-    memcpy(data, (*c->s)->values + c->at, size);
-    c->at += size;
-    return size;
-}
-
-ssize_t pn_string_write(void* cookie, const char* data, size_t size) {
-    struct pn_string_cookie* c         = cookie;
-    size_t                   save_size = size;
-    while (c->at > (int64_t)(*c->s)->count - 1) {
-        pn_strncat(c->s, "\0", 1);
-    }
-    int64_t len = (*c->s)->count - 1;
-    if (c->at < len) {
-        size_t overwrite_size = len - c->at;
-        if (overwrite_size > size) {
-            overwrite_size = size;
-        }
-        memcpy(&(*c->s)->values[c->at], data, overwrite_size);
-        data += overwrite_size;
-        size -= overwrite_size;
-        c->at += overwrite_size;
-    }
-    pn_strncat(c->s, data, size);
-    c->at += size;
-    return save_size;
-}
-
-int pn_string_seek(void* cookie, int64_t* offset, int whence) {
-    struct pn_string_cookie* c = cookie;
-    int64_t                  base;
-    switch (whence) {
-        case SEEK_CUR: base = c->at; break;
-        case SEEK_END: base = (*c->s)->count - 1; break;
-        case SEEK_SET: base = 0; break;
-        default: errno = EINVAL; return -1;
-    }
-    if ((*offset < 0) && (-*offset > base)) {
-        errno = EINVAL;
-        return -1;
-    }
-    *offset = c->at = base + *offset;
-    return 0;
-}
-
-ssize_t pn_data_read(void* cookie, char* data, size_t size) {
-    struct pn_data_cookie* c         = cookie;
-    size_t                 len       = (*c->d)->count;
-    size_t                 remainder = len - c->at;
-    if (remainder < size) {
-        size = remainder;
-    }
-    memcpy(data, (*c->d)->values + c->at, size);
-    c->at += size;
-    return size;
-}
-
-ssize_t pn_data_write(void* cookie, const char* data, size_t size) {
-    struct pn_data_cookie* c         = cookie;
-    size_t                 save_size = size;
-    while (c->at > (int64_t)(*c->d)->count) {
-        uint8_t nul = 0;
-        pn_datacat(c->d, &nul, 1);
-    }
-    int64_t len = (*c->d)->count;
-    if (c->at < len) {
-        size_t overwrite_size = len - c->at;
-        if (overwrite_size > size) {
-            overwrite_size = size;
-        }
-        memcpy(&(*c->d)->values[c->at], data, overwrite_size);
-        data += overwrite_size;
-        size -= overwrite_size;
-        c->at += overwrite_size;
-    }
-    pn_datacat(c->d, (uint8_t*)data, size);
-    c->at += size;
-    return save_size;
-}
-
-int pn_data_seek(void* cookie, int64_t* offset, int whence) {
-    struct pn_data_cookie* c = cookie;
-    int64_t                base;
-    switch (whence) {
-        case SEEK_CUR: base = c->at; break;
-        case SEEK_END: base = (*c->d)->count; break;
-        case SEEK_SET: base = 0; break;
-        default: errno = EINVAL; return -1;
-    }
-    if ((*offset < 0) && (-*offset > base)) {
-        errno = EINVAL;
-        return -1;
-    }
-    *offset = c->at = base + *offset;
-    return 0;
-}
-
-ssize_t pn_view_read(void* cookie, char* data, size_t size) {
-    struct pn_view_cookie* c         = cookie;
-    size_t                 remainder = c->size - c->at;
-    if (remainder < size) {
-        size = remainder;
-    }
-    memcpy(data, c->data + c->at, size);
-    c->at += size;
-    return size;
-}
-
-int pn_view_seek(void* cookie, int64_t* offset, int whence) {
-    struct pn_view_cookie* c = cookie;
-    size_t                 base;
-    switch (whence) {
-        case SEEK_CUR: base = c->at; break;
-        case SEEK_END: base = c->size; break;
-        case SEEK_SET: base = 0; break;
-        default: errno = EINVAL; return -1;
-    }
-    if ((*offset < 0) && ((uint64_t)(-*offset) > base)) {
-        errno = EINVAL;
-        return -1;
-    }
-    *offset = c->at = base + *offset;
-    return 0;
+pn_file_t pn_open_path(const char* path, const char* mode) {
+    return pn_wrap_file(fopen(path, mode));
 }
 
 pn_file_t pn_wrap_file(FILE* f) {
@@ -184,6 +52,51 @@ pn_file_t pn_wrap_file(FILE* f) {
     return file;
 }
 
+pn_file_t pn_open_view(const void* data, size_t size) {
+    pn_file_t f = {
+            .type = PN_FILE_TYPE_VIEW, .view_data = data, .view_size = size,
+    };
+    return f;
+}
+
+pn_file_t pn_open_data(pn_data_t** d, const char* mode) {
+    if (!d || !mode) {
+        errno = EINVAL;
+        return pn_wrap_file(NULL);
+    }
+
+    switch (pn_file_mode(mode)) {
+        case 'r': return pn_open_view((*d)->values, (*d)->count);
+        case 'w': (*d)->count = 0; break;
+        case 'a': break;
+        default: errno = EINVAL; return pn_wrap_file(NULL);
+    }
+
+    pn_file_t f = {
+            .type = PN_FILE_TYPE_DATA, .data = d,
+    };
+    return f;
+}
+
+pn_file_t pn_open_string(pn_string_t** s, const char* mode) {
+    if (!s || !mode) {
+        errno = EINVAL;
+        return pn_wrap_file(NULL);
+    }
+
+    switch (pn_file_mode(mode)) {
+        case 'r': return pn_open_view((*s)->values, (*s)->count - 1);
+        case 'w': (*s)->values[0] = '\0', (*s)->count = 1; break;
+        case 'a': break;
+        default: errno = EINVAL; return pn_wrap_file(NULL);
+    }
+
+    pn_file_t f = {
+            .type = PN_FILE_TYPE_STRING, .string = s,
+    };
+    return f;
+}
+
 bool pn_close(pn_file_t* file) {
     switch (file->type) {
         case PN_FILE_TYPE_INVALID: return true;
@@ -191,6 +104,9 @@ bool pn_close(pn_file_t* file) {
         case PN_FILE_TYPE_STDOUT: return !fclose(stdout);
         case PN_FILE_TYPE_STDERR: return !fclose(stderr);
         case PN_FILE_TYPE_C_FILE: return !fclose(file->c_file);
+        case PN_FILE_TYPE_VIEW: return true;
+        case PN_FILE_TYPE_DATA: return true;
+        case PN_FILE_TYPE_STRING: return true;
     }
 }
 
@@ -201,6 +117,9 @@ bool pn_file_eof(const pn_file_t* file) {
         case PN_FILE_TYPE_STDOUT: return feof(stdout);
         case PN_FILE_TYPE_STDERR: return feof(stderr);
         case PN_FILE_TYPE_C_FILE: return feof(file->c_file);
+        case PN_FILE_TYPE_VIEW: return !file->view_data;
+        case PN_FILE_TYPE_DATA: return !file->data;
+        case PN_FILE_TYPE_STRING: return !file->string;
     }
 }
 
@@ -211,6 +130,9 @@ bool pn_file_error(const pn_file_t* file) {
         case PN_FILE_TYPE_STDOUT: return ferror(stdout);
         case PN_FILE_TYPE_STDERR: return ferror(stderr);
         case PN_FILE_TYPE_C_FILE: return ferror(file->c_file);
+        case PN_FILE_TYPE_VIEW: return false;
+        case PN_FILE_TYPE_DATA: return false;
+        case PN_FILE_TYPE_STRING: return false;
     }
 }
 

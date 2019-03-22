@@ -121,47 +121,47 @@ namespace internal {
 
 template <typename tuple, int... i>
 bool apply_format(
-        file_view f, const char* input_format, const char* output_format, const tuple& args,
+        pn_file_t* f, const char* input_format, const char* output_format, const tuple& args,
         indexes<i...>) {
-    return pn_format(f.c_obj(), input_format, output_format, std::get<i>(args)...);
+    return pn_format(f, input_format, output_format, std::get<i>(args)...);
 }
 
 template <typename tuple>
-bool format(file_view f, const char* output_format, const char* input_format, const tuple& args) {
+bool format(pn_file_t* f, const char* output_format, const char* input_format, const tuple& args) {
     return apply_format(
             f, output_format, input_format, args,
             typename index_range<std::tuple_size<tuple>::value>::type());
 }
 
 template <typename tuple, int... i>
-void apply_dump(file_view f, int flags, char format, const tuple& args, indexes<i...>) {
-    pn_dump(f.c_obj(), flags, format, std::get<i>(args)...);
+void apply_dump(pn_file_t* f, int flags, char format, const tuple& args, indexes<i...>) {
+    pn_dump(f, flags, format, std::get<i>(args)...);
 }
 
 template <typename tuple>
-void dump(file_view f, int flags, char format, const tuple& args) {
+void dump(pn_file_t* f, int flags, char format, const tuple& args) {
     apply_dump(
             f, flags, format, args, typename index_range<std::tuple_size<tuple>::value>::type());
 }
 
 template <typename tuple, int... i>
-void apply_write(file_view file, const char* format, const tuple& args, indexes<i...>) {
-    pn_write(file.c_obj(), format, std::get<i>(args)...);
+void apply_write(pn_file_t* f, const char* format, const tuple& args, indexes<i...>) {
+    pn_write(f, format, std::get<i>(args)...);
 }
 
 template <typename tuple>
-void write(file_view file, const char* format, const tuple& args) {
-    apply_write(file, format, args, typename index_range<std::tuple_size<tuple>::value>::type());
+void write(pn_file_t* f, const char* format, const tuple& args) {
+    apply_write(f, format, args, typename index_range<std::tuple_size<tuple>::value>::type());
 }
 
 template <typename tuple, int... i>
-void apply_read(file_view file, const char* format, const tuple& args, indexes<i...>) {
-    pn_read(file.c_obj(), format, std::get<i>(args)...);
+void apply_read(pn_file_t* f, const char* format, const tuple& args, indexes<i...>) {
+    pn_read(f, format, std::get<i>(args)...);
 }
 
 template <typename tuple>
-void read(file_view file, const char* format, const tuple& args) {
-    apply_read(file, format, args, typename index_range<std::tuple_size<tuple>::value>::type());
+void read(pn_file_t* f, const char* format, const tuple& args) {
+    apply_read(f, format, args, typename index_range<std::tuple_size<tuple>::value>::type());
 }
 
 }  // namespace internal
@@ -183,7 +183,7 @@ string dump(const arg& x, int flags) {
 template <typename... args>
 file& file::read(args... arg) {
     internal::read(
-            *this, (char[]){internal::read_arg<typename std::decay<args>::type>::code..., '\0'},
+            c_obj(), (char[]){internal::read_arg<typename std::decay<args>::type>::code..., '\0'},
             std::tuple_cat(
                     internal::read_arg<typename std::decay<args>::type>::read_args(arg)...));
     return *this;
@@ -192,7 +192,7 @@ file& file::read(args... arg) {
 template <typename... args>
 file_view& file_view::read(args... arg) {
     internal::read(
-            *this, (char[]){internal::read_arg<typename std::decay<args>::type>::code..., '\0'},
+            c_obj(), (char[]){internal::read_arg<typename std::decay<args>::type>::code..., '\0'},
             std::tuple_cat(
                     internal::read_arg<typename std::decay<args>::type>::read_args(arg)...));
     return *this;
@@ -201,7 +201,7 @@ file_view& file_view::read(args... arg) {
 template <typename... args>
 file& file::write(const args&... arg) {
     internal::write(
-            *this, (char[]){internal::arg<typename std::decay<args>::type>::code..., '\0'},
+            c_obj(), (char[]){internal::arg<typename std::decay<args>::type>::code..., '\0'},
             std::tuple_cat(internal::arg<typename std::decay<args>::type>::write_args(arg)...));
     return *this;
 }
@@ -209,7 +209,7 @@ file& file::write(const args&... arg) {
 template <typename... args>
 file_view& file_view::write(const args&... arg) {
     internal::write(
-            *this, (char[]){internal::arg<typename std::decay<args>::type>::code..., '\0'},
+            c_obj(), (char[]){internal::arg<typename std::decay<args>::type>::code..., '\0'},
             std::tuple_cat(internal::arg<typename std::decay<args>::type>::write_args(arg)...));
     return *this;
 }
@@ -217,7 +217,7 @@ file_view& file_view::write(const args&... arg) {
 template <typename arg>
 file& file::dump(const arg& x, int flags) {
     internal::dump(
-            *this, flags, internal::arg<typename std::decay<arg>::type>::code,
+            c_obj(), flags, internal::arg<typename std::decay<arg>::type>::code,
             internal::arg<typename std::decay<arg>::type>::write_args(x));
     return *this;
 }
@@ -225,7 +225,7 @@ file& file::dump(const arg& x, int flags) {
 template <typename arg>
 file_view& file_view::dump(const arg& x, int flags) {
     internal::dump(
-            *this, flags, internal::arg<typename std::decay<arg>::type>::code,
+            c_obj(), flags, internal::arg<typename std::decay<arg>::type>::code,
             internal::arg<typename std::decay<arg>::type>::write_args(x));
     return *this;
 }
@@ -233,7 +233,7 @@ file_view& file_view::dump(const arg& x, int flags) {
 template <typename... args>
 file& file::format(const char* fmt, const args&... arg) {
     internal::format(
-            *this, fmt, (char[]){internal::arg<typename std::decay<args>::type>::code..., '\0'},
+            c_obj(), fmt, (char[]){internal::arg<typename std::decay<args>::type>::code..., '\0'},
             std::tuple_cat(internal::arg<typename std::decay<args>::type>::write_args(arg)...));
     return *this;
 }
@@ -241,7 +241,7 @@ file& file::format(const char* fmt, const args&... arg) {
 template <typename... args>
 file_view& file_view::format(const char* fmt, const args&... arg) {
     internal::format(
-            *this, fmt, (char[]){internal::arg<typename std::decay<args>::type>::code..., '\0'},
+            c_obj(), fmt, (char[]){internal::arg<typename std::decay<args>::type>::code..., '\0'},
             std::tuple_cat(internal::arg<typename std::decay<args>::type>::write_args(arg)...));
     return *this;
 }

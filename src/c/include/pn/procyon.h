@@ -221,17 +221,26 @@ bool pn_mapdel(pn_map_t** m, int key_format, ...);
 bool pn_mappop(pn_map_t** m, pn_value_t* x, int key_format, ...);
 
 typedef enum {
-    PN_FILE_TYPE_INVALID,
+    PN_FILE_TYPE_INVALID = 0,
     PN_FILE_TYPE_STDIN,
     PN_FILE_TYPE_STDOUT,
     PN_FILE_TYPE_STDERR,
     PN_FILE_TYPE_C_FILE,
+    PN_FILE_TYPE_VIEW,
+    PN_FILE_TYPE_DATA,
+    PN_FILE_TYPE_STRING,
 } pn_file_type_t;
 
 struct pn_file {
     pn_file_type_t type;
     union {
         FILE* c_file;
+        struct {
+            const void* view_data;
+            size_t      view_size;
+        };
+        pn_data_t**   data;
+        pn_string_t** string;
     };
 };
 

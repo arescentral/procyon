@@ -17,34 +17,6 @@
 
 #include <stdint.h>
 
-struct pn_string_cookie {
-    pn_string_t** s;
-    int64_t       at;
-};
-
-struct pn_data_cookie {
-    pn_data_t** d;
-    int64_t     at;
-};
-
-struct pn_view_cookie {
-    const char* const data;
-    const size_t      size;
-    int64_t           at;
-};
-
 char pn_file_mode(const char* mode);
-int  pn_file_close(void* cookie);
-
-ssize_t pn_string_read(void* cookie, char* data, size_t size);
-ssize_t pn_string_write(void* cookie, const char* data, size_t size);
-int     pn_string_seek(void* cookie, int64_t* offset, int whence);
-
-ssize_t pn_data_read(void* cookie, char* data, size_t size);
-ssize_t pn_data_write(void* cookie, const char* data, size_t size);
-int     pn_data_seek(void* cookie, int64_t* offset, int whence);
-
-ssize_t pn_view_read(void* cookie, char* data, size_t size);
-int     pn_view_seek(void* cookie, int64_t* offset, int whence);
 
 #endif  // PROCYON_FILE_H_

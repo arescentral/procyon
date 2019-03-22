@@ -14,8 +14,10 @@
 
 #include <pn/procyon.h>
 
+#include <errno.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #ifdef _WIN32
@@ -218,6 +220,19 @@ int pn_getc(pn_file_t* f) {
         case PN_FILE_TYPE_STDOUT: return getc(stdout);
         case PN_FILE_TYPE_STDERR: return getc(stderr);
         case PN_FILE_TYPE_C_FILE: return getc(f->c_file);
+
+        case PN_FILE_TYPE_VIEW:
+            if (f->view_size == 0) {
+                f->view_data = NULL;
+                return EOF;
+            }
+            char ch = *(char*)f->view_data;
+            --f->view_size;
+            ++f->view_data;
+            return ch;
+
+        case PN_FILE_TYPE_DATA: return EOF;
+        case PN_FILE_TYPE_STRING: return EOF;
     }
 }
 
@@ -228,6 +243,19 @@ int pn_putc(int ch, pn_file_t* f) {
         case PN_FILE_TYPE_STDOUT: return putc(ch, stdout);
         case PN_FILE_TYPE_STDERR: return putc(ch, stderr);
         case PN_FILE_TYPE_C_FILE: return putc(ch, f->c_file);
+        case PN_FILE_TYPE_VIEW: return f->view_data = NULL, EOF;
+
+        case PN_FILE_TYPE_DATA: {
+            uint8_t s[] = {ch};
+            pn_datacat(f->data, s, 1);
+            return true;
+        }
+
+        case PN_FILE_TYPE_STRING: {
+            char s[] = {ch};
+            pn_strncat(f->string, s, 1);
+            return true;
+        }
     }
 }
 
@@ -238,6 +266,20 @@ bool pn_raw_read(pn_file_t* f, void* data, size_t size) {
         case PN_FILE_TYPE_STDOUT: return fread(data, 1, size, stdout) == size;
         case PN_FILE_TYPE_STDERR: return fread(data, 1, size, stderr) == size;
         case PN_FILE_TYPE_C_FILE: return fread(data, 1, size, f->c_file) == size;
+
+        case PN_FILE_TYPE_VIEW:
+            if (f->view_size < size) {
+                f->view_size = 0;
+                f->view_data = NULL;
+                return false;
+            }
+            memmove(data, f->view_data, size);
+            f->view_size -= size;
+            f->view_data += size;
+            return true;
+
+        case PN_FILE_TYPE_DATA: return false;
+        case PN_FILE_TYPE_STRING: return false;
     }
 }
 
@@ -248,6 +290,9 @@ bool pn_raw_write(pn_file_t* f, const void* data, size_t size) {
         case PN_FILE_TYPE_STDOUT: return fwrite(data, 1, size, stdout) == size;
         case PN_FILE_TYPE_STDERR: return fwrite(data, 1, size, stderr) == size;
         case PN_FILE_TYPE_C_FILE: return fwrite(data, 1, size, f->c_file) == size;
+        case PN_FILE_TYPE_VIEW: return f->view_data = NULL, false;
+        case PN_FILE_TYPE_DATA: return pn_datacat(f->data, data, size), true;
+        case PN_FILE_TYPE_STRING: return pn_strncat(f->string, data, size), true;
     }
 }
 
@@ -258,5 +303,33 @@ ssize_t pn_getline(pn_file_t* f, char** data, size_t* size) {
         case PN_FILE_TYPE_STDOUT: return getline(data, size, stdout);
         case PN_FILE_TYPE_STDERR: return getline(data, size, stderr);
         case PN_FILE_TYPE_C_FILE: return getline(data, size, f->c_file);
+
+        case PN_FILE_TYPE_VIEW: {
+            if (!(data && size)) {
+                f->view_data = NULL;
+                errno        = EINVAL;
+                return -1;
+            }
+
+            if (f->view_size == 0) {
+                f->view_data = NULL;
+                return -1;
+            }
+
+            void*  nl       = memchr(f->view_data, '\n', f->view_size);
+            size_t out_size = nl ? (nl - f->view_data + 1) : f->view_size;
+            if (*size < (out_size + 1)) {
+                *data = realloc(*data, (out_size + 1));
+                *size = (out_size + 1);
+            }
+            memmove(*data, f->view_data, out_size);
+            (*data)[out_size] = '\0';
+            f->view_data += out_size;
+            f->view_size -= out_size;
+            return out_size;
+        }
+
+        case PN_FILE_TYPE_DATA: return -1;
+        case PN_FILE_TYPE_STRING: return -1;
     }
 }
