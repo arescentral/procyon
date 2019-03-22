@@ -20,80 +20,121 @@
 #include <stdlib.h>
 #include <string.h>
 
-pn_file_t pn_open_path(const char* path, const char* mode) {
-    return pn_wrap_file(fopen(path, mode));
+pn_input_t pn_open_r(const char* path) { return pn_file_input(fopen(path, "r")); }
+
+pn_input_t pn_file_input(FILE* f) {
+    pn_input_t in = {.type = f ? PN_INPUT_TYPE_C_FILE : PN_INPUT_TYPE_INVALID, .c_file = f};
+    return in;
 }
 
-pn_file_t pn_wrap_file(FILE* f) {
-    pn_file_t file = {.type = f ? PN_FILE_TYPE_C_FILE : PN_FILE_TYPE_INVALID, .c_file = f};
-    return file;
+pn_input_t pn_data_input(const pn_data_t* d) {
+    if (!d) {
+        errno = EINVAL;
+        return pn_file_input(NULL);
+    }
+    return pn_view_input(d->values, d->count);
 }
 
-pn_file_t pn_view_input(const void* data, size_t size) {
-    pn_file_t f = {.type = PN_FILE_TYPE_VIEW, .view_data = data, .view_size = size};
-    return f;
+pn_input_t pn_string_input(const pn_string_t* s) {
+    if (!s) {
+        errno = EINVAL;
+        return pn_file_input(NULL);
+    }
+    return pn_view_input(s->values, s->count);
 }
 
-pn_file_t pn_data_input(const pn_data_t* d) { return pn_view_input(d->values, d->count); }
-pn_file_t pn_string_input(const pn_string_t* s) { return pn_view_input(s->values, s->count - 1); }
+pn_input_t pn_view_input(const void* data, size_t size) {
+    pn_input_t in = {.type = PN_INPUT_TYPE_VIEW, .view_data = data, .view_size = size};
+    return in;
+}
 
-pn_file_t pn_data_output(pn_data_t** d) {
+pn_output_t pn_open_w(const char* path) { return pn_file_output(fopen(path, "w")); }
+
+pn_output_t pn_open_a(const char* path) { return pn_file_output(fopen(path, "a")); }
+
+pn_output_t pn_file_output(FILE* f) {
+    pn_output_t out = {.type = f ? PN_OUTPUT_TYPE_C_FILE : PN_OUTPUT_TYPE_INVALID, .c_file = f};
+    return out;
+}
+
+pn_output_t pn_data_output(pn_data_t** d) {
     if (!d || !*d) {
         errno = EINVAL;
-        return pn_wrap_file(NULL);
+        return pn_file_output(NULL);
     }
-    pn_file_t f = {.type = PN_FILE_TYPE_DATA, .data = d};
-    return f;
+    pn_output_t out = {.type = PN_OUTPUT_TYPE_DATA, .data = d};
+    return out;
 }
 
-pn_file_t pn_string_output(pn_string_t** s) {
+pn_output_t pn_string_output(pn_string_t** s) {
     if (!s || !*s) {
         errno = EINVAL;
-        return pn_wrap_file(NULL);
+        return pn_file_output(NULL);
     }
-    pn_file_t f = {.type = PN_FILE_TYPE_STRING, .string = s};
-    return f;
+    pn_output_t out = {.type = PN_OUTPUT_TYPE_STRING, .string = s};
+    return out;
 }
 
-bool pn_close(pn_file_t* file) {
-    switch (file->type) {
-        case PN_FILE_TYPE_INVALID: return true;
-        case PN_FILE_TYPE_STDIN: return !fclose(stdin);
-        case PN_FILE_TYPE_STDOUT: return !fclose(stdout);
-        case PN_FILE_TYPE_STDERR: return !fclose(stderr);
-        case PN_FILE_TYPE_C_FILE: return !fclose(file->c_file);
-        case PN_FILE_TYPE_VIEW: return true;
-        case PN_FILE_TYPE_DATA: return true;
-        case PN_FILE_TYPE_STRING: return true;
+bool pn_input_close(pn_input_t* in) {
+    switch (in->type) {
+        case PN_INPUT_TYPE_INVALID: return true;
+        case PN_INPUT_TYPE_C_FILE: return !fclose(in->c_file);
+        case PN_INPUT_TYPE_STDIN: return !fclose(stdin);
+        case PN_INPUT_TYPE_VIEW: return true;
     }
 }
 
-bool pn_file_eof(const pn_file_t* file) {
-    switch (file->type) {
-        case PN_FILE_TYPE_INVALID: return true;
-        case PN_FILE_TYPE_STDIN: return feof(stdin);
-        case PN_FILE_TYPE_STDOUT: return feof(stdout);
-        case PN_FILE_TYPE_STDERR: return feof(stderr);
-        case PN_FILE_TYPE_C_FILE: return feof(file->c_file);
-        case PN_FILE_TYPE_VIEW: return !file->view_data;
-        case PN_FILE_TYPE_DATA: return !file->data;
-        case PN_FILE_TYPE_STRING: return !file->string;
+bool pn_input_eof(const pn_input_t* in) {
+    switch (in->type) {
+        case PN_INPUT_TYPE_INVALID: return true;
+        case PN_INPUT_TYPE_C_FILE: return feof(in->c_file);
+        case PN_INPUT_TYPE_STDIN: return feof(stdin);
+        case PN_INPUT_TYPE_VIEW: return !in->view_data;
     }
 }
 
-bool pn_file_error(const pn_file_t* file) {
-    switch (file->type) {
-        case PN_FILE_TYPE_INVALID: return true;
-        case PN_FILE_TYPE_STDIN: return ferror(stdin);
-        case PN_FILE_TYPE_STDOUT: return ferror(stdout);
-        case PN_FILE_TYPE_STDERR: return ferror(stderr);
-        case PN_FILE_TYPE_C_FILE: return ferror(file->c_file);
-        case PN_FILE_TYPE_VIEW: return false;
-        case PN_FILE_TYPE_DATA: return false;
-        case PN_FILE_TYPE_STRING: return false;
+bool pn_input_error(const pn_input_t* in) {
+    switch (in->type) {
+        case PN_INPUT_TYPE_INVALID: return true;
+        case PN_INPUT_TYPE_C_FILE: return ferror(in->c_file);
+        case PN_INPUT_TYPE_STDIN: return ferror(stdin);
+        case PN_INPUT_TYPE_VIEW: return false;
     }
 }
 
-pn_file_t pn_stdin  = {.type = PN_FILE_TYPE_STDIN};
-pn_file_t pn_stdout = {.type = PN_FILE_TYPE_STDOUT};
-pn_file_t pn_stderr = {.type = PN_FILE_TYPE_STDERR};
+bool pn_output_close(pn_output_t* out) {
+    switch (out->type) {
+        case PN_OUTPUT_TYPE_INVALID: return true;
+        case PN_OUTPUT_TYPE_C_FILE: return !fclose(out->c_file);
+        case PN_OUTPUT_TYPE_STDOUT: return !fclose(stdout);
+        case PN_OUTPUT_TYPE_STDERR: return !fclose(stderr);
+        case PN_OUTPUT_TYPE_DATA: return true;
+        case PN_OUTPUT_TYPE_STRING: return true;
+    }
+}
+
+bool pn_output_eof(const pn_output_t* out) {
+    switch (out->type) {
+        case PN_OUTPUT_TYPE_INVALID: return true;
+        case PN_OUTPUT_TYPE_C_FILE: return feof(out->c_file);
+        case PN_OUTPUT_TYPE_STDOUT: return feof(stdout);
+        case PN_OUTPUT_TYPE_STDERR: return feof(stderr);
+        case PN_OUTPUT_TYPE_DATA: return !out->data;
+        case PN_OUTPUT_TYPE_STRING: return !out->string;
+    }
+}
+
+bool pn_output_error(const pn_output_t* out) {
+    switch (out->type) {
+        case PN_OUTPUT_TYPE_INVALID: return true;
+        case PN_OUTPUT_TYPE_C_FILE: return ferror(out->c_file);
+        case PN_OUTPUT_TYPE_STDOUT: return ferror(stdout);
+        case PN_OUTPUT_TYPE_STDERR: return ferror(stderr);
+        case PN_OUTPUT_TYPE_DATA: return false;
+        case PN_OUTPUT_TYPE_STRING: return false;
+    }
+}
+
+pn_input_t  pn_stdin  = {.type = PN_INPUT_TYPE_STDIN};
+pn_output_t pn_stdout = {.type = PN_OUTPUT_TYPE_STDOUT};
+pn_output_t pn_stderr = {.type = PN_OUTPUT_TYPE_STDERR};

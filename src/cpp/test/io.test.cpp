@@ -68,9 +68,9 @@ TEST_F(IoTest, ReadC) {
     EXPECT_THAT(pn_read(in.c_obj(), "c", &c), Eq(true));
     EXPECT_THAT(c, Eq('\042'));
 
-    EXPECT_THAT(pn_file_eof(in.c_obj()), Eq(false));
+    EXPECT_THAT(pn_input_eof(in.c_obj()), Eq(false));
     EXPECT_THAT(pn_read(in.c_obj(), "q", &i64), Eq(false));
-    EXPECT_THAT(pn_file_eof(in.c_obj()), Eq(true));
+    EXPECT_THAT(pn_input_eof(in.c_obj()), Eq(true));
 }
 
 TEST_F(IoTest, ReadCpp) {

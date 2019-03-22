@@ -108,63 +108,63 @@ static void set_arg(char format, struct format_arg* dst, va_list* vl) {
     dst->type = format;
 }
 
-static bool print_u(pn_file_t* f, uint64_t u) {
+static bool print_u(pn_output_t* out, uint64_t u) {
     char    buf[32];
     ssize_t len;
-    return ((len = sprintf(buf, "%" PRIu64, u)) > 0) && pn_write(f, "S", buf, (size_t)len);
+    return ((len = sprintf(buf, "%" PRIu64, u)) > 0) && pn_write(out, "S", buf, (size_t)len);
 }
 
-static bool print_arg(pn_file_t* f, const struct format_arg* arg) {
+static bool print_arg(pn_output_t* out, const struct format_arg* arg) {
     switch (arg->type) {
-        case 'n': return pn_raw_write(f, "null", 4);
+        case 'n': return pn_raw_write(out, "null", 4);
 
-        case '?': return pn_raw_write(f, arg->i ? "true" : "false", arg->i ? 4 : 5);
+        case '?': return pn_raw_write(out, arg->i ? "true" : "false", arg->i ? 4 : 5);
 
-        case 'i': return pn_dump(f, PN_DUMP_SHORT, 'i', arg->i);
-        case 'I': return pn_dump(f, PN_DUMP_SHORT, 'I', arg->I);
-        case 'l': return pn_dump(f, PN_DUMP_SHORT, 'l', arg->l);
-        case 'L': return pn_dump(f, PN_DUMP_SHORT, 'L', arg->L);
-        case 'q': return pn_dump(f, PN_DUMP_SHORT, 'q', arg->q);
-        case 'Q': return print_u(f, arg->Q);
-        case 'p': return print_u(f, arg->p);
-        case 'P': return print_u(f, arg->P);
-        case 'z': return print_u(f, arg->z);
-        case 'Z': return print_u(f, arg->Z);
+        case 'i': return pn_dump(out, PN_DUMP_SHORT, 'i', arg->i);
+        case 'I': return pn_dump(out, PN_DUMP_SHORT, 'I', arg->I);
+        case 'l': return pn_dump(out, PN_DUMP_SHORT, 'l', arg->l);
+        case 'L': return pn_dump(out, PN_DUMP_SHORT, 'L', arg->L);
+        case 'q': return pn_dump(out, PN_DUMP_SHORT, 'q', arg->q);
+        case 'Q': return print_u(out, arg->Q);
+        case 'p': return print_u(out, arg->p);
+        case 'P': return print_u(out, arg->P);
+        case 'z': return print_u(out, arg->z);
+        case 'Z': return print_u(out, arg->Z);
 
         case 'f':
-        case 'd': return pn_dump(f, PN_DUMP_SHORT, 'd', arg->d);
-        case '$': return pn_dump(f, PN_DUMP_SHORT, '$', arg->D.data, arg->D.size);
-        case 'a': return pn_dump(f, PN_DUMP_SHORT, 'a', arg->a);
-        case 'm': return pn_dump(f, PN_DUMP_SHORT, 'm', arg->m);
+        case 'd': return pn_dump(out, PN_DUMP_SHORT, 'd', arg->d);
+        case '$': return pn_dump(out, PN_DUMP_SHORT, '$', arg->D.data, arg->D.size);
+        case 'a': return pn_dump(out, PN_DUMP_SHORT, 'a', arg->a);
+        case 'm': return pn_dump(out, PN_DUMP_SHORT, 'm', arg->m);
 
-        case 'r': return pn_dump(f, PN_DUMP_SHORT, 'x', arg->x);
+        case 'r': return pn_dump(out, PN_DUMP_SHORT, 'x', arg->x);
         case 'x':
             if (arg->x->type == PN_STRING) {
                 size_t len = arg->x->s->count - 1;
-                return pn_raw_write(f, arg->x->s->values, len);
+                return pn_raw_write(out, arg->x->s->values, len);
             }
-            return pn_dump(f, PN_DUMP_SHORT, 'x', arg->x);
+            return pn_dump(out, PN_DUMP_SHORT, 'x', arg->x);
 
-        case 's': return pn_raw_write(f, arg->s, strlen(arg->s));
-        case 'S': return pn_raw_write(f, arg->S.data, arg->S.size);
+        case 's': return pn_raw_write(out, arg->s, strlen(arg->s));
+        case 'S': return pn_raw_write(out, arg->S.data, arg->S.size);
 
         case 'c': {
             char   data[4];
             size_t size;
             pn_chr(arg->i, data, &size);
-            return pn_raw_write(f, data, size);
+            return pn_raw_write(out, data, size);
         }
 
         case 'C': {
             char   data[4];
             size_t size;
             pn_unichr(arg->L, data, &size);
-            return pn_raw_write(f, data, size);
+            return pn_raw_write(out, data, size);
         }
 
         case '#':
             for (size_t i = 0; i < arg->z; ++i) {
-                if (pn_putc(0, f) == EOF) {
+                if (pn_putc(0, out) == EOF) {
                     return false;
                 }
             }
@@ -220,12 +220,12 @@ static const struct format_arg* get_subscript(
 }
 
 static bool format_segment(
-        pn_file_t* f, const char** format, const struct format_arg* args, size_t nargs,
+        pn_output_t* out, const char** format, const struct format_arg* args, size_t nargs,
         const struct format_arg** next_arg) {
     ++*format;
     if (**format == '{') {
         ++*format;
-        return pn_putc('{', f) != EOF;
+        return pn_putc('{', out) != EOF;
     }
 
     size_t      span       = strspn(*format, "0123456789");
@@ -259,7 +259,7 @@ static bool format_segment(
         goto fail;  // Unclosed template parameter.
     }
 
-    if (!print_arg(f, arg)) {
+    if (!print_arg(out, arg)) {
         return false;
     }
     *format = format_end + 1;
@@ -273,7 +273,7 @@ static bool format_segment(
 fail:
     --*format;
     size_t len = format_end - *format;
-    if (!pn_raw_write(f, *format, len)) {
+    if (!pn_raw_write(out, *format, len)) {
         return false;
     }
     *format = format_end;
@@ -281,7 +281,7 @@ fail:
 }
 
 #define NSTACKARGS 8
-bool pn_format(pn_file_t* f, const char* output_format, const char* input_format, ...) {
+bool pn_format(pn_output_t* out, const char* output_format, const char* input_format, ...) {
     struct format_arg  stack_args[NSTACKARGS];
     struct format_arg* heap_args = NULL;
     size_t             nargs     = strlen(input_format);
@@ -298,20 +298,20 @@ bool pn_format(pn_file_t* f, const char* output_format, const char* input_format
     while (*output_format) {
         size_t span = strcspn(output_format, "{}");
         if (span) {
-            if (!pn_raw_write(f, output_format, span)) {
+            if (!pn_raw_write(out, output_format, span)) {
                 return false;
             }
             output_format += span;
         }
         switch (*output_format) {
             case '{':
-                if (!format_segment(f, &output_format, args, nargs, &next_arg)) {
+                if (!format_segment(out, &output_format, args, nargs, &next_arg)) {
                     return false;
                 }
                 break;
 
             case '}':
-                if (pn_putc('}', f) == EOF) {
+                if (pn_putc('}', out) == EOF) {
                     return false;
                 }
                 output_format += (output_format[1] == '}') ? 2 : 1;

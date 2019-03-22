@@ -21,11 +21,11 @@
 extern "C" {
 #endif  // __cplusplus
 
-int     pn_getc(pn_file_t* f);
-int     pn_putc(int ch, pn_file_t* f);
-bool    pn_raw_read(pn_file_t* f, void* data, size_t size);
-bool    pn_raw_write(pn_file_t* f, const void* data, size_t size);
-ssize_t pn_getline(pn_file_t* f, char** data, size_t* size);
+int     pn_getc(pn_input_t* in);
+int     pn_putc(int ch, pn_output_t* out);
+bool    pn_raw_read(pn_input_t* in, void* data, size_t size);
+bool    pn_raw_write(pn_output_t* out, const void* data, size_t size);
+ssize_t pn_getline(pn_input_t* in, char** data, size_t* size);
 
 #ifdef __cplusplus
 }  // extern "C"

@@ -167,11 +167,11 @@ static void parse_key(pn_parser_t* p, pn_parser_key_t key) {
     }
 }
 
-bool pn_parse(pn_file_t* file, pn_value_t* out, pn_error_t* error) {
+bool pn_parse(pn_input_t* in, pn_value_t* out, pn_error_t* error) {
     pn_error_t ignore_error;
     error = error ? error : &ignore_error;
     pn_lexer_t lex;
-    pn_lexer_init(&lex, file);
+    pn_lexer_init(&lex, in);
     pn_parser_t prs;
     pn_parser_init(&prs, &lex, 64);
 

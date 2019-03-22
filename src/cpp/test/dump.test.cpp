@@ -24,22 +24,20 @@ using ::testing::Eq;
 namespace pntest {
 
 pn::value dump(const pn_value_t* x) {
-    pn::value out;
-    pn_set(out.c_obj(), 's', "");
-    pn_file_t f = pn_string_output(&out.c_obj()->s);
-    EXPECT_THAT(pn_dump(&f, PN_DUMP_DEFAULT, 'x', x), Eq(true));
-    pn_close(&f);
-    return out;
+    pn::value o;
+    pn_set(o.c_obj(), 's', "");
+    pn_output_t out = pn_string_output(&o.c_obj()->s);
+    EXPECT_THAT(pn_dump(&out, PN_DUMP_DEFAULT, 'x', x), Eq(true));
+    return o;
 }
 
 template <typename... Args>
 pn::value dump(char format, const Args&... args) {
-    pn::value out;
-    pn_set(out.c_obj(), 's', "");
-    pn_file_t f = pn_string_output(&out.c_obj()->s);
-    EXPECT_THAT(pn_dump(&f, PN_DUMP_DEFAULT, format, args...), Eq(true));
-    pn_close(&f);
-    return out;
+    pn::value x;
+    pn_set(x.c_obj(), 's', "");
+    pn_output_t out = pn_string_output(&x.c_obj()->s);
+    EXPECT_THAT(pn_dump(&out, PN_DUMP_DEFAULT, format, args...), Eq(true));
+    return x;
 }
 
 template <typename... Args>

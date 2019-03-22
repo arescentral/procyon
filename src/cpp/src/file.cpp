@@ -69,9 +69,9 @@ output_view output_view::check() {
     return *this;
 }
 
-input  open_r(string_view path) { return input{fopen(path.copy().c_str(), "r")}; }
-output open_w(string_view path) { return output{fopen(path.copy().c_str(), "w")}; }
-output open_a(string_view path) { return output{fopen(path.copy().c_str(), "a")}; }
+input  open_r(string_view path) { return input{pn_open_r(path.copy().c_str())}; }
+output open_w(string_view path) { return output{pn_open_w(path.copy().c_str())}; }
+output open_a(string_view path) { return output{pn_open_a(path.copy().c_str())}; }
 
 bool parse(input_view in, value_ptr out, pn_error_t* error) {
     return pn_parse(in.c_obj(), out->c_obj(), error);

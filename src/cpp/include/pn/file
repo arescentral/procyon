@@ -34,18 +34,14 @@ enum {
 
 class input {
   public:
-    input() : _c_obj{pn_wrap_file(nullptr)} {}
-    explicit input(FILE* f) : _c_obj{pn_wrap_file(f)} {}
-    explicit input(pn_file_t f) : _c_obj{f} {}
+    input() : _c_obj{pn_file_input(nullptr)} {}
+    explicit input(FILE* f) : _c_obj{pn_file_input(f)} {}
+    explicit input(pn_input_t in) : _c_obj{in} {}
     input(const input&) = delete;
-    input(input&& other) : _c_obj{pn_wrap_file(nullptr)} { std::swap(_c_obj, other._c_obj); }
+    input(input&& other) : _c_obj{pn_file_input(nullptr)} { std::swap(_c_obj, other._c_obj); }
     input& operator=(const input&) = delete;
     input& operator=(input&& other) { return std::swap(_c_obj, other._c_obj), *this; }
-    ~input() {
-        if (_c_obj.type == PN_FILE_TYPE_C_FILE) {
-            pn_close(&_c_obj);
-        }
-    }
+    ~input() { pn_input_close(&_c_obj); }
 
            operator bool() const { return c_obj()->type && !eof() && !error(); }
     input& check() &;
@@ -54,24 +50,24 @@ class input {
     template <typename... arguments>
     input& read(arguments... args);
 
-    bool error() const { return pn_file_error(c_obj()); }
-    bool eof() const { return pn_file_eof(c_obj()); }
+    bool error() const { return pn_input_error(c_obj()); }
+    bool eof() const { return pn_input_eof(c_obj()); }
 
-    pn_file_t*       c_obj() { return &_c_obj; }
-    const pn_file_t* c_obj() const { return &_c_obj; }
+    pn_input_t*       c_obj() { return &_c_obj; }
+    const pn_input_t* c_obj() const { return &_c_obj; }
 
   private:
     void check_ok();
 
-    pn_file_t _c_obj;
+    pn_input_t _c_obj;
 };
 
 class input_view {
   public:
-    input_view() : _c_obj{pn_wrap_file(nullptr)} {}
-    input_view(const input& f) : _c_obj{*f.c_obj()} {}
-    input_view(FILE* f) : _c_obj{pn_wrap_file(f)} {}
-    input_view(pn_file_t f) : _c_obj{f} {}
+    input_view() : _c_obj{pn_file_input(nullptr)} {}
+    input_view(const input& in) : _c_obj{*in.c_obj()} {}
+    input_view(FILE* f) : _c_obj{pn_file_input(f)} {}
+    input_view(pn_input_t in) : _c_obj{in} {}
 
                operator bool() const { return c_obj()->type && !eof() && !error(); }
     input_view check();
@@ -79,30 +75,26 @@ class input_view {
     template <typename... arguments>
     input_view& read(arguments... args);
 
-    bool error() const { return pn_file_error(c_obj()); }
-    bool eof() const { return pn_file_eof(c_obj()); }
+    bool error() const { return pn_input_error(c_obj()); }
+    bool eof() const { return pn_input_eof(c_obj()); }
 
-    pn_file_t*       c_obj() { return &_c_obj; }
-    const pn_file_t* c_obj() const { return &_c_obj; }
+    pn_input_t*       c_obj() { return &_c_obj; }
+    const pn_input_t* c_obj() const { return &_c_obj; }
 
   private:
-    pn_file_t _c_obj;
+    pn_input_t _c_obj;
 };
 
 class output {
   public:
-    output() : _c_obj{pn_wrap_file(nullptr)} {}
-    explicit output(FILE* f) : _c_obj{pn_wrap_file(f)} {}
-    explicit output(pn_file_t f) : _c_obj{f} {}
+    output() : _c_obj{pn_file_output(nullptr)} {}
+    explicit output(FILE* f) : _c_obj{pn_file_output(f)} {}
+    explicit output(pn_output_t out) : _c_obj{out} {}
     output(const output&) = delete;
-    output(output&& other) : _c_obj{pn_wrap_file(nullptr)} { std::swap(_c_obj, other._c_obj); }
+    output(output&& other) : _c_obj{pn_file_output(nullptr)} { std::swap(_c_obj, other._c_obj); }
     output& operator=(const output&) = delete;
     output& operator=(output&& other) { return std::swap(_c_obj, other._c_obj), *this; }
-    ~output() {
-        if (_c_obj.type == PN_FILE_TYPE_C_FILE) {
-            pn_close(&_c_obj);
-        }
-    }
+    ~output() { pn_output_close(&_c_obj); }
 
             operator bool() const { return c_obj()->type && !eof() && !error(); }
     output& check() &;
@@ -117,24 +109,24 @@ class output {
     template <typename... arguments>
     output& format(const char* fmt, const arguments&... arg);
 
-    bool error() const { return pn_file_error(c_obj()); }
-    bool eof() const { return pn_file_eof(c_obj()); }
+    bool error() const { return pn_output_error(c_obj()); }
+    bool eof() const { return pn_output_eof(c_obj()); }
 
-    pn_file_t*       c_obj() { return &_c_obj; }
-    const pn_file_t* c_obj() const { return &_c_obj; }
+    pn_output_t*       c_obj() { return &_c_obj; }
+    const pn_output_t* c_obj() const { return &_c_obj; }
 
   private:
     void check_ok();
 
-    pn_file_t _c_obj;
+    pn_output_t _c_obj;
 };
 
 class output_view {
   public:
-    output_view() : _c_obj{pn_wrap_file(nullptr)} {}
-    output_view(const output& f) : _c_obj{*f.c_obj()} {}
-    output_view(FILE* f) : _c_obj{pn_wrap_file(f)} {}
-    output_view(pn_file_t f) : _c_obj{f} {}
+    output_view() : _c_obj{pn_file_output(nullptr)} {}
+    output_view(const output& out) : _c_obj{*out.c_obj()} {}
+    output_view(FILE* f) : _c_obj{pn_file_output(f)} {}
+    output_view(pn_output_t out) : _c_obj{out} {}
 
                 operator bool() const { return c_obj()->type && !eof() && !error(); }
     output_view check();
@@ -148,14 +140,14 @@ class output_view {
     template <typename... arguments>
     output_view& format(const char* fmt, const arguments&... arg);
 
-    bool error() const { return pn_file_error(c_obj()); }
-    bool eof() const { return pn_file_eof(c_obj()); }
+    bool error() const { return pn_output_error(c_obj()); }
+    bool eof() const { return pn_output_eof(c_obj()); }
 
-    pn_file_t*       c_obj() { return &_c_obj; }
-    const pn_file_t* c_obj() const { return &_c_obj; }
+    pn_output_t*       c_obj() { return &_c_obj; }
+    const pn_output_t* c_obj() const { return &_c_obj; }
 
   private:
-    pn_file_t _c_obj;
+    pn_output_t _c_obj;
 };
 
 [[clang::warn_unused_result]] input  open_r(string_view path);
@@ -174,47 +166,48 @@ namespace internal {
 
 template <typename tuple, int... i>
 bool apply_format(
-        pn_file_t* f, const char* input_format, const char* output_format, const tuple& args,
+        pn_output_t* out, const char* input_format, const char* output_format, const tuple& args,
         indexes<i...>) {
-    return pn_format(f, input_format, output_format, std::get<i>(args)...);
+    return pn_format(out, input_format, output_format, std::get<i>(args)...);
 }
 
 template <typename tuple>
-bool format(pn_file_t* f, const char* output_format, const char* input_format, const tuple& args) {
+bool format(
+        pn_output_t* out, const char* output_format, const char* input_format, const tuple& args) {
     return apply_format(
-            f, output_format, input_format, args,
+            out, output_format, input_format, args,
             typename index_range<std::tuple_size<tuple>::value>::type());
 }
 
 template <typename tuple, int... i>
-void apply_dump(pn_file_t* f, int flags, char format, const tuple& args, indexes<i...>) {
-    pn_dump(f, flags, format, std::get<i>(args)...);
+void apply_dump(pn_output_t* out, int flags, char format, const tuple& args, indexes<i...>) {
+    pn_dump(out, flags, format, std::get<i>(args)...);
 }
 
 template <typename tuple>
-void dump(pn_file_t* f, int flags, char format, const tuple& args) {
+void dump(pn_output_t* out, int flags, char format, const tuple& args) {
     apply_dump(
-            f, flags, format, args, typename index_range<std::tuple_size<tuple>::value>::type());
+            out, flags, format, args, typename index_range<std::tuple_size<tuple>::value>::type());
 }
 
 template <typename tuple, int... i>
-void apply_write(pn_file_t* f, const char* format, const tuple& args, indexes<i...>) {
-    pn_write(f, format, std::get<i>(args)...);
+void apply_write(pn_output_t* out, const char* format, const tuple& args, indexes<i...>) {
+    pn_write(out, format, std::get<i>(args)...);
 }
 
 template <typename tuple>
-void write(pn_file_t* f, const char* format, const tuple& args) {
-    apply_write(f, format, args, typename index_range<std::tuple_size<tuple>::value>::type());
+void write(pn_output_t* out, const char* format, const tuple& args) {
+    apply_write(out, format, args, typename index_range<std::tuple_size<tuple>::value>::type());
 }
 
 template <typename tuple, int... i>
-void apply_read(pn_file_t* f, const char* format, const tuple& args, indexes<i...>) {
-    pn_read(f, format, std::get<i>(args)...);
+void apply_read(pn_input_t* in, const char* format, const tuple& args, indexes<i...>) {
+    pn_read(in, format, std::get<i>(args)...);
 }
 
 template <typename tuple>
-void read(pn_file_t* f, const char* format, const tuple& args) {
-    apply_read(f, format, args, typename index_range<std::tuple_size<tuple>::value>::type());
+void read(pn_input_t* in, const char* format, const tuple& args) {
+    apply_read(in, format, args, typename index_range<std::tuple_size<tuple>::value>::type());
 }
 
 }  // namespace internal
