@@ -47,16 +47,16 @@ void main(int argc, char* const* argv) {
 
     pn_error_t error{};
     pn::value  x;
-    if (!parse(stdin, &x, &error)) {
+    if (!parse(pn::in, &x, &error)) {
         throw std::runtime_error(
                 pn::format("-:{0}:{1}: {2}", error.lineno, error.column, pn_strerror(error.code))
                         .c_str());
     }
-    pn::output_view{stdout}.dump(x).check();
+    pn::out.dump(x).check();
 }
 
 void print_nested_exception(const std::exception& e) {
-    pn::output_view{stderr}.format(": {0}", e.what());
+    pn::err.format(": {0}", e.what());
     try {
         std::rethrow_if_nested(e);
     } catch (const std::exception& e) {
@@ -65,13 +65,13 @@ void print_nested_exception(const std::exception& e) {
 }
 
 void print_exception(const std::exception& e) {
-    pn::output_view{stderr}.format("{0}: {1}", progname, e.what());
+    pn::err.format("{0}: {1}", progname, e.what());
     try {
         std::rethrow_if_nested(e);
     } catch (const std::exception& e) {
         print_nested_exception(e);
     }
-    pn::output_view{stderr}.format("\n");
+    pn::err.format("\n");
 }
 
 }  // namespace

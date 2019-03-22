@@ -32,6 +32,10 @@ enum {
     dump_short   = PN_DUMP_SHORT,
 };
 
+extern input  in;
+extern output out;
+extern output err;
+
 class input {
   public:
     input() : _c_obj{pn_file_input(nullptr)} {}

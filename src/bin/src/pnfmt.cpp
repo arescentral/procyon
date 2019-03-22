@@ -93,12 +93,12 @@ void main(int argc, char* const* argv) {
     char ch;
     while ((ch = getopt_long(argc, argv, "hio:", opts, NULL)) != -1) {
         switch (ch) {
-            case 'h': usage(stdout, 0);
+            case 'h': usage(pn::out, 0);
             case 'i': in_place = true; break;
             case 'o': output = pn::string{optarg}; break;
             case 'd': dump = true; break;
             case 0: break;
-            default: usage(stderr, 64);
+            default: usage(pn::err, 64);
         }
     }
 
@@ -106,19 +106,18 @@ void main(int argc, char* const* argv) {
     argv += optind;
 
     if (in_place && !output.is_null()) {
-        pn::output_view{stderr}.format("{0}: --in-place conflicts with --output\n", progname);
+        pn::err.format("{0}: --in-place conflicts with --output\n", progname);
         exit(64);
     } else if (in_place && (argc == 0)) {
-        pn::output_view{stderr}.format("{0}: --in-place requires an input path\n", progname);
+        pn::err.format("{0}: --in-place requires an input path\n", progname);
         exit(64);
     } else if (!output.is_null() && (argc > 1)) {
-        pn::output_view{stderr}.format(
-                "{0}: --output requires at most one input path\n", progname);
+        pn::err.format("{0}: --output requires at most one input path\n", progname);
         exit(64);
     }
 
     if (argc == 0) {
-        format_file("-", stdin, dump, in_place, output);
+        format_file("-", pn::in, dump, in_place, output);
     } else {
         for (int i = 0; i < argc; ++i) {
             pn::string_view path = argv[i];
@@ -126,7 +125,7 @@ void main(int argc, char* const* argv) {
             try {
                 f = pn::open_r(path).check();
             } catch (std::runtime_error& e) {
-                pn::output_view{stderr}.format("{0}: {1}: {2}\n", progname, path, e.what());
+                pn::err.format("{0}: {1}: {2}\n", progname, path, e.what());
                 exit(64);
             }
             format_file(path, f, dump, in_place, output);
@@ -150,7 +149,7 @@ static void format_file(
     set_indent(&roots, 0);
     set_column(&roots);
     if (dump) {
-        pn::output_view{stdout}.dump(repr(roots));
+        pn::out.dump(repr(roots));
     } else {
         output_tokens(roots, in_place, path, output);
     }
@@ -210,7 +209,7 @@ static void output_tokens(
         {
             int fd = mkstemp(tmp.data());
             if (fd < 0) {
-                pn::output_view{stderr}.format("{0}: {1}: {2}\n", progname, tmp, strerror(errno));
+                pn::err.format("{0}: {1}: {2}\n", progname, tmp, strerror(errno));
                 exit(1);
             }
             pn::output out(fdopen(fd, "w"));
@@ -218,7 +217,7 @@ static void output_tokens(
             out.write('\n').check();
         }
         if (rename(tmp.c_str(), path.copy().c_str()) < 0) {
-            pn::output_view{stderr}.format("{0}: {1}: {2}\n", progname, path, strerror(errno));
+            pn::err.format("{0}: {1}: {2}\n", progname, path, strerror(errno));
             unlink(tmp.c_str());
             exit(1);
         }
@@ -227,15 +226,14 @@ static void output_tokens(
         try {
             out = pn::open_w(output.as_string()).check();
         } catch (std::runtime_error& e) {
-            pn::output_view{stderr}.format(
-                    "{0}: {1}: {2}\n", progname, output.as_string(), e.what());
+            pn::err.format("{0}: {1}: {2}\n", progname, output.as_string(), e.what());
             exit(1);
         }
         format_tokens(roots, out, &lineno, 0, 0);
         out.write('\n').check();
     } else {
-        format_tokens(roots, stdout, &lineno, 0, 0);
-        pn::output_view{stdout}.write('\n').check();
+        format_tokens(roots, pn::out, &lineno, 0, 0);
+        pn::out.write('\n').check();
     }
 }
 
@@ -279,7 +277,7 @@ static void lex_block(
                 continue;
 
             case PN_TOK_ERROR:
-                pn::output_view{stderr}.format(
+                pn::err.format(
                         "{0}:{1}:{2}: {3}\n", path.copy().c_str(), lex->lineno(), lex->column(),
                         pn_strerror(error.code));
                 break;
@@ -840,7 +838,7 @@ static void format_tokens(
 }
 
 void print_nested_exception(const std::exception& e) {
-    pn::output_view{stderr}.format(": {0}", e.what());
+    pn::err.format(": {0}", e.what());
     try {
         std::rethrow_if_nested(e);
     } catch (const std::exception& e) {
@@ -849,13 +847,13 @@ void print_nested_exception(const std::exception& e) {
 }
 
 void print_exception(const std::exception& e) {
-    pn::output_view{stderr}.format("{0}: {1}", progname, e.what());
+    pn::err.format("{0}: {1}", progname, e.what());
     try {
         std::rethrow_if_nested(e);
     } catch (const std::exception& e) {
         print_nested_exception(e);
     }
-    pn::output_view{stderr}.format("\n");
+    pn::err.format("\n");
 }
 
 }  // namespace

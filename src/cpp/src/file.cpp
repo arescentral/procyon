@@ -33,6 +33,10 @@ static_assert(std::is_same<index_range<4>::type, indexes<0, 1, 2, 3>>::value, ""
 
 }  // namespace internal
 
+input  in{pn_stdin};
+output out{pn_stdout};
+output err{pn_stderr};
+
 input& input::check() & {
     if (!c_obj()->type || error()) {
         throw std::system_error(errno, std::system_category());
