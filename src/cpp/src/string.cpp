@@ -127,12 +127,10 @@ bool strtod(string_view s, double* f, pn_error_code_t* error) {
     return pn_strtod(s.data(), s.size(), f, error);
 }
 
-#ifndef _WIN32
 file string::input() const { return check_c_obj(file{pn_view_input(data(), size())}); }
 file string_ref::input() const { return check_c_obj(file{pn_view_input(data(), size())}); }
 file string_view::input() const { return check_c_obj(file{pn_view_input(data(), size())}); }
 file string::output() { return check_c_obj(file{pn_string_output(c_obj())}); }
 file string_ref::output() const { return check_c_obj(file{pn_string_output(c_obj())}); }
-#endif
 
 }  // namespace pn

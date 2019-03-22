@@ -59,12 +59,10 @@ int data_view::compare(data_view other) const {
     return pn_memncmp(data(), size(), other.data(), other.size());
 }
 
-#ifndef _WIN32
 file data::input() const { return check_c_obj(file{pn_view_input(data(), size())}); }
 file data_ref::input() const { return check_c_obj(file{pn_view_input(data(), size())}); }
 file data_view::input() const { return check_c_obj(file{pn_view_input(data(), size())}); }
 file data::output() { return check_c_obj(file{pn_data_output(c_obj())}); }
 file data_ref::output() const { return check_c_obj(file{pn_data_output(c_obj())}); }
-#endif
 
 }  // namespace pn
