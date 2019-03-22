@@ -57,7 +57,9 @@ config("procyon_private") {
 executable("procyon-cpp-test") {
   testonly = true
   sources = [
+    "test/dump.test.cpp",
     "test/float.test.cpp",
+    "test/format.test.cpp",
     "test/lex.test.cpp",
     "test/matchers.cpp",
     "test/matchers.hpp",
@@ -68,8 +70,6 @@ executable("procyon-cpp-test") {
     output_extension = "exe"
   } else {
     sources += [
-      "test/dump.test.cpp",
-      "test/format.test.cpp",
       "test/io.test.cpp",
       "test/parse.test.cpp",
       "test/valuepp.test.cpp",
