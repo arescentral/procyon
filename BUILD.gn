@@ -24,16 +24,14 @@ source_set("procyon-cpp") {
   ]
 }
 
-if (target_os != "win") {
-  source_set("pnfmt") {
-    public_deps = [
-      "src/bin:pnfmt",
-    ]
-  }
+source_set("pnfmt") {
+  public_deps = [
+    "src/bin:pnfmt",
+  ]
+}
 
-  source_set("pn2json") {
-    public_deps = [
-      "src/bin:pn2json",
-    ]
-  }
+source_set("pn2json") {
+  public_deps = [
+    "src/bin:pn2json",
+  ]
 }

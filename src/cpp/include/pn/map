@@ -28,8 +28,8 @@ namespace internal {
 
 void       map_set(pn_map_t** m, string key, value x);
 value_ref  map_force(pn_map_t** m, string key);
-value_ref  map_force(pn_map_t** m, const char* data, int size);
-value_cref map_get(const pn_map_t* m, const char* data, int size);
+value_ref  map_force(pn_map_t** m, const char* data, size_t size);
+value_cref map_get(const pn_map_t* m, const char* data, size_t size);
 void       map_clear(pn_map_t* m);
 
 }  // namespace internal

@@ -25,6 +25,8 @@ static_library("procyon") {
     "src/gen_table.c",
     "src/gen_table.h",
     "src/io.c",
+    "src/lex.c",
+    "src/lex.h",
     "src/numeric.c",
     "src/numeric.h",
     "src/parse.c",
@@ -34,12 +36,6 @@ static_library("procyon") {
     "src/utf8.h",
     "src/vector.h",
   ]
-  if (target_os != "win") {
-    sources += [
-      "src/lex.c",
-      "src/lex.h",
-    ]
-  }
 
   public_configs = [ ":procyon_public" ]
   configs += [ ":procyon_private" ]
@@ -48,6 +44,9 @@ static_library("procyon") {
 config("procyon_public") {
   include_dirs = [ "include" ]
   libs = [ "-lm" ]
+  if (target_os == "win") {
+    libs += [ "-lws2_32" ]
+  }
 }
 
 config("procyon_private") {

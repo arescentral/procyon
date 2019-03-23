@@ -37,7 +37,7 @@ value_ref map_force(pn_map_t** m, string key) {
     return value_ref{x};
 }
 
-value_ref map_force(pn_map_t** m, const char* data, int size) {
+value_ref map_force(pn_map_t** m, const char* data, size_t size) {
     pn_value_t* x = pn_mapget(*m, 'S', data, size);
     if (!x) {
         pn_mapset(m, 'S', 'N', data, size, &x);
@@ -45,7 +45,7 @@ value_ref map_force(pn_map_t** m, const char* data, int size) {
     return value_ref{x};
 }
 
-value_cref map_get(const pn_map_t* m, const char* data, int size) {
+value_cref map_get(const pn_map_t* m, const char* data, size_t size) {
     const pn_value_t* x = pn_mapget_const(m, 'S', data, size);
     if (!x) {
         x = &pn_null;
