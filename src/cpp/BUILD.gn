@@ -67,11 +67,10 @@ executable("procyon-cpp-test") {
     "test/parse.test.cpp",
     "test/utf8.test.cpp",
     "test/value.test.cpp",
+    "test/valuepp.test.cpp",
   ]
   if (target_os == "win") {
     output_extension = "exe"
-  } else {
-    sources += [ "test/valuepp.test.cpp" ]
   }
   deps = [
     ":procyon-cpp",
