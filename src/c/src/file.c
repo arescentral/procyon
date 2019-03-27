@@ -20,7 +20,14 @@
 #include <stdlib.h>
 #include <string.h>
 
-pn_input_t pn_open_r(const char* path) { return pn_file_input(fopen(path, "r")); }
+pn_input_t pn_path_input(const char* path, pn_path_flags_t flags) {
+    switch (flags) {
+        case PN_TEXT:
+        case PN_APPEND_TEXT: return pn_file_input(fopen(path, "r"));
+        case PN_BINARY:
+        case PN_APPEND_BINARY: return pn_file_input(fopen(path, "rb"));
+    }
+}
 
 pn_input_t pn_file_input(FILE* f) {
     pn_input_t in = {.type = f ? PN_INPUT_TYPE_C_FILE : PN_INPUT_TYPE_INVALID, .c_file = f};
@@ -48,9 +55,14 @@ pn_input_t pn_view_input(const void* data, size_t size) {
     return in;
 }
 
-pn_output_t pn_open_w(const char* path) { return pn_file_output(fopen(path, "w")); }
-
-pn_output_t pn_open_a(const char* path) { return pn_file_output(fopen(path, "a")); }
+pn_output_t pn_path_output(const char* path, pn_path_flags_t flags) {
+    switch (flags) {
+        case PN_TEXT: return pn_file_output(fopen(path, "w"));
+        case PN_APPEND_TEXT: return pn_file_output(fopen(path, "a"));
+        case PN_BINARY: return pn_file_output(fopen(path, "wb"));
+        case PN_APPEND_BINARY: return pn_file_output(fopen(path, "ab"));
+    }
+}
 
 pn_output_t pn_file_output(FILE* f) {
     pn_output_t out = {.type = f ? PN_OUTPUT_TYPE_C_FILE : PN_OUTPUT_TYPE_INVALID, .c_file = f};

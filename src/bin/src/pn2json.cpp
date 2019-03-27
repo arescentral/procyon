@@ -106,7 +106,7 @@ void main(int argc, char* const* argv) {
                 if (filename == "-") {
                     in = pn::in;
                 } else {
-                    in = open_in = pn::open_r(argv[0]).check();
+                    in = open_in = pn::input{argv[0], pn::text}.check();
                 }
                 break;
 

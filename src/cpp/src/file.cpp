@@ -31,11 +31,19 @@ static_assert(std::is_same<index_range<2>::type, indexes<0, 1>>::value, "");
 static_assert(std::is_same<index_range<3>::type, indexes<0, 1, 2>>::value, "");
 static_assert(std::is_same<index_range<4>::type, indexes<0, 1, 2, 3>>::value, "");
 
+static pn_path_flags_t path_flag(text_mode mode, bool append) {
+    return append ? ((mode == text) ? PN_APPEND_TEXT : PN_APPEND_BINARY)
+                  : ((mode == text) ? PN_TEXT : PN_BINARY);
+}
+
 }  // namespace internal
 
 input  in{pn_stdin};
 output out{pn_stdout};
 output err{pn_stderr};
+
+input::input(string_view path, text_mode mode)
+        : _c_obj{pn_path_input(path.copy().c_str(), internal::path_flag(mode, false))} {}
 
 input& input::check() & {
     if (!c_obj()->type || error()) {
@@ -55,6 +63,9 @@ input_view input_view::check() {
     return *this;
 }
 
+output::output(string_view path, text_mode mode, bool append)
+        : _c_obj{pn_path_output(path.copy().c_str(), internal::path_flag(mode, append))} {}
+
 output& output::check() & {
     if (!c_obj()->type || error()) {
         throw std::system_error(errno, std::system_category());
@@ -72,10 +83,6 @@ output_view output_view::check() {
     }
     return *this;
 }
-
-input  open_r(string_view path) { return input{pn_open_r(path.copy().c_str())}; }
-output open_w(string_view path) { return output{pn_open_w(path.copy().c_str())}; }
-output open_a(string_view path) { return output{pn_open_a(path.copy().c_str())}; }
 
 bool parse(input_view in, value_ptr out, pn_error_t* error) {
     return pn_parse(in.c_obj(), out->c_obj(), error);

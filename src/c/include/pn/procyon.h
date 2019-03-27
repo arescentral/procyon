@@ -265,14 +265,20 @@ enum {
 };
 bool pn_dump(pn_output_t* output, int flags, int format, ...);
 
-pn_input_t pn_open_r(const char* path);
+typedef enum {
+    PN_TEXT          = 0,
+    PN_BINARY        = 1,
+    PN_APPEND_TEXT   = 2,
+    PN_APPEND_BINARY = 3,
+} pn_path_flags_t;
+
+pn_input_t pn_path_input(const char* path, pn_path_flags_t flags);
 pn_input_t pn_file_input(FILE* f);
 pn_input_t pn_data_input(const pn_data_t* d);
 pn_input_t pn_string_input(const pn_string_t* s);
 pn_input_t pn_view_input(const void* data, size_t size);
 
-pn_output_t pn_open_w(const char* path);
-pn_output_t pn_open_a(const char* path);
+pn_output_t pn_path_output(const char* path, pn_path_flags_t flags);
 pn_output_t pn_file_output(FILE* f);
 pn_output_t pn_data_output(pn_data_t** d);
 pn_output_t pn_string_output(pn_string_t** s);
