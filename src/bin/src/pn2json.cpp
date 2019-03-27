@@ -19,7 +19,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <cmath>
-#include <pn/file>
+#include <pn/input>
+#include <pn/output>
 #include <pn/value>
 
 #include "../../c/src/lex.h"

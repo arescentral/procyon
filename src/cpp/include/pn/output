@@ -1,5 +1,5 @@
 // -*- mode: C++ -*-
-// Copyright 2017 The Procyon Authors
+// Copyright 2017-2019 The Procyon Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,8 +13,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef PN_FILE_
-#define PN_FILE_
+#ifndef PN_OUTPUT_
+#define PN_OUTPUT_
 
 #include <pn/procyon.h>
 #include <pn/arg>
@@ -32,65 +32,8 @@ enum {
     dump_short   = PN_DUMP_SHORT,
 };
 
-extern input  in;
 extern output out;
 extern output err;
-
-enum text_mode { binary, text };
-
-class input {
-  public:
-    input() : _c_obj{pn_file_input(nullptr)} {}
-    explicit input(string_view path, text_mode mode);
-    explicit input(FILE* f) : _c_obj{pn_file_input(f)} {}
-    explicit input(pn_input_t in) : _c_obj{in} {}
-    input(const input&) = delete;
-    input(input&& other) : _c_obj{pn_file_input(nullptr)} { std::swap(_c_obj, other._c_obj); }
-    input& operator=(const input&) = delete;
-    input& operator=(input&& other) { return std::swap(_c_obj, other._c_obj), *this; }
-    ~input() { pn_input_close(&_c_obj); }
-
-           operator bool() const { return c_obj()->type && !eof() && !error(); }
-    input& check() &;
-    input  check() && { return check(), std::move(*this); }
-
-    template <typename... arguments>
-    input& read(arguments... args);
-
-    bool error() const { return pn_input_error(c_obj()); }
-    bool eof() const { return pn_input_eof(c_obj()); }
-
-    pn_input_t*       c_obj() { return &_c_obj; }
-    const pn_input_t* c_obj() const { return &_c_obj; }
-
-  private:
-    void check_ok();
-
-    pn_input_t _c_obj;
-};
-
-class input_view {
-  public:
-    input_view() : _c_obj{pn_file_input(nullptr)} {}
-    input_view(const input& in) : _c_obj{*in.c_obj()} {}
-    input_view(FILE* f) : _c_obj{pn_file_input(f)} {}
-    input_view(pn_input_t in) : _c_obj{in} {}
-
-               operator bool() const { return c_obj()->type && !eof() && !error(); }
-    input_view check();
-
-    template <typename... arguments>
-    input_view& read(arguments... args);
-
-    bool error() const { return pn_input_error(c_obj()); }
-    bool eof() const { return pn_input_eof(c_obj()); }
-
-    pn_input_t*       c_obj() { return &_c_obj; }
-    const pn_input_t* c_obj() const { return &_c_obj; }
-
-  private:
-    pn_input_t _c_obj;
-};
 
 class output {
   public:
@@ -158,8 +101,6 @@ class output_view {
     pn_output_t _c_obj;
 };
 
-[[clang::warn_unused_result]] bool parse(input_view in, value_ptr out, pn_error_t* error);
-
 template <typename... args>
 [[clang::warn_unused_result]] string format(const char* fmt, const args&... arg);
 
@@ -204,16 +145,6 @@ void write(pn_output_t* out, const char* format, const tuple& args) {
     apply_write(out, format, args, typename index_range<std::tuple_size<tuple>::value>::type());
 }
 
-template <typename tuple, int... i>
-void apply_read(pn_input_t* in, const char* format, const tuple& args, indexes<i...>) {
-    pn_read(in, format, std::get<i>(args)...);
-}
-
-template <typename tuple>
-void read(pn_input_t* in, const char* format, const tuple& args) {
-    apply_read(in, format, args, typename index_range<std::tuple_size<tuple>::value>::type());
-}
-
 }  // namespace internal
 
 template <typename... args>
@@ -228,24 +159,6 @@ string dump(const arg& x, int flags) {
     string out;
     out.output().dump(x, flags).check();
     return out;
-}
-
-template <typename... args>
-input& input::read(args... arg) {
-    internal::read(
-            c_obj(), (char[]){internal::read_arg<typename std::decay<args>::type>::code..., '\0'},
-            std::tuple_cat(
-                    internal::read_arg<typename std::decay<args>::type>::read_args(arg)...));
-    return *this;
-}
-
-template <typename... args>
-input_view& input_view::read(args... arg) {
-    internal::read(
-            c_obj(), (char[]){internal::read_arg<typename std::decay<args>::type>::code..., '\0'},
-            std::tuple_cat(
-                    internal::read_arg<typename std::decay<args>::type>::read_args(arg)...));
-    return *this;
 }
 
 template <typename... args>
@@ -298,4 +211,4 @@ output_view& output_view::format(const char* fmt, const args&... arg) {
 
 }  // namespace pn
 
-#endif  // PN_FILE_
+#endif  // PN_OUTPUT_

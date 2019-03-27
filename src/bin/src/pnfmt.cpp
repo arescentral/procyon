@@ -18,7 +18,8 @@
 #include <unistd.h>
 #include <deque>
 #include <map>
-#include <pn/file>
+#include <pn/input>
+#include <pn/output>
 #include <pn/value>
 #include <vector>
 

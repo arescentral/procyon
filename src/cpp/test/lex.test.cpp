@@ -15,6 +15,7 @@
 #include <pn/procyon.h>
 
 #include <gmock/gmock.h>
+#include <pn/input>
 
 #include "../src/lex.h"
 #include "./matchers.hpp"

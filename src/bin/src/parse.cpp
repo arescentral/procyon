@@ -15,7 +15,8 @@
 #include "./parse.hpp"
 
 #include <exception>
-#include <pn/file>
+#include <pn/input>
+#include <pn/output>
 
 parser::parser(lexer* l, int max_depth) { pn_parser_init(c_obj(), l->c_obj(), max_depth); }
 parser::~parser() { pn_parser_clear(c_obj()); }

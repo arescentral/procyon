@@ -16,6 +16,8 @@
 
 #include <gmock/gmock.h>
 #include <limits>
+#include <pn/input>
+#include <pn/output>
 
 #include "./matchers.hpp"
 

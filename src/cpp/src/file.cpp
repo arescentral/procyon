@@ -12,7 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <pn/file>
+#include <pn/input>
+#include <pn/output>
 
 #include <errno.h>
 #include <stdlib.h>
