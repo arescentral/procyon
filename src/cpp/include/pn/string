@@ -129,6 +129,56 @@ class rune_iterator {
     size_type   _offset;
 };
 
+class reverse_rune_iterator {
+  public:
+    using iterator_category = std::bidirectional_iterator_tag;
+    using size_type         = int;
+    using difference_type   = int;
+    using value_type        = rune;
+    using pointer           = value_type*;
+    using reference         = value_type&;
+
+    reverse_rune_iterator() : _data{nullptr}, _size{0}, _offset{0} {}
+    reverse_rune_iterator(const char* data, size_type size, size_type at)
+            : _data{data}, _size{size}, _offset{at} {}
+
+    rune operator*() const {
+        size_type prev_offset = pn_rune_prev(_data, _size, _offset);
+        return rune(&_data[prev_offset], _size - prev_offset);
+    }
+
+    reverse_rune_iterator& operator++() {
+        return _offset = pn_rune_prev(_data, _size, _offset), *this;
+    }
+    reverse_rune_iterator operator++(int) {
+        size_type old_offset = _offset;
+        _offset              = pn_rune_prev(_data, _size, _offset);
+        return reverse_rune_iterator{_data, _size, old_offset};
+    }
+    reverse_rune_iterator& operator--() {
+        return _offset = pn_rune_next(_data, _size, _offset), *this;
+    }
+    reverse_rune_iterator operator--(int) {
+        size_type old_offset = _offset;
+        _offset              = pn_rune_next(_data, _size, _offset);
+        return reverse_rune_iterator{_data, _size, old_offset};
+    }
+
+    bool operator==(reverse_rune_iterator other) const { return other._offset == _offset; }
+    bool operator!=(reverse_rune_iterator other) const { return other._offset != _offset; }
+    bool operator<(reverse_rune_iterator other) const { return other._offset < _offset; }
+    bool operator<=(reverse_rune_iterator other) const { return other._offset <= _offset; }
+    bool operator>(reverse_rune_iterator other) const { return other._offset > _offset; }
+    bool operator>=(reverse_rune_iterator other) const { return other._offset >= _offset; }
+
+    size_type offset() const { return _offset; }
+
+  private:
+    const char* _data;
+    size_type   _size;
+    size_type   _offset;
+};
+
 class string {
   public:
     using c_obj_type       = pn_string_t*;
@@ -138,6 +188,7 @@ class string {
     using reference        = value_type&;
     using const_reference  = const value_type&;
     using iterator         = rune_iterator;
+    using reverse_iterator = reverse_rune_iterator;
 
     static constexpr size_type npos = -1;
 
@@ -171,10 +222,12 @@ class string {
     string_view substr(size_type offset) const;
     string_view substr(size_type offset, size_type size) const;
 
-    size_type find(string_view needle, size_type offset = 0) const;
-    size_type rfind(string_view needle, size_type offset = 0) const;
-    iterator  begin() const { return iterator{data(), size(), 0}; }
-    iterator  end() const { return iterator{data(), size(), size()}; }
+    size_type        find(string_view needle, size_type offset = 0) const;
+    size_type        rfind(string_view needle, size_type offset = 0) const;
+    iterator         begin() const { return iterator{data(), size(), 0}; }
+    iterator         end() const { return iterator{data(), size(), size()}; }
+    reverse_iterator rbegin() const { return reverse_iterator{data(), size(), size()}; }
+    reverse_iterator rend() const { return reverse_iterator{data(), size(), 0}; }
 
     void swap(string& other) noexcept { std::swap(*c_obj(), *other.c_obj()); }
     void swap(string&& other) noexcept { std::swap(*c_obj(), *other.c_obj()); }
@@ -200,6 +253,7 @@ class string_ref {
     using reference        = value_type&;
     using const_reference  = const value_type&;
     using iterator         = rune_iterator;
+    using reverse_iterator = reverse_rune_iterator;
 
     static constexpr size_type npos = -1;
 
@@ -229,10 +283,12 @@ class string_ref {
     string_view substr(size_type offset) const;
     string_view substr(size_type offset, size_type size) const;
 
-    size_type find(string_view needle, size_type offset = 0) const;
-    size_type rfind(string_view needle, size_type offset = 0) const;
-    iterator  begin() const { return iterator{data(), size(), 0}; }
-    iterator  end() const { return iterator{data(), size(), size()}; }
+    size_type        find(string_view needle, size_type offset = 0) const;
+    size_type        rfind(string_view needle, size_type offset = 0) const;
+    iterator         begin() const { return iterator{data(), size(), 0}; }
+    iterator         end() const { return iterator{data(), size(), size()}; }
+    reverse_iterator rbegin() const { return reverse_iterator{data(), size(), size()}; }
+    reverse_iterator rend() const { return reverse_iterator{data(), size(), 0}; }
 
     void swap(string& other) const noexcept { std::swap(*c_obj(), *other.c_obj()); }
     void swap(string&& other) const noexcept { std::swap(*c_obj(), *other.c_obj()); }
@@ -250,10 +306,10 @@ class string_ref {
 
 class string_view {
   public:
-    using size_type      = int;
-    using value_type     = rune;
-    using iterator       = rune_iterator;
-    using const_iterator = rune_iterator;
+    using size_type        = int;
+    using value_type       = rune;
+    using iterator         = rune_iterator;
+    using reverse_iterator = reverse_rune_iterator;
 
     static constexpr size_type npos = -1;
 
@@ -270,10 +326,12 @@ class string_view {
     const char* data() const { return _data; }
     data_view   as_data() const;
 
-    size_type find(string_view needle, size_type offset = 0) const;
-    size_type rfind(string_view needle, size_type offset = 0) const;
-    iterator  begin() const { return iterator{data(), size(), 0}; }
-    iterator  end() const { return iterator{data(), size(), size()}; }
+    size_type        find(string_view needle, size_type offset = 0) const;
+    size_type        rfind(string_view needle, size_type offset = 0) const;
+    iterator         begin() const { return iterator{data(), size(), 0}; }
+    iterator         end() const { return iterator{data(), size(), size()}; }
+    reverse_iterator rbegin() const { return reverse_iterator{data(), size(), size()}; }
+    reverse_iterator rend() const { return reverse_iterator{data(), size(), 0}; }
 
     string_view substr(size_type offset) const;
     string_view substr(size_type offset, size_type size) const;
