@@ -74,9 +74,9 @@ class iterator {
     using difference_type   = std::ptrdiff_t;
     using value_type        = typename std::conditional<_is_const::value, const _val, _val>::type;
     using reference         = typename std::conditional<_is_const::value, _cref, _ref>::type;
-    using const_reference   = _ref;
+    using const_reference   = _cref;
     using pointer           = typename std::conditional<_is_const::value, _cptr, _ptr>::type;
-    using const_pointer     = _ptr;
+    using const_pointer     = _cptr;
 
     iterator(const iterator<typename std::remove_const<Container>::type>& it) : _it{it._it} {}
     constexpr explicit iterator(pointer it) : _it{it} {}
@@ -86,16 +86,16 @@ class iterator {
     pointer         operator->() { return _it; }
     const_pointer   operator->() const { return _it; }
 
-    iterator        operator+(difference_type n) { return iterator{_it + n}; }
+    iterator        operator+(difference_type n) const { return iterator{_it + n}; }
     iterator&       operator+=(difference_type n) { return _it += n, *this; }
-    iterator        operator-(difference_type n) { return iterator{_it - n}; }
+    iterator        operator-(difference_type n) const { return iterator{_it - n}; }
     iterator&       operator-=(difference_type n) { return _it -= n, *this; }
-    difference_type operator-(iterator other) { return _it - other._it; }
+    difference_type operator-(iterator other) const { return _it - other._it; }
 
     iterator& operator++() { return ++_it, *this; }
-    iterator  operator++(int) { return _it++; }
+    iterator  operator++(int) { return iterator{_it++}; }
     iterator& operator--() { return --_it, *this; }
-    iterator  operator--(int) { return _it--; }
+    iterator  operator--(int) { return iterator{_it--}; }
 
     bool operator==(iterator other) const { return _it == other._it; }
     bool operator!=(iterator other) const { return _it != other._it; }
@@ -107,6 +107,61 @@ class iterator {
   private:
     template <typename C>
     friend class iterator;
+
+    pointer _it;
+};
+
+template <typename Container>
+class reverse_iterator {
+    friend Container;
+
+    using _is_const = std::is_const<Container>;
+    using _val      = typename Container::value_type;
+    using _ref      = typename Container::reference;
+    using _cref     = typename Container::const_reference;
+    using _ptr      = typename Container::pointer;
+    using _cptr     = typename Container::const_pointer;
+
+  public:
+    using iterator_category = std::random_access_iterator_tag;
+    using size_type         = int;
+    using difference_type   = std::ptrdiff_t;
+    using value_type        = typename std::conditional<_is_const::value, const _val, _val>::type;
+    using reference         = typename std::conditional<_is_const::value, _cref, _ref>::type;
+    using const_reference   = _cref;
+    using pointer           = typename std::conditional<_is_const::value, _cptr, _ptr>::type;
+    using const_pointer     = _cptr;
+
+    reverse_iterator(const reverse_iterator<typename std::remove_const<Container>::type>& it)
+            : _it{it._it} {}
+    constexpr explicit reverse_iterator(pointer it) : _it{it} {}
+
+    reference       operator*() { return *(_it - 1); }
+    const_reference operator*() const { return *(_it - 1); }
+    pointer         operator->() { return _it - 1; }
+    const_pointer   operator->() const { return _it - 1; }
+
+    reverse_iterator  operator+(difference_type n) const { return reverse_iterator{_it - n}; }
+    reverse_iterator& operator+=(difference_type n) { return _it -= n, *this; }
+    reverse_iterator  operator-(difference_type n) const { return reverse_iterator{_it + n}; }
+    reverse_iterator& operator-=(difference_type n) { return _it += n, *this; }
+    difference_type   operator-(reverse_iterator other) const { return other._it - _it; }
+
+    reverse_iterator& operator++() { return --_it, *this; }
+    reverse_iterator  operator++(int) { return reverse_iterator{_it--}; }
+    reverse_iterator& operator--() { return ++_it, *this; }
+    reverse_iterator  operator--(int) { return reverse_iterator{_it++}; }
+
+    bool operator==(reverse_iterator other) const { return other._it == _it; }
+    bool operator!=(reverse_iterator other) const { return other._it != _it; }
+    bool operator<(reverse_iterator other) const { return other._it < _it; }
+    bool operator<=(reverse_iterator other) const { return other._it <= _it; }
+    bool operator>(reverse_iterator other) const { return other._it > _it; }
+    bool operator>=(reverse_iterator other) const { return other._it >= _it; }
+
+  private:
+    template <typename C>
+    friend class reverse_iterator;
 
     pointer _it;
 };
@@ -126,11 +181,11 @@ class ptr {
     const reference& operator*() const { return _ref; }
     const reference* operator->() const { return &_ref; }
 
-    ptr             operator+(difference_type n) { return ptr{_ref._c_obj + n}; }
+    ptr             operator+(difference_type n) const { return ptr{_ref._c_obj + n}; }
     ptr&            operator+=(difference_type n) { return _ref._c_obj += n, *this; }
-    ptr             operator-(difference_type n) { return ptr{_ref._c_obj - n}; }
+    ptr             operator-(difference_type n) const { return ptr{_ref._c_obj - n}; }
     ptr&            operator-=(difference_type n) { return _ref._c_obj -= n, *this; }
-    difference_type operator-(ptr other) { return _ref._c_obj - other._ref._c_obj; }
+    difference_type operator-(ptr other) const { return _ref._c_obj - other._ref._c_obj; }
 
     ptr& operator++() { return ++_ref._c_obj, *this; }
     ptr  operator++(int) { return ptr{_ref._c_obj++}; }
