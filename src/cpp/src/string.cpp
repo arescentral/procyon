@@ -14,7 +14,8 @@
 
 #include <pn/string>
 
-#include <pn/file>
+#include <pn/input>
+#include <pn/output>
 
 #include "../../c/src/common.h"
 #include "../../c/src/vector.h"

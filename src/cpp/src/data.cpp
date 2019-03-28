@@ -14,7 +14,8 @@
 
 #include <pn/data>
 
-#include <pn/file>
+#include <pn/input>
+#include <pn/output>
 #include <pn/string>
 
 #include "../../c/src/common.h"

@@ -15,6 +15,7 @@
 #include <pn/procyon.h>
 
 #include <gmock/gmock.h>
+#include <pn/output>
 
 #include "./matchers.hpp"
 

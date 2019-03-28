@@ -51,6 +51,8 @@ template <typename P>
 class byte_iterator;
 class rune_iterator;
 
+enum text_mode { binary, text };
+
 using type = pn_type_t;
 
 namespace internal {

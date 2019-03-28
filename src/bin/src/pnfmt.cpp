@@ -18,7 +18,8 @@
 #include <unistd.h>
 #include <deque>
 #include <map>
-#include <pn/file>
+#include <pn/input>
+#include <pn/output>
 #include <pn/value>
 #include <vector>
 
@@ -123,7 +124,7 @@ void main(int argc, char* const* argv) {
             pn::string_view path = argv[i];
             pn::input       f;
             try {
-                f = pn::open_r(path).check();
+                f = pn::input{path, pn::text}.check();
             } catch (std::runtime_error& e) {
                 pn::err.format("{0}: {1}: {2}\n", progname, path, e.what());
                 exit(64);
@@ -224,7 +225,7 @@ static void output_tokens(
     } else if (!output.is_null()) {
         pn::output out;
         try {
-            out = pn::open_w(output.as_string()).check();
+            out = pn::output{output.as_string(), pn::text}.check();
         } catch (std::runtime_error& e) {
             pn::err.format("{0}: {1}: {2}\n", progname, output.as_string(), e.what());
             exit(1);

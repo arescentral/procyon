@@ -15,8 +15,8 @@
 #ifndef PROCYON_LEX_HPP_
 #define PROCYON_LEX_HPP_
 
-#include <pn/file>
 #include <pn/fwd>
+#include <pn/input>
 
 #include "../../c/src/lex.h"
 
