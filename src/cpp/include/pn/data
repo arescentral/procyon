@@ -24,16 +24,18 @@ namespace pn {
 
 class data_ {
   public:
-    using c_obj_type       = pn_data_t*;
-    using c_obj_const_type = pn_data_t const*;
-    using size_type        = int;
-    using value_type       = uint8_t;
-    using reference        = uint8_t&;
-    using const_reference  = const uint8_t&;
-    using pointer          = uint8_t*;
-    using const_pointer    = const uint8_t*;
-    using iterator         = internal::iterator<data_>;
-    using const_iterator   = internal::iterator<const data_>;
+    using c_obj_type             = pn_data_t*;
+    using c_obj_const_type       = pn_data_t const*;
+    using size_type              = int;
+    using value_type             = uint8_t;
+    using reference              = uint8_t&;
+    using const_reference        = const uint8_t&;
+    using pointer                = uint8_t*;
+    using const_pointer          = const uint8_t*;
+    using iterator               = internal::iterator<data_>;
+    using const_iterator         = internal::iterator<const data_>;
+    using reverse_iterator       = internal::reverse_iterator<data_>;
+    using const_reverse_iterator = internal::reverse_iterator<const data_>;
 
     data_() : data_(nullptr, 0) {}
     data_(const_pointer data, size_type size);
@@ -71,10 +73,14 @@ class data_ {
     reference  back() { return operator[](size() - 1); }
     value_type back() const { return operator[](size() - 1); }
 
-    iterator       begin() { return iterator{data()}; }
-    const_iterator begin() const { return const_iterator{data()}; }
-    iterator       end() { return iterator{data() + size()}; }
-    const_iterator end() const { return const_iterator{data() + size()}; }
+    iterator               begin() { return iterator{data()}; }
+    const_iterator         begin() const { return const_iterator{data()}; }
+    iterator               end() { return iterator{data() + size()}; }
+    const_iterator         end() const { return const_iterator{data() + size()}; }
+    reverse_iterator       rbegin() { return reverse_iterator{data() + size()}; }
+    const_reverse_iterator rbegin() const { return const_reverse_iterator{data() + size()}; }
+    reverse_iterator       rend() { return reverse_iterator{data()}; }
+    const_reverse_iterator rend() const { return const_reverse_iterator{data()}; }
 
     void swap(data_& other) { std::swap(*c_obj(), *other.c_obj()); }
     void swap(data_&& other) { std::swap(*c_obj(), *other.c_obj()); }
@@ -91,16 +97,18 @@ class data_ {
 
 class data_ref {
   public:
-    using c_obj_type       = pn_data_t*;
-    using c_obj_const_type = const pn_data_t*;
-    using size_type        = int;
-    using value_type       = uint8_t;
-    using reference        = uint8_t&;
-    using const_reference  = const uint8_t&;
-    using pointer          = uint8_t*;
-    using const_pointer    = const uint8_t*;
-    using iterator         = internal::iterator<data_>;
-    using const_iterator   = internal::iterator<data_>;
+    using c_obj_type             = pn_data_t*;
+    using c_obj_const_type       = const pn_data_t*;
+    using size_type              = int;
+    using value_type             = uint8_t;
+    using reference              = uint8_t&;
+    using const_reference        = const uint8_t&;
+    using pointer                = uint8_t*;
+    using const_pointer          = const uint8_t*;
+    using iterator               = internal::iterator<data_>;
+    using const_iterator         = internal::iterator<data_>;
+    using reverse_iterator       = internal::reverse_iterator<data_>;
+    using const_reverse_iterator = internal::reverse_iterator<data_>;
 
     explicit data_ref(c_obj_type* x) : _c_obj{x} {}
     data_ref(data& x) : _c_obj{x.c_obj()} {}
@@ -133,8 +141,10 @@ class data_ref {
     reference front() const { return operator[](0); }
     reference back() const { return operator[](size() - 1); }
 
-    iterator begin() const { return iterator{data()}; }
-    iterator end() const { return iterator{data() + size()}; }
+    iterator         begin() const { return iterator{data()}; }
+    iterator         end() const { return iterator{data() + size()}; }
+    reverse_iterator rbegin() const { return reverse_iterator{data() + size()}; }
+    reverse_iterator rend() const { return reverse_iterator{data()}; }
 
     ::pn::input  input() const;
     ::pn::output output() const;
@@ -147,10 +157,12 @@ class data_ref {
 
 class data_view {
   public:
-    using size_type      = int;
-    using value_type     = uint8_t;
-    using iterator       = internal::iterator<const data_>;
-    using const_iterator = internal::iterator<const data_>;
+    using size_type              = int;
+    using value_type             = uint8_t;
+    using iterator               = internal::iterator<const data_>;
+    using const_iterator         = internal::iterator<const data_>;
+    using reverse_iterator       = internal::reverse_iterator<const data_>;
+    using const_reverse_iterator = internal::reverse_iterator<const data_>;
 
     static constexpr size_type npos = -1;
 
@@ -168,8 +180,10 @@ class data_view {
     value_type front() const { return operator[](0); }
     value_type back() const { return operator[](size() - 1); }
 
-    iterator begin() const { return iterator{data()}; }
-    iterator end() const { return iterator{data() + size()}; }
+    iterator         begin() const { return iterator{data()}; }
+    iterator         end() const { return iterator{data() + size()}; }
+    reverse_iterator rbegin() const { return reverse_iterator{data() + size()}; }
+    reverse_iterator rend() const { return reverse_iterator{data()}; }
 
     data_view slice(size_type offset) const;
     data_view slice(size_type offset, size_type size) const;

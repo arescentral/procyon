@@ -142,18 +142,20 @@ class key_value_cref {
 
 class map {
   public:
-    using c_obj_type       = pn_map_t*;
-    using c_obj_const_type = pn_map_t const*;
-    using size_type        = int;
-    using key_type         = string;
-    using mapped_type      = value;
-    using value_type       = key_value;
-    using reference        = key_value_ref;
-    using const_reference  = key_value_cref;
-    using pointer          = key_value_ptr;
-    using const_pointer    = key_value_cptr;
-    using iterator         = internal::iterator<map>;
-    using const_iterator   = internal::iterator<const map>;
+    using c_obj_type             = pn_map_t*;
+    using c_obj_const_type       = pn_map_t const*;
+    using size_type              = int;
+    using key_type               = string;
+    using mapped_type            = value;
+    using value_type             = key_value;
+    using reference              = key_value_ref;
+    using const_reference        = key_value_cref;
+    using pointer                = key_value_ptr;
+    using const_pointer          = key_value_cptr;
+    using iterator               = internal::iterator<map>;
+    using const_iterator         = internal::iterator<const map>;
+    using reverse_iterator       = internal::reverse_iterator<map>;
+    using const_reverse_iterator = internal::reverse_iterator<const map>;
 
     map();
     explicit map(std::initializer_list<std::pair<string, value>> m);
@@ -192,10 +194,14 @@ class map {
     void      reserve(size_type n);
     void      shrink_to_fit();
 
-    iterator       begin() { return iterator{data()}; }
-    iterator       end() { return iterator{data() + size()}; }
-    const_iterator begin() const { return const_iterator{data()}; }
-    const_iterator end() const { return const_iterator{data() + size()}; }
+    iterator               begin() { return iterator{data()}; }
+    iterator               end() { return iterator{data() + size()}; }
+    const_iterator         begin() const { return const_iterator{data()}; }
+    const_iterator         end() const { return const_iterator{data() + size()}; }
+    reverse_iterator       rbegin() { return reverse_iterator{data() + size()}; }
+    const_reverse_iterator rbegin() const { return const_reverse_iterator{data() + size()}; }
+    reverse_iterator       rend() { return reverse_iterator{data()}; }
+    const_reverse_iterator rend() const { return const_reverse_iterator{data()}; }
 
     void swap(map& other) { std::swap(_c_obj, other._c_obj); }
 
@@ -208,16 +214,18 @@ class map {
 
 class map_ref {
   public:
-    using c_obj_type       = pn_map_t*;
-    using c_obj_const_type = pn_map_t const*;
-    using size_type        = int;
-    using key_type         = string;
-    using mapped_type      = value;
-    using value_type       = key_value;
-    using reference        = key_value_ref;
-    using const_reference  = key_value_cref;
-    using iterator         = internal::iterator<map>;
-    using const_iterator   = internal::iterator<const map>;
+    using c_obj_type             = pn_map_t*;
+    using c_obj_const_type       = pn_map_t const*;
+    using size_type              = int;
+    using key_type               = string;
+    using mapped_type            = value;
+    using value_type             = key_value;
+    using reference              = key_value_ref;
+    using const_reference        = key_value_cref;
+    using iterator               = internal::iterator<map>;
+    using const_iterator         = internal::iterator<map>;
+    using reverse_iterator       = internal::reverse_iterator<map>;
+    using const_reverse_iterator = internal::reverse_iterator<map>;
 
     explicit map_ref(c_obj_type* x) : _c_obj{x} {}
     map_ref(map& x) : _c_obj{x.c_obj()} {}
@@ -254,8 +262,10 @@ class map_ref {
     void      reserve(size_type n) const;
     void      shrink_to_fit() const;
 
-    iterator begin() const { return iterator{data()}; }
-    iterator end() const { return iterator{data() + size()}; }
+    iterator         begin() const { return iterator{data()}; }
+    iterator         end() const { return iterator{data() + size()}; }
+    reverse_iterator rbegin() const { return reverse_iterator{data() + size()}; }
+    reverse_iterator rend() const { return reverse_iterator{data()}; }
 
     c_obj_type* c_obj() const { return _c_obj; }
 
@@ -265,16 +275,18 @@ class map_ref {
 
 class map_cref {
   public:
-    using c_obj_type       = pn_map_t const*;
-    using c_obj_const_type = pn_map_t const*;
-    using size_type        = int;
-    using key_type         = string;
-    using mapped_type      = value;
-    using value_type       = key_value;
-    using reference        = key_value_cref;
-    using const_reference  = key_value_cref;
-    using iterator         = internal::iterator<map>;
-    using const_iterator   = internal::iterator<const map>;
+    using c_obj_type             = pn_map_t const*;
+    using c_obj_const_type       = pn_map_t const*;
+    using size_type              = int;
+    using key_type               = string;
+    using mapped_type            = value;
+    using value_type             = key_value;
+    using reference              = key_value_cref;
+    using const_reference        = key_value_cref;
+    using iterator               = internal::iterator<const map>;
+    using const_iterator         = internal::iterator<const map>;
+    using reverse_iterator       = internal::reverse_iterator<const map>;
+    using const_reverse_iterator = internal::reverse_iterator<const map>;
 
     explicit map_cref(const c_obj_type* x) : _c_obj{x} {}
     map_cref(const map& x) : _c_obj{x.c_obj()} {}
@@ -296,8 +308,10 @@ class map_cref {
 
     size_type capacity() const;
 
-    const_iterator begin() const { return const_iterator{data()}; }
-    const_iterator end() const { return const_iterator{data() + size()}; }
+    const_iterator   begin() const { return const_iterator{data()}; }
+    const_iterator   end() const { return const_iterator{data() + size()}; }
+    reverse_iterator rbegin() const { return reverse_iterator{data() + size()}; }
+    reverse_iterator rend() const { return reverse_iterator{data()}; }
 
     c_obj_type const* c_obj() const { return _c_obj; }
 
