@@ -24,6 +24,10 @@ using StringTest = ::testing::Test;
 using ::testing::ElementsAre;
 using ::testing::Eq;
 using ::testing::Ne;
+using ::testing::Lt;
+using ::testing::Le;
+using ::testing::Gt;
+using ::testing::Ge;
 
 namespace pntest {
 
@@ -71,6 +75,76 @@ TEST_F(StringTest, AllRunes) {
     // Invalid: overlong encoding of '\0'.
     EXPECT_THAT(runes("\300\200"), ElementsAre(0xFFFD, 0xFFFD));
     EXPECT_THAT(rev_runes("\300\200"), ElementsAre(0xFFFD, 0xFFFD));
+}
+
+TEST_F(StringTest, Iterator) {
+    pn::string_view s = "\1\2\3\4";
+
+    const auto begin = s.begin();
+    const auto end   = s.end();
+    EXPECT_THAT(begin.offset(), Eq(0));
+    EXPECT_THAT(end.offset(), Eq(4));
+
+    auto       it     = begin;
+    const auto second = ++it;
+    const auto third  = ++it;
+    const auto fourth = ++it;
+    EXPECT_THAT(*begin, Eq(pn::rune{1}));
+    EXPECT_THAT(*second, Eq(pn::rune{2}));
+    EXPECT_THAT(*third, Eq(pn::rune{3}));
+    EXPECT_THAT(*fourth, Eq(pn::rune{4}));
+    EXPECT_THAT(++it, Eq(end));
+
+    EXPECT_THAT(second, Ne(begin));
+    EXPECT_THAT(second, Gt(begin));
+    EXPECT_THAT(second, Ge(begin));
+    EXPECT_THAT(second, Ge(second));
+    EXPECT_THAT(second, Eq(second));
+    EXPECT_THAT(second, Le(second));
+    EXPECT_THAT(second, Le(third));
+    EXPECT_THAT(second, Lt(third));
+    EXPECT_THAT(second, Ne(third));
+
+    it = begin;
+    EXPECT_THAT(it++, Eq(begin));
+    EXPECT_THAT(++it, Eq(third));
+    EXPECT_THAT(--it, Eq(second));
+    EXPECT_THAT(it++, Eq(second));
+}
+
+TEST_F(StringTest, ReverseIterator) {
+    pn::string_view s = "\4\3\2\1";
+
+    const auto begin = s.rbegin();
+    const auto end   = s.rend();
+    EXPECT_THAT(begin.offset(), Eq(4));
+    EXPECT_THAT(end.offset(), Eq(0));
+
+    auto       it     = begin;
+    const auto second = ++it;
+    const auto third  = ++it;
+    const auto fourth = ++it;
+    EXPECT_THAT(*begin, Eq(pn::rune{1}));
+    EXPECT_THAT(*second, Eq(pn::rune{2}));
+    EXPECT_THAT(*third, Eq(pn::rune{3}));
+    EXPECT_THAT(*fourth, Eq(pn::rune{4}));
+    EXPECT_THAT(++it, Eq(end));
+
+    EXPECT_THAT(second, Ne(begin));
+    EXPECT_THAT(second, Gt(begin));
+    EXPECT_THAT(second, Ge(begin));
+    EXPECT_THAT(second, Ge(second));
+    EXPECT_THAT(second, Eq(second));
+    EXPECT_THAT(second, Le(second));
+    EXPECT_THAT(second, Le(third));
+    EXPECT_THAT(second, Lt(third));
+    EXPECT_THAT(second, Ne(third));
+
+    it = begin;
+    EXPECT_THAT(it++, Eq(begin));
+    EXPECT_THAT(++it, Eq(third));
+    EXPECT_THAT(--it, Eq(second));
+    EXPECT_THAT(it++, Eq(second));
 }
 
 }  // namespace pntest
