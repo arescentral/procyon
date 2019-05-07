@@ -102,6 +102,25 @@ class output_ref {
     c_obj_type* _c_obj;
 };
 
+class output_cref {
+  public:
+    using c_obj_type = pn_output_t const;
+
+    output_cref(output& out) : _c_obj{out.c_obj()} {}
+    explicit output_cref(c_obj_type* out) : _c_obj{out} {}
+
+                operator bool() const { return c_obj()->type && !eof() && !error(); }
+    output_cref check() const;
+
+    bool error() const { return pn_output_error(c_obj()); }
+    bool eof() const { return pn_output_eof(c_obj()); }
+
+    c_obj_type* c_obj() const { return _c_obj; }
+
+  private:
+    c_obj_type* _c_obj;
+};
+
 template <typename... args>
 [[clang::warn_unused_result]] string format(const char* fmt, const args&... arg);
 

@@ -84,6 +84,25 @@ class input_ref {
     c_obj_type* _c_obj;
 };
 
+class input_cref {
+  public:
+    using c_obj_type = pn_input_t const;
+
+    input_cref(input& in) : _c_obj{in.c_obj()} {}
+    explicit input_cref(c_obj_type* in) : _c_obj{in} {}
+
+               operator bool() const { return c_obj()->type && !eof() && !error(); }
+    input_cref check() const;
+
+    bool error() const { return pn_input_error(c_obj()); }
+    bool eof() const { return pn_input_eof(c_obj()); }
+
+    c_obj_type* c_obj() const { return _c_obj; }
+
+  private:
+    c_obj_type* _c_obj;
+};
+
 [[clang::warn_unused_result]] bool parse(input_ref in, value_ptr out, pn_error_t* error);
 
 namespace internal {

@@ -64,6 +64,15 @@ input_ref input_ref::check() const {
     return *this;
 }
 
+input_cref input_cref::check() const {
+    if (!c_obj()->type || error()) {
+        throw std::system_error(errno, std::system_category());
+    } else if (eof()) {
+        throw std::runtime_error("unexpected eof");
+    }
+    return *this;
+}
+
 output::output(string_view path, text_mode mode, bool append)
         : _c_obj{pn_path_output(path.copy().c_str(), internal::path_flag(mode, append))} {}
 
@@ -77,6 +86,15 @@ output& output::check() & {
 }
 
 output_ref output_ref::check() const {
+    if (!c_obj()->type || error()) {
+        throw std::system_error(errno, std::system_category());
+    } else if (eof()) {
+        throw std::runtime_error("unexpected eof");
+    }
+    return *this;
+}
+
+output_cref output_cref::check() const {
     if (!c_obj()->type || error()) {
         throw std::system_error(errno, std::system_category());
     } else if (eof()) {
