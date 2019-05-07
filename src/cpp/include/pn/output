@@ -37,10 +37,12 @@ extern output err;
 
 class output {
   public:
+    using c_obj_type = pn_output_t;
+
     output() : _c_obj{pn_file_output(nullptr)} {}
     explicit output(string_view path, text_mode mode, bool append = false);
     explicit output(FILE* f) : _c_obj{pn_file_output(f)} {}
-    explicit output(pn_output_t out) : _c_obj{out} {}
+    explicit output(c_obj_type out) : _c_obj{out} {}
     output(const output&) = delete;
     output(output&& other) : _c_obj{pn_file_output(nullptr)} { std::swap(_c_obj, other._c_obj); }
     output& operator=(const output&) = delete;
@@ -63,42 +65,41 @@ class output {
     bool error() const { return pn_output_error(c_obj()); }
     bool eof() const { return pn_output_eof(c_obj()); }
 
-    pn_output_t*       c_obj() { return &_c_obj; }
-    const pn_output_t* c_obj() const { return &_c_obj; }
+    c_obj_type*       c_obj() { return &_c_obj; }
+    const c_obj_type* c_obj() const { return &_c_obj; }
 
   private:
     void check_ok();
 
-    pn_output_t _c_obj;
+    c_obj_type _c_obj;
 };
 
-class output_view {
+class output_ref {
   public:
-    output_view() : _c_obj{pn_file_output(nullptr)} {}
-    output_view(const output& out) : _c_obj{*out.c_obj()} {}
-    output_view(FILE* f) : _c_obj{pn_file_output(f)} {}
-    output_view(pn_output_t out) : _c_obj{out} {}
+    using c_obj_type = pn_output_t;
 
-                operator bool() const { return c_obj()->type && !eof() && !error(); }
-    output_view check();
+    output_ref(output& out) : _c_obj{out.c_obj()} {}
+    explicit output_ref(c_obj_type* out) : _c_obj{out} {}
+
+               operator bool() const { return c_obj()->type && !eof() && !error(); }
+    output_ref check() const;
 
     template <typename... arguments>
-    output_view& write(const arguments&... args);
+    output_ref write(const arguments&... args) const;
 
     template <typename argument>
-    output_view& dump(const argument& x, int flags = dump_default);
+    output_ref dump(const argument& x, int flags = dump_default) const;
 
     template <typename... arguments>
-    output_view& format(const char* fmt, const arguments&... arg);
+    output_ref format(const char* fmt, const arguments&... arg) const;
 
     bool error() const { return pn_output_error(c_obj()); }
     bool eof() const { return pn_output_eof(c_obj()); }
 
-    pn_output_t*       c_obj() { return &_c_obj; }
-    const pn_output_t* c_obj() const { return &_c_obj; }
+    c_obj_type* c_obj() const { return _c_obj; }
 
   private:
-    pn_output_t _c_obj;
+    c_obj_type* _c_obj;
 };
 
 template <typename... args>
@@ -170,7 +171,7 @@ output& output::write(const args&... arg) {
 }
 
 template <typename... args>
-output_view& output_view::write(const args&... arg) {
+output_ref output_ref::write(const args&... arg) const {
     internal::write(
             c_obj(), (char[]){internal::arg<typename std::decay<args>::type>::code..., '\0'},
             std::tuple_cat(internal::arg<typename std::decay<args>::type>::write_args(arg)...));
@@ -186,7 +187,7 @@ output& output::dump(const arg& x, int flags) {
 }
 
 template <typename arg>
-output_view& output_view::dump(const arg& x, int flags) {
+output_ref output_ref::dump(const arg& x, int flags) const {
     internal::dump(
             c_obj(), flags, internal::arg<typename std::decay<arg>::type>::code,
             internal::arg<typename std::decay<arg>::type>::write_args(x));
@@ -202,7 +203,7 @@ output& output::format(const char* fmt, const args&... arg) {
 }
 
 template <typename... args>
-output_view& output_view::format(const char* fmt, const args&... arg) {
+output_ref output_ref::format(const char* fmt, const args&... arg) const {
     internal::format(
             c_obj(), fmt, (char[]){internal::arg<typename std::decay<args>::type>::code..., '\0'},
             std::tuple_cat(internal::arg<typename std::decay<args>::type>::write_args(arg)...));

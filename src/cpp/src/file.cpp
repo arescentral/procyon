@@ -55,7 +55,7 @@ input& input::check() & {
     return *this;
 }
 
-input_view input_view::check() {
+input_ref input_ref::check() const {
     if (!c_obj()->type || error()) {
         throw std::system_error(errno, std::system_category());
     } else if (eof()) {
@@ -76,7 +76,7 @@ output& output::check() & {
     return *this;
 }
 
-output_view output_view::check() {
+output_ref output_ref::check() const {
     if (!c_obj()->type || error()) {
         throw std::system_error(errno, std::system_category());
     } else if (eof()) {
@@ -85,7 +85,7 @@ output_view output_view::check() {
     return *this;
 }
 
-bool parse(input_view in, value_ptr out, pn_error_t* error) {
+bool parse(input_ref in, value_ptr out, pn_error_t* error) {
     return pn_parse(in.c_obj(), out->c_obj(), error);
 }
 
