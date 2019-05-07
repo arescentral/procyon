@@ -50,11 +50,10 @@ struct line {
     std::vector<line>  children;
 };
 
-static void usage(pn::output_view out, int status);
+static void usage(pn::output_ref out, int status);
 static void format_file(
-        pn::string_view path, pn::input_view in, bool dump, bool in_place,
-        const pn::value& output);
-static void      lex_file(pn::string_view path, pn::input_view in, std::vector<line>* roots);
+        pn::string_view path, pn::input_ref in, bool dump, bool in_place, const pn::value& output);
+static void      lex_file(pn::string_view path, pn::input_ref in, std::vector<line>* roots);
 static void      join_tokens(std::vector<line>* lines);
 static void      simplify_tokens(std::vector<line>* lines);
 static void      wrap_tokens(std::vector<line>* lines);
@@ -66,7 +65,7 @@ static void      output_tokens(
              const std::vector<line>& roots, bool in_place, pn::string_view path,
              pn::value_cref output);
 static void format_tokens(
-        const std::vector<line>& lines, pn::output_view out, int* lineno, int indent, int column);
+        const std::vector<line>& lines, pn::output_ref out, int* lineno, int indent, int column);
 
 #ifndef NDEBUG
 static void check_invariants(const std::vector<line>& lines);
@@ -135,7 +134,7 @@ void main(int argc, char* const* argv) {
 }
 
 static void format_file(
-        pn::string_view path, pn::input_view in, bool dump, bool in_place,
+        pn::string_view path, pn::input_ref in, bool dump, bool in_place,
         const pn::value& output) {
     std::vector<line> roots;
     lex_file(path, in, &roots);
@@ -156,7 +155,7 @@ static void format_file(
     }
 }
 
-static void usage(pn::output_view out, int status) {
+static void usage(pn::output_ref out, int status) {
     out.format(
             "usage: {0} [-i | -o OUT] [IN]\n"
             "\n"
@@ -294,7 +293,7 @@ static void lex_block(
     }
 }
 
-static void lex_file(pn::string_view path, pn::input_view in, std::vector<line>* roots) {
+static void lex_file(pn::string_view path, pn::input_ref in, std::vector<line>* roots) {
     bool       need_newline = false;
     lexer      lex(in);
     pn_error_t error;
@@ -814,7 +813,7 @@ static void set_column(std::vector<line>* lines) {
 }
 
 static void format_tokens(
-        const std::vector<line>& lines, pn::output_view out, int* lineno, int indent, int column) {
+        const std::vector<line>& lines, pn::output_ref out, int* lineno, int indent, int column) {
     for (const line& l : lines) {
         for (; *lineno < l.lineno; ++*lineno) {
             out.write('\n').check();

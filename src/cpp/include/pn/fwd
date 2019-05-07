@@ -43,9 +43,9 @@ class map;
 class map_ref;
 class map_cref;
 class input;
-class input_view;
+class input_ref;
 class output;
-class output_view;
+class output_ref;
 
 template <typename P>
 class byte_iterator;
