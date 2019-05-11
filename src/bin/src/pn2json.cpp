@@ -50,12 +50,12 @@ struct option opts[] = {
         {},
 };
 
-void dump_traditional_json(pn::output_ref out, parser* prs, pn_error_t* error);
-void dump_comma_first_json(pn::output_ref out, parser* prs, pn_error_t* error);
-void dump_minified_json(pn::output_ref out, parser* prs, pn_error_t* error);
-void dump_json_root(pn::output_ref out, parser* prs, pn_error_t* error);
+void dump_traditional_json(pn::output_view out, parser* prs, pn_error_t* error);
+void dump_comma_first_json(pn::output_view out, parser* prs, pn_error_t* error);
+void dump_minified_json(pn::output_view out, parser* prs, pn_error_t* error);
+void dump_json_root(pn::output_view out, parser* prs, pn_error_t* error);
 
-void usage(pn::output_ref out, int status) {
+void usage(pn::output_view out, int status) {
     out.format(
             "usage: {0} [options] [FILE.pn]\n"
             "\n"
@@ -94,14 +94,19 @@ void main(int argc, char* const* argv) {
     pn::string_view filename;
     pn_error_t      error{};
     try {
-        pn::input     open_in;
-        pn::input_ref in = pn::in;
+        pn::input      open_in;
+        pn::input_view in;
         switch (argc) {
-            case 0: filename = "-"; break;
+            case 0:
+                filename = "-";
+                in       = pn::in;
+                break;
 
             case 1:
                 filename = argv[0];
-                if (filename != "-") {
+                if (filename == "-") {
+                    in = pn::in;
+                } else {
                     in = open_in = pn::input{argv[0], pn::text}.check();
                 }
                 break;
@@ -122,14 +127,14 @@ void main(int argc, char* const* argv) {
     }
 }
 
-void nl_indent(pn::output_ref out, int depth) {
+void nl_indent(pn::output_view out, int depth) {
     out.write(pn::rune{'\n'}).check();
     for (int i = 0; i < depth; ++i) {
         out.write(pn::rune{'\t'}).check();
     }
 }
 
-void dump_float(pn::output_ref out, double f) {
+void dump_float(pn::output_view out, double f) {
     switch (std::fpclassify(f)) {
         case FP_NAN: out.write("null").check(); break;
         case FP_INFINITE: pn::out.format("{0}1e999", (f < 0) ? "-" : ""); break;
@@ -137,7 +142,7 @@ void dump_float(pn::output_ref out, double f) {
     }
 }
 
-void dump_data(pn::output_ref out, pn::data_view d) {
+void dump_data(pn::output_view out, pn::data_view d) {
     static const char hex[] = "0123456789abcdef";
     out.write('"').check();
     for (int i = 0; i < d.size(); ++i) {
@@ -146,7 +151,7 @@ void dump_data(pn::output_ref out, pn::data_view d) {
     out.write('"').check();
 }
 
-void dump_string(pn::output_ref out, pn::string_view s) {
+void dump_string(pn::output_view out, pn::string_view s) {
     out.write('"').check();
     for (int i = 0; i < s.size(); ++i) {
         switch (s.data()[i]) {
@@ -209,7 +214,7 @@ bool is_sequence_out(pn_event_type_t t) {
 
 bool is_sequence(pn_event_type_t t) { return is_sequence_in(t) || is_sequence_out(t); }
 
-void dump_token(pn::output_ref out, pn_event_type_t t, pn::value_cref x) {
+void dump_token(pn::output_view out, pn_event_type_t t, pn::value_cref x) {
     switch (t) {
         case PN_EVT_NULL:
         case PN_EVT_BOOL:
@@ -228,7 +233,7 @@ void dump_token(pn::output_ref out, pn_event_type_t t, pn::value_cref x) {
 // Prints \n on destruction if !*is_first_event.
 class line_finisher {
   public:
-    line_finisher(pn::output_ref out, bool* is_first_event)
+    line_finisher(pn::output_view out, bool* is_first_event)
             : _out(out), _is_first_event(is_first_event) {}
 
     ~line_finisher() {
@@ -238,11 +243,11 @@ class line_finisher {
     }
 
   private:
-    pn::output_ref _out;
-    bool*          _is_first_event;
+    pn::output_view _out;
+    bool*           _is_first_event;
 };
 
-void dump_json_root(pn::output_ref out, parser* prs, pn_error_t* error) {
+void dump_json_root(pn::output_view out, parser* prs, pn_error_t* error) {
     if (!prs->next(error)) {
         throw std::runtime_error("internal error: no events?");
     }
@@ -254,7 +259,7 @@ void dump_json_root(pn::output_ref out, parser* prs, pn_error_t* error) {
     }
 }
 
-void dump_minified_json(pn::output_ref out, parser* prs, pn_error_t* error) {
+void dump_minified_json(pn::output_view out, parser* prs, pn_error_t* error) {
     bool          is_first_event = true;
     bool          is_first_item  = true;
     line_finisher lf(out, &is_first_event);
@@ -278,7 +283,7 @@ void dump_minified_json(pn::output_ref out, parser* prs, pn_error_t* error) {
     }
 }
 
-void dump_traditional_json(pn::output_ref out, parser* prs, pn_error_t* error) {
+void dump_traditional_json(pn::output_view out, parser* prs, pn_error_t* error) {
     int           long_depth     = 0;
     int           short_depth    = 0;
     bool          is_first_item  = true;
@@ -324,7 +329,7 @@ void dump_traditional_json(pn::output_ref out, parser* prs, pn_error_t* error) {
     }
 }
 
-void dump_comma_first_json(pn::output_ref out, parser* prs, pn_error_t* error) {
+void dump_comma_first_json(pn::output_view out, parser* prs, pn_error_t* error) {
     int           long_depth     = 0;
     int           short_depth    = 0;
     bool          is_first_item  = true;

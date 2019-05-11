@@ -31,12 +31,10 @@ extern input in;
 
 class input {
   public:
-    using c_obj_type = pn_input_t;
-
     input() : _c_obj{pn_file_input(nullptr)} {}
     explicit input(string_view path, text_mode mode);
     explicit input(FILE* f) : _c_obj{pn_file_input(f)} {}
-    explicit input(c_obj_type in) : _c_obj{in} {}
+    explicit input(pn_input_t in) : _c_obj{in} {}
     input(const input&) = delete;
     input(input&& other) : _c_obj{pn_file_input(nullptr)} { std::swap(_c_obj, other._c_obj); }
     input& operator=(const input&) = delete;
@@ -53,57 +51,39 @@ class input {
     bool error() const { return pn_input_error(c_obj()); }
     bool eof() const { return pn_input_eof(c_obj()); }
 
-    c_obj_type*       c_obj() { return &_c_obj; }
-    const c_obj_type* c_obj() const { return &_c_obj; }
+    pn_input_t*       c_obj() { return &_c_obj; }
+    const pn_input_t* c_obj() const { return &_c_obj; }
 
   private:
     void check_ok();
 
-    c_obj_type _c_obj;
+    pn_input_t _c_obj;
 };
 
-class input_ref {
+class input_view {
   public:
-    using c_obj_type = pn_input_t;
-
-    input_ref(input& in) : _c_obj{in.c_obj()} {}
-    explicit input_ref(c_obj_type* in) : _c_obj{in} {}
-
-              operator bool() const { return c_obj()->type && !eof() && !error(); }
-    input_ref check() const;
-
-    template <typename... arguments>
-    input_ref read(arguments... args) const;
-
-    bool error() const { return pn_input_error(c_obj()); }
-    bool eof() const { return pn_input_eof(c_obj()); }
-
-    c_obj_type* c_obj() const { return _c_obj; }
-
-  private:
-    c_obj_type* _c_obj;
-};
-
-class input_cref {
-  public:
-    using c_obj_type = pn_input_t const;
-
-    input_cref(input& in) : _c_obj{in.c_obj()} {}
-    explicit input_cref(c_obj_type* in) : _c_obj{in} {}
+    input_view() : _c_obj{pn_file_input(nullptr)} {}
+    input_view(const input& in) : _c_obj{*in.c_obj()} {}
+    input_view(FILE* f) : _c_obj{pn_file_input(f)} {}
+    input_view(pn_input_t in) : _c_obj{in} {}
 
                operator bool() const { return c_obj()->type && !eof() && !error(); }
-    input_cref check() const;
+    input_view check();
+
+    template <typename... arguments>
+    input_view& read(arguments... args);
 
     bool error() const { return pn_input_error(c_obj()); }
     bool eof() const { return pn_input_eof(c_obj()); }
 
-    c_obj_type* c_obj() const { return _c_obj; }
+    pn_input_t*       c_obj() { return &_c_obj; }
+    const pn_input_t* c_obj() const { return &_c_obj; }
 
   private:
-    c_obj_type* _c_obj;
+    pn_input_t _c_obj;
 };
 
-[[clang::warn_unused_result]] bool parse(input_ref in, value_ptr out, pn_error_t* error);
+[[clang::warn_unused_result]] bool parse(input_view in, value_ptr out, pn_error_t* error);
 
 namespace internal {
 
@@ -129,7 +109,7 @@ input& input::read(args... arg) {
 }
 
 template <typename... args>
-input_ref input_ref::read(args... arg) const {
+input_view& input_view::read(args... arg) {
     internal::read(
             c_obj(), (char[]){internal::read_arg<typename std::decay<args>::type>::code..., '\0'},
             std::tuple_cat(

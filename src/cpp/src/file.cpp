@@ -55,16 +55,7 @@ input& input::check() & {
     return *this;
 }
 
-input_ref input_ref::check() const {
-    if (!c_obj()->type || error()) {
-        throw std::system_error(errno, std::system_category());
-    } else if (eof()) {
-        throw std::runtime_error("unexpected eof");
-    }
-    return *this;
-}
-
-input_cref input_cref::check() const {
+input_view input_view::check() {
     if (!c_obj()->type || error()) {
         throw std::system_error(errno, std::system_category());
     } else if (eof()) {
@@ -85,7 +76,7 @@ output& output::check() & {
     return *this;
 }
 
-output_ref output_ref::check() const {
+output_view output_view::check() {
     if (!c_obj()->type || error()) {
         throw std::system_error(errno, std::system_category());
     } else if (eof()) {
@@ -94,16 +85,7 @@ output_ref output_ref::check() const {
     return *this;
 }
 
-output_cref output_cref::check() const {
-    if (!c_obj()->type || error()) {
-        throw std::system_error(errno, std::system_category());
-    } else if (eof()) {
-        throw std::runtime_error("unexpected eof");
-    }
-    return *this;
-}
-
-bool parse(input_ref in, value_ptr out, pn_error_t* error) {
+bool parse(input_view in, value_ptr out, pn_error_t* error) {
     return pn_parse(in.c_obj(), out->c_obj(), error);
 }
 
