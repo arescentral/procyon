@@ -221,13 +221,13 @@ int pn_getc(pn_input_t* in) {
         case PN_INPUT_TYPE_STDIN: return getc(stdin);
 
         case PN_INPUT_TYPE_VIEW:
-            if (in->view_size == 0) {
-                in->view_data = NULL;
+            if (in->view->size == 0) {
+                in->view->data = NULL;
                 return EOF;
             }
-            char ch = *(char*)in->view_data;
-            --in->view_size;
-            ++in->view_data;
+            char ch = *(char*)in->view->data;
+            --in->view->size;
+            ++in->view->data;
             return ch;
     }
 }
@@ -260,14 +260,14 @@ bool pn_raw_read(pn_input_t* in, void* data, size_t size) {
         case PN_INPUT_TYPE_STDIN: return fread(data, 1, size, stdin) == size;
 
         case PN_INPUT_TYPE_VIEW:
-            if (in->view_size < size) {
-                in->view_size = 0;
-                in->view_data = NULL;
+            if (in->view->size < size) {
+                in->view->size = 0;
+                in->view->data = NULL;
                 return false;
             }
-            memmove(data, in->view_data, size);
-            in->view_size -= size;
-            in->view_data += size;
+            memmove(data, in->view->data, size);
+            in->view->size -= size;
+            in->view->data += size;
             return true;
     }
 }
@@ -321,26 +321,26 @@ ssize_t pn_getline(pn_input_t* in, char** data, size_t* size) {
 
         case PN_INPUT_TYPE_VIEW: {
             if (!(data && size)) {
-                in->view_data = NULL;
-                errno         = EINVAL;
+                in->view->data = NULL;
+                errno          = EINVAL;
                 return -1;
             }
 
-            if (in->view_size == 0) {
-                in->view_data = NULL;
+            if (in->view->size == 0) {
+                in->view->data = NULL;
                 return -1;
             }
 
-            void*  nl       = memchr(in->view_data, '\n', in->view_size);
-            size_t out_size = nl ? (nl - in->view_data + 1) : in->view_size;
+            void*  nl       = memchr(in->view->data, '\n', in->view->size);
+            size_t out_size = nl ? (nl - in->view->data + 1) : in->view->size;
             if (*size < (out_size + 1)) {
                 *data = realloc(*data, (out_size + 1));
                 *size = (out_size + 1);
             }
-            memmove(*data, in->view_data, out_size);
+            memmove(*data, in->view->data, out_size);
             (*data)[out_size] = '\0';
-            in->view_data += out_size;
-            in->view_size -= out_size;
+            in->view->data += out_size;
+            in->view->size -= out_size;
             return out_size;
         }
     }

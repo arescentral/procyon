@@ -231,11 +231,8 @@ typedef enum {
 struct pn_input {
     pn_input_type_t type;
     union {
-        FILE* c_file;
-        struct {
-            const void* view_data;
-            size_t      view_size;
-        };
+        FILE*                 c_file;
+        struct pn_input_view* view;
     };
 };
 
