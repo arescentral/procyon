@@ -20,6 +20,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "io.h"
+
 pn_input_t pn_path_input(const char* path, pn_path_flags_t flags) {
     switch (flags) {
         case PN_TEXT:
@@ -51,7 +53,10 @@ pn_input_t pn_string_input(const pn_string_t* s) {
 }
 
 pn_input_t pn_view_input(const void* data, size_t size) {
-    pn_input_t in = {.type = PN_INPUT_TYPE_VIEW, .view_data = data, .view_size = size};
+    struct pn_input_view* view = malloc(sizeof(struct pn_input_view));
+    view->data                 = data;
+    view->size                 = size;
+    pn_input_t in              = {.type = PN_INPUT_TYPE_VIEW, .view = view};
     return in;
 }
 
@@ -92,7 +97,7 @@ bool pn_input_close(pn_input_t* in) {
         case PN_INPUT_TYPE_INVALID: return true;
         case PN_INPUT_TYPE_C_FILE: return !fclose(in->c_file);
         case PN_INPUT_TYPE_STDIN: return !fclose(stdin);
-        case PN_INPUT_TYPE_VIEW: return true;
+        case PN_INPUT_TYPE_VIEW: return free(in->view), true;
     }
 }
 
@@ -101,7 +106,7 @@ bool pn_input_eof(const pn_input_t* in) {
         case PN_INPUT_TYPE_INVALID: return true;
         case PN_INPUT_TYPE_C_FILE: return feof(in->c_file);
         case PN_INPUT_TYPE_STDIN: return feof(stdin);
-        case PN_INPUT_TYPE_VIEW: return !in->view_data;
+        case PN_INPUT_TYPE_VIEW: return !in->view->data;
     }
 }
 

@@ -21,6 +21,11 @@
 extern "C" {
 #endif  // __cplusplus
 
+struct pn_input_view {
+    const void* data;
+    size_t      size;
+};
+
 int     pn_getc(pn_input_t* in);
 int     pn_putc(int ch, pn_output_t* out);
 bool    pn_raw_read(pn_input_t* in, void* data, size_t size);
