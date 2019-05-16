@@ -86,10 +86,10 @@ static bool skip_bytes(pn_input_t* in, size_t count) {
 
 #define PN_READ_PRIMITIVE(FIELD, T) \
     (read_primitive(in, sizeof(T), &p) ? (*va_arg(*vl, T*) = p.FIELD, true) : false)
-#define PN_READ_BYTE(T) (((c = pn_getc(in)) != EOF) ? (*va_arg(*vl, T*) = c, true) : false)
+#define PN_READ_BYTE(T) (pn_raw_read(in, &c, 1) ? (*va_arg(*vl, T*) = c, true) : false)
 
 bool pn_read_arg(pn_input_t* in, char format, va_list* vl) {
-    int                c;
+    uint8_t            c;
     union pn_primitive p;
     switch (format) {
         default: return false;
