@@ -124,6 +124,97 @@ TEST_F(IoTest, ReadCpp) {
     EXPECT_THAT(in.eof(), Eq(true));
 }
 
+TEST_F(IoTest, ReadExtrema) {
+    char charmin, charmax;
+    EXPECT_THAT(
+            (pn::string_view{"\200\177", 2}).input().read(&charmin, &charmax).operator bool(),
+            Eq(true));
+    EXPECT_THAT(charmin, Eq(-128));
+    EXPECT_THAT(charmax, Eq(127));
+
+    int8_t i8min, i8max;
+    EXPECT_THAT(
+            (pn::string_view{"\200\177", 2}).input().read(&i8min, &i8max).operator bool(),
+            Eq(true));
+    EXPECT_THAT(i8min, Eq(-128));
+    EXPECT_THAT(i8max, Eq(127));
+
+    uint8_t u8min, u8max;
+    EXPECT_THAT(
+            (pn::string_view{"\000\377", 2}).input().read(&u8min, &u8max).operator bool(),
+            Eq(true));
+    EXPECT_THAT(u8min, Eq(0u));
+    EXPECT_THAT(u8max, Eq(255u));
+
+    int16_t i16min, i16max;
+    EXPECT_THAT(
+            (pn::string_view{"\200\000\177\377", 4})
+                    .input()
+                    .read(&i16min, &i16max)
+                    .
+                    operator bool(),
+            Eq(true));
+    EXPECT_THAT(i16min, Eq(-32768));
+    EXPECT_THAT(i16max, Eq(32767));
+
+    uint16_t u16min, u16max;
+    EXPECT_THAT(
+            (pn::string_view{"\000\000\377\377", 4})
+                    .input()
+                    .read(&u16min, &u16max)
+                    .
+                    operator bool(),
+            Eq(true));
+    EXPECT_THAT(u16min, Eq(0u));
+    EXPECT_THAT(u16max, Eq(65535u));
+
+    int32_t i32min, i32max;
+    EXPECT_THAT(
+            (pn::string_view{"\200\000\000\000\177\377\377\377", 8})
+                    .input()
+                    .read(&i32min, &i32max)
+                    .
+                    operator bool(),
+            Eq(true));
+    EXPECT_THAT(i32min, Eq(-2147483648));
+    EXPECT_THAT(i32max, Eq(2147483647));
+
+    uint32_t u32min, u32max;
+    EXPECT_THAT(
+            (pn::string_view{"\000\000\000\000\377\377\377\377", 8})
+                    .input()
+                    .read(&u32min, &u32max)
+                    .
+                    operator bool(),
+            Eq(true));
+    EXPECT_THAT(u32min, Eq(0u));
+    EXPECT_THAT(u32max, Eq(4294967295u));
+
+    int64_t i64min, i64max;
+    EXPECT_THAT(
+            (pn::string_view{"\200\000\000\000\000\000\000\000\177\377\377\377\377\377\377\377",
+                             16})
+                    .input()
+                    .read(&i64min, &i64max)
+                    .
+                    operator bool(),
+            Eq(true));
+    EXPECT_THAT(i64min, Eq(std::numeric_limits<int64_t>::min()));
+    EXPECT_THAT(i64max, Eq(std::numeric_limits<int64_t>::max()));
+
+    uint64_t u64min, u64max;
+    EXPECT_THAT(
+            (pn::string_view{"\000\000\000\000\000\000\000\000\377\377\377\377\377\377\377\377",
+                             16})
+                    .input()
+                    .read(&u64min, &u64max)
+                    .
+                    operator bool(),
+            Eq(true));
+    EXPECT_THAT(u64min, Eq(std::numeric_limits<uint64_t>::min()));
+    EXPECT_THAT(u64max, Eq(std::numeric_limits<uint64_t>::max()));
+}
+
 TEST_F(IoTest, WriteC) {
     pn::string data;
     pn::output out = data.output();
