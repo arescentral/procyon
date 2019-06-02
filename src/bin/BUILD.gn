@@ -14,7 +14,7 @@
 
 config("procyon_public") {
   include_dirs = [ "include" ]
-  libs = [ "-lm" ]
+  libs = [ "m" ]
 }
 
 config("procyon_private") {
