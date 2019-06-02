@@ -43,9 +43,9 @@ static_library("procyon") {
 
 config("procyon_public") {
   include_dirs = [ "include" ]
-  libs = [ "-lm" ]
+  libs = [ "m" ]
   if (target_os == "win") {
-    libs += [ "-lws2_32" ]
+    libs += [ "ws2_32" ]
   }
 }
 
