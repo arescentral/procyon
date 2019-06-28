@@ -82,6 +82,21 @@ class rune {
     static string_view slice(string_view s, size_type offset);
     static string_view slice(string_view s, size_type offset, size_type size);
 
+    int width() const { return pn_rune_width(value()); }
+
+    bool isascii() const { return pn_isascii(value()); }
+    bool isalnum() const { return pn_isalnum(value()); }
+    bool isalpha() const { return pn_isalpha(value()); }
+    bool iscntrl() const { return pn_iscntrl(value()); }
+    bool isdigit() const { return pn_isdigit(value()); }
+    bool islower() const { return pn_islower(value()); }
+    bool isnumeric() const { return pn_isnumeric(value()); }
+    bool isprint() const { return pn_isprint(value()); }
+    bool ispunct() const { return pn_ispunct(value()); }
+    bool isspace() const { return pn_isspace(value()); }
+    bool isupper() const { return pn_isupper(value()); }
+    bool istitle() const { return pn_istitle(value()); }
+
   private:
     char _data[4];
 };
