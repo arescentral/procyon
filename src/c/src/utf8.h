@@ -22,7 +22,7 @@
 extern "C" {
 #endif  // __cplusplus
 
-void   pn_chr(uint8_t rune, char* data, size_t* size);
+void   pn_ascchr(uint8_t rune, char* data, size_t* size);
 void   pn_unichr(uint32_t rune, char* data, size_t* size);
 size_t pn_rune_width(uint32_t rune);
 size_t pn_str_width(const char* data, size_t size);

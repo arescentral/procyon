@@ -113,7 +113,7 @@ size_t pn_rune_prev(const char* data, size_t size, size_t index) {
     }
 }
 
-void pn_chr(uint8_t rune, char* data, size_t* size) {
+void pn_ascchr(uint8_t rune, char* data, size_t* size) {
     if (rune < 0x80) {
         *size = 1;
         *data = rune;

@@ -117,7 +117,7 @@ bool pn_vset(pn_value_t* dst, char format, va_list* vl) {
 
         case 'x': pn_copy(dst, va_arg(*vl, const pn_value_t*)); return true;
         case 'X': pn_move(dst, va_arg(*vl, pn_value_t*)); return true;
-        // clang-format on
+            // clang-format on
 
         case 's': {
             const char* arg = va_arg(*vl, const char*);
@@ -145,7 +145,7 @@ bool pn_vset(pn_value_t* dst, char format, va_list* vl) {
         case 'c': {
             char   data[4];
             size_t size;
-            pn_chr(va_arg(*vl, int), data, &size);
+            pn_ascchr(va_arg(*vl, int), data, &size);
             dst->type = PN_STRING;
             dst->s    = pn_string_new(data, size);
             return true;
@@ -488,7 +488,7 @@ static bool map_vfind(
         case 'c': {
             char   arg_data[4];
             size_t arg_size;
-            pn_chr(va_arg(*vl, int), arg_data, &arg_size);
+            pn_ascchr(va_arg(*vl, int), arg_data, &arg_size);
             if (map_find(*m, arg_data, arg_size, index)) {
                 return true;
             } else if (key) {

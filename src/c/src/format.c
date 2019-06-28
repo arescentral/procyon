@@ -151,7 +151,7 @@ static bool print_arg(pn_output_t* out, const struct format_arg* arg) {
         case 'c': {
             char   data[4];
             size_t size;
-            pn_chr(arg->i, data, &size);
+            pn_ascchr(arg->i, data, &size);
             return pn_raw_write(out, data, size);
         }
 
