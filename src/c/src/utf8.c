@@ -22,7 +22,7 @@ static bool is_ascii(uint8_t byte) { return byte < 0200; }
 static bool is_continuation(uint8_t byte) { return (0200 <= byte) && (byte < 0300); }
 static bool is_header(uint8_t byte) { return (0302 <= byte) && (byte < 0365); }
 
-static size_t continuation_count_for_header(uint8_t byte, uint32_t* rune) {
+static size_t continuation_count_for_header(uint8_t byte, pn_rune_t* rune) {
     if (byte >= 0360) {
         *rune = byte & 0007;
         return 3;
@@ -44,8 +44,8 @@ int32_t pn_rune(const char* data, size_t size, size_t index) {
     } else if (!is_header(data[0])) {
         return UFFFD_REPLACEMENT_CHARACTER;
     }
-    uint32_t rune;
-    size_t   continuation_count = continuation_count_for_header(data[0], &rune);
+    pn_rune_t rune;
+    size_t    continuation_count = continuation_count_for_header(data[0], &rune);
     if (continuation_count > size) {
         return UFFFD_REPLACEMENT_CHARACTER;
     }
@@ -123,7 +123,7 @@ void pn_ascchr(uint8_t rune, char* data, size_t* size) {
     }
 }
 
-void pn_unichr(uint32_t rune, char* data, size_t* size) {
+void pn_unichr(pn_rune_t rune, char* data, size_t* size) {
     if (((0xd800 <= rune) && (rune < 0xe000)) || (0x110000 <= rune)) {
         *size = 3;
         memcpy(data, "\357\277\275", 3);
@@ -175,23 +175,23 @@ enum {
 
     PN_RUNE_PUNCTUATION               = 040,  // P
     PN_RUNE_PUNCTUATION_CONNECTOR     = 040,  // Pc
-    PN_RUNE_PUNCTUATION_DASH          = 041,
-    PN_RUNE_PUNCTUATION_CLOSE         = 042,
-    PN_RUNE_PUNCTUATION_FINAL_QUOTE   = 043,
-    PN_RUNE_PUNCTUATION_INITIAL_QUOTE = 044,
-    PN_RUNE_PUNCTUATION_OTHER         = 045,
-    PN_RUNE_PUNCTUATION_OPEN          = 046,
+    PN_RUNE_PUNCTUATION_DASH          = 041,  // Pd
+    PN_RUNE_PUNCTUATION_CLOSE         = 042,  // Pe
+    PN_RUNE_PUNCTUATION_FINAL_QUOTE   = 043,  // Pf
+    PN_RUNE_PUNCTUATION_INITIAL_QUOTE = 044,  // Pi
+    PN_RUNE_PUNCTUATION_OTHER         = 045,  // Po
+    PN_RUNE_PUNCTUATION_OPEN          = 046,  // Ps
 
     PN_RUNE_SYMBOL          = 050,  // S
-    PN_RUNE_SYMBOL_CURRENCY = 050,
-    PN_RUNE_SYMBOL_MODIFIER = 051,
-    PN_RUNE_SYMBOL_MATH     = 052,
-    PN_RUNE_SYMBOL_OTHER    = 053,
+    PN_RUNE_SYMBOL_CURRENCY = 050,  // Sc
+    PN_RUNE_SYMBOL_MODIFIER = 051,  // Sk
+    PN_RUNE_SYMBOL_MATH     = 052,  // Sm
+    PN_RUNE_SYMBOL_OTHER    = 053,  // So
 
-    PN_RUNE_SEPARATOR           = 060,
-    PN_RUNE_SEPARATOR_LINE      = 060,
-    PN_RUNE_SEPARATOR_PARAGRAPH = 061,
-    PN_RUNE_SEPARATOR_SPACE     = 062,
+    PN_RUNE_SEPARATOR           = 060,  // Z
+    PN_RUNE_SEPARATOR_LINE      = 060,  // Zl
+    PN_RUNE_SEPARATOR_PARAGRAPH = 061,  // Zp
+    PN_RUNE_SEPARATOR_SPACE     = 062,  // Zs
 };
 
 enum {
@@ -1509,7 +1509,7 @@ static const uint8_t data_5[][8] = {
 };
 static const uint8_t data_6[] = {0, 3, 3, 2, 1};
 
-static int8_t get_width(uint32_t rune) {
+static int8_t pn_rune_data(pn_rune_t rune) {
     uint8_t b6 = (rune & 07000000) >> 18;
     uint8_t b5 = (rune & 00700000) >> 15;
     uint8_t b4 = (rune & 00070000) >> 12;
@@ -1524,22 +1524,19 @@ static int8_t get_width(uint32_t rune) {
     x          = data_2[x][b2];
     x          = data_1[x][b1];
     x          = data_0[x][b0];
-    switch (x & 0070) {
-        case PN_RUNE_OTHER: return -1;
-        case PN_RUNE_MODIFIER: return 0;
-    }
-    return 1 + (x >> 6);
+    return x;
 }
 
-size_t pn_rune_width(uint32_t rune) {
+size_t pn_rune_width(pn_rune_t rune) {
     if (rune >= 0x110000) {
         return 1;
     }
-    int8_t w = get_width(rune);
-    if (w == -1) {
-        return 1;
+    int8_t x = pn_rune_data(rune);
+    switch (x & 0070) {
+        case PN_RUNE_OTHER: return 1;
+        case PN_RUNE_MODIFIER: return 0;
     }
-    return w;
+    return 1 + (x >> 6);
 }
 
 size_t pn_str_width(const char* data, size_t size) {
@@ -1550,9 +1547,56 @@ size_t pn_str_width(const char* data, size_t size) {
     return total;
 }
 
-bool pn_isprint(uint32_t rune) {
-    if (rune >= 0x110000) {
+bool pn_isascii(pn_rune_t r) { return r < 0x80; }
+bool pn_isrune(pn_rune_t r) { return r < 0x110000; }
+
+bool pn_isalnum(pn_rune_t r) {
+    if (!pn_isrune(r)) {
         return false;
     }
-    return get_width(rune) != -1;
+    switch (pn_rune_data(r) & 0070) {
+        case PN_RUNE_LETTER:
+        case PN_RUNE_NUMBER: return true;
+        default: return false;
+    }
+}
+
+bool pn_isalpha(pn_rune_t r) {
+    return pn_isrune(r) && ((pn_rune_data(r) & 0070) == PN_RUNE_LETTER);
+}
+
+bool pn_iscntrl(pn_rune_t r) {
+    return pn_isrune(r) && ((pn_rune_data(r) & 0077) == PN_RUNE_OTHER_CONTROL);
+}
+
+bool pn_isdigit(pn_rune_t r) {
+    return pn_isrune(r) && ((pn_rune_data(r) & 0077) == PN_RUNE_NUMBER_DECIMAL_DIGIT);
+}
+
+bool pn_islower(pn_rune_t r) {
+    return pn_isrune(r) && ((pn_rune_data(r) & 0077) == PN_RUNE_LETTER_LOWERCASE);
+}
+
+bool pn_isnumeric(pn_rune_t r) {
+    return pn_isrune(r) && ((pn_rune_data(r) & 0070) == PN_RUNE_NUMBER);
+}
+
+bool pn_isprint(pn_rune_t r) {
+    return pn_isrune(r) && ((pn_rune_data(r) & 0070) != PN_RUNE_OTHER);
+}
+
+bool pn_ispunct(pn_rune_t r) {
+    return pn_isrune(r) && ((pn_rune_data(r) & 0070) == PN_RUNE_PUNCTUATION);
+}
+
+bool pn_isspace(pn_rune_t r) {
+    return pn_isrune(r) && ((pn_rune_data(r) & 0070) == PN_RUNE_SEPARATOR);
+}
+
+bool pn_istitle(pn_rune_t r) {
+    return pn_isrune(r) && ((pn_rune_data(r) & 0077) == PN_RUNE_LETTER_TITLECASE);
+}
+
+bool pn_isupper(pn_rune_t r) {
+    return pn_isrune(r) && ((pn_rune_data(r) & 0077) == PN_RUNE_LETTER_UPPERCASE);
 }

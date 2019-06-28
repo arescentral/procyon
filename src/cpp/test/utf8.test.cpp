@@ -16,6 +16,9 @@
 
 #include <gmock/gmock.h>
 #include <limits>
+#include <pn/array>
+#include <pn/output>
+#include <pn/string>
 
 #include "../src/utf8.h"
 #include "./matchers.hpp"
@@ -263,12 +266,143 @@ TEST_F(Utf8Test, StringWidthInvalidUTF8) {
     EXPECT_THAT(str_width("\377\377\377\377"), Eq(4));
 }
 
-TEST_F(Utf8Test, IsPrint) {
-    EXPECT_THAT(pn_isprint('\000'), Eq(false));
-    EXPECT_THAT(pn_isprint('\037'), Eq(false));
-    EXPECT_THAT(pn_isprint('\277'), Eq(false));
-    EXPECT_THAT(pn_isprint('\n'), Eq(false));
-    EXPECT_THAT(pn_isprint('\t'), Eq(false));
+TEST_F(Utf8Test, Category) {
+    enum Print {
+        nothing   = 0,
+        isrune    = (1 << 0),
+        isascii   = (1 << 1),
+        iscntrl   = (1 << 11),
+        isprint   = (1 << 10),
+        isnumeric = (1 << 2),
+        isdigit   = (1 << 3),
+        isalpha   = (1 << 4),
+        isupper   = (1 << 5),
+        islower   = (1 << 6),
+        istitle   = (1 << 7),
+        ispunct   = (1 << 8),
+        isspace   = (1 << 9),
+
+        all_space   = isspace,
+        all_punct   = ispunct,
+        all_title   = istitle,
+        all_lower   = islower,
+        all_upper   = isupper,
+        all_alpha   = isalpha | all_upper | all_lower | all_title,
+        all_digit   = isdigit,
+        all_numeric = isnumeric | all_digit,
+        all_alnum   = all_alpha | all_numeric,
+        all_print   = isprint | all_alnum | all_punct | all_space,
+        all_cntrl   = iscntrl,
+        all_ascii   = isascii,
+        all_rune    = isrune | all_ascii | all_cntrl | all_print,
+    };
+    struct {
+        const char category[3];
+        size_t     width;
+        int        flags;
+        uint32_t   rune;
+    } cases[] = {
+            {"Cc", 1, isascii | iscntrl, u'\000'},  // (null)
+            {"Cc", 1, isascii | iscntrl, u'\037'},  // INFORMATION SEPARATOR ONE
+            {"Cc", 1, isascii | iscntrl, u'\177'},  // DELETE
+            {"Cc", 1, isascii | iscntrl, u'\n'},    // LINE FEED
+            {"Cc", 1, isascii | iscntrl, u'\t'},    // CHARACTER TABULATION
+            {"Cn", 1, isrune, u'\x0378'},           // (unassigned)
+            {"Co", 1, isrune, u'\xf8ff'},           // PRIVATE USE AREA-F8FF (Apple Logo)
+            {"Cs", 1, isrune, u'\xd800'},           // (surrogate)
+
+            {"Ll", 1, isascii | islower, u'p'},  // LATIN SMALL LETTER P
+            {"Ll", 2, islower, u'ｐ'},           // FULLWIDTH LATIN SMALL LETTER P
+            {"Lu", 1, isascii | isupper, u'P'},  // LATIN CAPITAL LETTER P
+            {"Lu", 2, isupper, u'Ｐ'},           // FULLWIDTH LATIN CAPITAL LETTER P
+            {"Lm", 1, isalpha, u'ᵖ'},            // MODIFIER LETTER SMALL P
+            {"Lo", 1, isalpha, u'ª'},            // FEMININE ORDINAL INDICATOR
+            {"Lt", 1, isalpha | istitle, u'ǈ'},  // LATIN CAPITAL LETTER L WITH SMALL LETTER J
+            {"Lm", 2, isalpha, u'々'},           // IDEOGRAPHIC ITERATION MARK
+            {"Lo", 2, isalpha, u'ᄇ'},           // HANGUL CHOSEONG PIEUP
+
+            {"Mc", 0, isprint, u'\x0903'},  // DEVANAGARI SIGN VISARGA
+            {"Mc", 0, isprint, u'\x302f'},  // HANGUL DOUBLE DOT TONE MARK
+            {"Me", 0, isprint, u'\x0488'},  // COMBINING CYRILLIC HUNDRED THOUSANDS SIGN
+            {"Mn", 0, isprint, u'\x0300'},  // COMBINING GRAVE ACCENT
+            {"Mn", 0, isprint, u'\x309a'},  // COMBINING KATAKANA-HIRAGANA SEMI-VOICED SOUND MARK
+
+            {"Nd", 1, isascii | isdigit, u'0'},  // DIGIT ZERO
+            {"Nl", 1, isnumeric, u'ⅵ'},          // SMALL ROMAN NUMERAL SIX
+            {"No", 1, isnumeric, u'½'},          // VULGAR FRATION ONE HALF
+            {"Nd", 2, isdigit, u'０'},           // FULLWIDTH DIGIT ZERO
+            {"Nl", 2, isnumeric, u'〇'},         // IDEOGRAPHIC NUMBER ZERO
+            {"No", 2, isnumeric, u'㊅'},         // CIRCLED IDEOGRAPH SIX
+
+            {"Pc", 1, isascii | ispunct, u'_'},  // LOW LINE (underscore)
+            {"Pd", 1, isascii | ispunct, u'-'},  // HYPHEN-MINUS
+            {"Pe", 1, isascii | ispunct, u')'},  // RIGHT PARENTHESIS
+            {"Pf", 1, ispunct, u'”'},            // RIGHT DOUBLE QUOTATION MARK
+            {"Pi", 1, ispunct, u'“'},            // LEFT DOUBLE QUOTATION MARK
+            {"Po", 1, isascii | ispunct, u'!'},  // EXCLAMATION MARK
+            {"Ps", 1, isascii | ispunct, u'('},  // LEFT PARENTHESIS
+            {"Pc", 2, ispunct, u'＿'},           // FULLWIDTH
+            {"Pd", 2, ispunct, u'〜'},           // WAVE DASH
+            {"Pe", 2, ispunct, u'」'},           // RIGHT CORNER BRACKET
+            {"Po", 2, ispunct, u'。'},           // IDEOGRAPHIC FULL STOP
+            {"Ps", 2, ispunct, u'「'},           // LEFT CORNER BRACKET
+
+            {"Sc", 1, isascii | isprint, u'$'},  // DOLLAR SIGN
+            {"Sk", 1, isascii | isprint, u'^'},  // CIRCUMFLEX ACCENT
+            {"Sm", 1, isascii | isprint, u'+'},  // PLUS SIGN
+            {"So", 1, isprint, u'©'},            // COPYRIGHT SIGN
+            {"Sc", 2, isprint, u'￥'},           // FULLWIDTH YEN SIGN
+            {"Sk", 2, isprint, u'゜'},           // KATAKANA-HIRAGANA SEMI-VOICED SOUND MARK
+            {"Sm", 2, isprint, u'﹢'},           // SMALL PLUS SIGN
+            {"So", 2, isprint, u'〒'},           // POSTAL MARK
+
+            {"Zl", 1, isspace, u'\x2028'},       // LINE SEPARATOR
+            {"Zp", 1, isspace, u'\x2029'},       // PARAGRAPH SEPARATOR
+            {"Zs", 1, isascii | isspace, u' '},  // SPACE
+            {"Zs", 1, isspace, u'\xa0'},         // NO-BREAK SPACE
+            {"Zs", 2, isspace, u'\x3000'},       // IDEOGRAPHIC SPACE
+
+            {"Xx", 1, 0, 0x110000},    // (not a code point)
+            {"Xx", 1, 0, 0xffffffff},  // (not a code point)
+    };
+    for (const auto c : cases) {
+        pn::rune r{c.rune};
+
+        EXPECT_THAT(pn_rune_width(c.rune), Eq(c.width))
+                << pn::format("pn_rune_width({}) ({})", pn::dump(r, pn::dump_short), c.category)
+                           .c_str();
+
+        EXPECT_THAT(pn_isrune(c.rune), Eq<bool>(c.flags & all_rune))
+                << pn::dump(pn::array{r.copy(), c.category}, pn::dump_short).c_str();
+        EXPECT_THAT(pn_isascii(c.rune), Eq<bool>(c.flags & all_ascii))
+                << pn::dump(pn::array{r.copy(), c.category}, pn::dump_short).c_str();
+
+        EXPECT_THAT(pn_iscntrl(c.rune), Eq<bool>(c.flags & all_cntrl))
+                << pn::dump(pn::array{r.copy(), c.category}, pn::dump_short).c_str();
+        EXPECT_THAT(pn_isprint(c.rune), Eq<bool>(c.flags & all_print))
+                << pn::dump(pn::array{r.copy(), c.category}, pn::dump_short).c_str();
+
+        EXPECT_THAT(pn_isalnum(c.rune), Eq<bool>(c.flags & all_alnum))
+                << pn::dump(pn::array{r.copy(), c.category}, pn::dump_short).c_str();
+        EXPECT_THAT(pn_isdigit(c.rune), Eq<bool>(c.flags & all_digit))
+                << pn::dump(pn::array{r.copy(), c.category}, pn::dump_short).c_str();
+        EXPECT_THAT(pn_isnumeric(c.rune), Eq<bool>(c.flags & all_numeric))
+                << pn::dump(pn::array{r.copy(), c.category}, pn::dump_short).c_str();
+
+        EXPECT_THAT(pn_isalpha(c.rune), Eq<bool>(c.flags & all_alpha))
+                << pn::dump(pn::array{r.copy(), c.category}, pn::dump_short).c_str();
+        EXPECT_THAT(pn_isupper(c.rune), Eq<bool>(c.flags & all_upper))
+                << pn::dump(pn::array{r.copy(), c.category}, pn::dump_short).c_str();
+        EXPECT_THAT(pn_islower(c.rune), Eq<bool>(c.flags & all_lower))
+                << pn::dump(pn::array{r.copy(), c.category}, pn::dump_short).c_str();
+        EXPECT_THAT(pn_istitle(c.rune), Eq<bool>(c.flags & all_title))
+                << pn::dump(pn::array{r.copy(), c.category}, pn::dump_short).c_str();
+
+        EXPECT_THAT(pn_ispunct(c.rune), Eq<bool>(c.flags & all_punct))
+                << pn::dump(pn::array{r.copy(), c.category}, pn::dump_short).c_str();
+        EXPECT_THAT(pn_isspace(c.rune), Eq<bool>(c.flags & all_space))
+                << pn::dump(pn::array{r.copy(), c.category}, pn::dump_short).c_str();
+    }
 }
 
 }  // namespace pntest
