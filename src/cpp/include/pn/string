@@ -84,7 +84,6 @@ class rune {
 
     int width() const { return pn_rune_width(value()); }
 
-    bool isascii() const { return pn_isascii(value()); }
     bool isalnum() const { return pn_isalnum(value()); }
     bool isalpha() const { return pn_isalpha(value()); }
     bool iscntrl() const { return pn_iscntrl(value()); }

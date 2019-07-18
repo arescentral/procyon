@@ -186,7 +186,6 @@ size_t pn_rune_prev(const char* data, size_t size, size_t index);
 size_t pn_rune_width(pn_rune_t rune);
 size_t pn_str_width(const char* data, size_t size);
 
-bool pn_isascii(pn_rune_t r);
 bool pn_isrune(pn_rune_t r);
 
 bool pn_isalnum(pn_rune_t r);    // Abc123あいう英美四㊀㊁㊂

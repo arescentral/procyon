@@ -1547,7 +1547,6 @@ size_t pn_str_width(const char* data, size_t size) {
     return total;
 }
 
-bool pn_isascii(pn_rune_t r) { return r < 0x80; }
 bool pn_isrune(pn_rune_t r) { return r < 0x110000; }
 
 bool pn_isalnum(pn_rune_t r) {
