@@ -13,7 +13,7 @@
 # limitations under the License.
 
 static_library("procyon-cpp") {
-  sources = [
+  public = [
     "include/pn/arg",
     "include/pn/array",
     "include/pn/data",
@@ -23,6 +23,9 @@ static_library("procyon-cpp") {
     "include/pn/output",
     "include/pn/string",
     "include/pn/value",
+  ]
+
+  sources = [
     "src/array.cpp",
     "src/common.hpp",
     "src/data.cpp",
