@@ -102,13 +102,13 @@ struct arg<float> : pod_arg<float, 'f'> {};
 template <>
 struct arg<double> : pod_arg<double, 'd'> {};
 template <>
-struct arg<intptr_t, zero_if_not_in<intptr_t, int64_t>::value> : pod_arg<intptr_t, 'p'> {};
+struct arg<intptr_t, zero_if_not_in<intptr_t, int32_t, int64_t>::value> : pod_arg<intptr_t, 'p'> {};
 template <>
-struct arg<uintptr_t, zero_if_not_in<uintptr_t, uint64_t>::value> : pod_arg<uintptr_t, 'P'> {};
+struct arg<uintptr_t, zero_if_not_in<uintptr_t, uint32_t, uint64_t>::value> : pod_arg<uintptr_t, 'P'> {};
 template <>
-struct arg<size_t, zero_if_not_in<size_t, uintptr_t, uint64_t>::value> : pod_arg<size_t, 'z'> {};
+struct arg<size_t, zero_if_not_in<size_t, uintptr_t, uint32_t, uint64_t>::value> : pod_arg<size_t, 'z'> {};
 template <>
-struct arg<ssize_t, zero_if_not_in<ssize_t, intptr_t, int64_t>::value> : pod_arg<ssize_t, 'Z'> {};
+struct arg<ssize_t, zero_if_not_in<ssize_t, intptr_t, int32_t, int64_t>::value> : pod_arg<ssize_t, 'Z'> {};
 template <>
 struct arg<void*> : pod_arg<void*, 'P'> {};
 
