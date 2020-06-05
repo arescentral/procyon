@@ -178,11 +178,11 @@ def check_mac_on_linux(args):
 def check_win_on_linux(args):
     with cfg.step("checking Linux distro") as msg:
         distro = platform.linux_distribution()
-        if distro == ("Ubuntu", "18.10", "cosmic"):
+        if distro == ("Ubuntu", "20.04", "focal"):
             msg(" ".join(distro), color="green")
         else:
             msg(" ".join(distro), color="red")
-            print("\nSorry! Cross-compilation currently requires Ubuntu 18.10 cosmic")
+            print("\nSorry! Cross-compilation currently requires Ubuntu 20.04 focal")
             sys.exit(1)
 
     missing = collections.OrderedDict()

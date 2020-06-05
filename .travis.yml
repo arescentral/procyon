@@ -3,17 +3,16 @@ language:  cpp
 matrix:
   include:
     - os:        osx
-      osx_image: xcode9.3
+      osx_image: xcode11.5
       install:
-        - HOMEBREW_NO_AUTO_UPDATE=1 brew upgrade python
         - pip3 install --user pytest pygments
       env:
         - TARGET=mac TEST=test
 
-    - os:        osx
-      osx_image: xcode7.3
-      env:
-        - TARGET=mac TEST=test-cpp
+#   - os:        osx
+#     osx_image: xcode7.3
+#     env:
+#       - TARGET=mac TEST=test-cpp
 
     - os:        linux
       dist:      xenial
@@ -27,7 +26,7 @@ matrix:
       services:
         - docker
       before_install:
-        - docker run -d --name cosmic -v $(pwd):/procyon -w /procyon ubuntu:cosmic sleep infinity
+        - docker run -d --name focal -v $(pwd):/procyon -w /procyon ubuntu:focal sleep infinity
         - docker ps
       install:
         - $SH apt-get update
@@ -35,20 +34,20 @@ matrix:
         - $SH apt-get install -y --no-install-recommends python3 python3-pip
         - $SH pip3 install --user pytest pygments
       env:
-        - TARGET=linux TEST=test SH="docker exec cosmic"
+        - TARGET=linux TEST=test SH="docker exec focal"
 
     - os:        linux
       services:
         - docker
       before_install:
-        - docker run -d --name cosmic -v $(pwd):/procyon -w /procyon ubuntu:cosmic sleep infinity
+        - docker run -d --name focal -v $(pwd):/procyon -w /procyon ubuntu:focal sleep infinity
         - docker ps
       install:
         - $SH apt-get update
         - $SH apt-get install -y --no-install-recommends python build-essential clang make
         - $SH apt-get install -y --no-install-recommends mingw-w64 xvfb wine
       env:
-        - TARGET=win TEST=test-wine SH="docker exec cosmic"
+        - TARGET=win TEST=test-wine SH="docker exec -e DEBIAN_FRONTEND=noninteractive focal"
 
 script:
   - $SH ./configure -o $TARGET
