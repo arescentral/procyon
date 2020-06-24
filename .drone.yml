@@ -87,10 +87,10 @@ steps:
     DEBIAN_FRONTEND: noninteractive
   commands:
   - apt-get update
-  - apt-get install -y --no-install-recommends python build-essential clang make mingw-w64 xvfb wine
+  - apt-get install -y --no-install-recommends python3 build-essential clang make mingw-w64 xvfb wine
 
   - ./configure -o win
   - make
   - make test-wine
 
----
+...

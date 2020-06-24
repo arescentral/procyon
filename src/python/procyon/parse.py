@@ -218,7 +218,7 @@ def main(args=None):
     event_strings = "NULL BOOL INT FLOAT DATA STRING [ ] { }".split()
 
     if len(args) != 1:
-        sys.stderr.write("usage: python -m procyon.parse\n")
+        sys.stderr.write("usage: python3 -m procyon.parse\n")
         return 64
     depth = 0
 
@@ -237,8 +237,8 @@ def main(args=None):
             if event.value is None:
                 sys.stdout.write("%s\n" % (event_strings[event.type.value]))
             else:
-                sys.stdout.write("%s(%s)\n" % (event_strings[event.type.value],
-                                               dumps(event.value, ShortStyle)))
+                sys.stdout.write("%s(%s)\n" %
+                                 (event_strings[event.type.value], dumps(event.value, ShortStyle)))
     except Exception as e:
         sys.stderr.write("%s: %s\n" % (args[0], e))
         return 1

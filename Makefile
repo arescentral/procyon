@@ -20,15 +20,11 @@ all:
 	@$(NINJA)
 
 .PHONY: test
-test: test-python3
+test: test-python
 
-.PHONY: test-python3
-test-python3: all
+.PHONY: test-python
+test-python: all
 	python3 -m pytest src misc
-
-.PHONY: test-python2
-test-python2:
-	python2 -m pytest src/python misc/pygments
 
 .PHONY: test-vim
 test-vim:
