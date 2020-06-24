@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
 # Copyright 2017 The Procyon Authors
@@ -221,6 +221,6 @@ def summarize_cpp_pn_map(valobj, unused):
 
 def __lldb_init_module(debugger, unused):
     for t, func in summarizers:
-        debugger.HandleCommand(
-            "type summary add -w procyon -F pn_lldb.{0} {1}".format(func.__name__, t))
+        debugger.HandleCommand("type summary add -w procyon -F pn_lldb.{0} {1}".format(
+            func.__name__, t))
     debugger.HandleCommand("type category enable procyon")

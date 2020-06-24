@@ -1,0 +1,96 @@
+---
+kind: pipeline
+type: docker
+name: xenial
+
+steps:
+- name: submodule
+  image: alpine/git
+  commands:
+  - git submodule update --init
+
+- name: test
+  image: ubuntu:xenial
+  environment:
+    DEBIAN_FRONTEND: noninteractive
+  commands:
+  - apt-get update
+  - apt-get install -y --no-install-recommends python3 python3-pip build-essential clang make
+  - pip3 install --user pytest pygments
+
+  - ./configure
+  - make
+  - make test
+
+---
+kind: pipeline
+type: docker
+name: bionic
+
+steps:
+- name: submodule
+  image: alpine/git
+  commands:
+  - git submodule update --init
+
+- name: test
+  image: ubuntu:bionic
+  environment:
+    DEBIAN_FRONTEND: noninteractive
+  commands:
+  - apt-get update
+  - apt-get install -y --no-install-recommends python3 python3-pip build-essential clang make
+  - pip3 install --user pytest pygments
+
+  - ./configure
+  - make
+  - make test
+
+---
+kind: pipeline
+type: docker
+name: focal
+
+steps:
+- name: submodule
+  image: alpine/git
+  commands:
+  - git submodule update --init
+
+- name: test
+  image: ubuntu:focal
+  environment:
+    DEBIAN_FRONTEND: noninteractive
+  commands:
+  - apt-get update
+  - apt-get install -y --no-install-recommends python3 python3-pip build-essential clang make
+  - pip3 install --user pytest pygments
+
+  - ./configure
+  - make
+  - make test
+
+---
+kind: pipeline
+type: docker
+name: wine
+
+steps:
+- name: submodule
+  image: alpine/git
+  commands:
+  - git submodule update --init
+
+- name: test
+  image: ubuntu:focal
+  environment:
+    DEBIAN_FRONTEND: noninteractive
+  commands:
+  - apt-get update
+  - apt-get install -y --no-install-recommends python3 build-essential clang make mingw-w64 xvfb wine
+
+  - ./configure -o win
+  - make
+  - make test-wine
+
+...

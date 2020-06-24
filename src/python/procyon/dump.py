@@ -479,7 +479,7 @@ def main(args=None):
         args = sys.argv
 
     if len(args) != 1:
-        sys.stderr.write("usage: python -m procyon.dump\n")
+        sys.stderr.write("usage: python3 -m procyon.dump\n")
         return 64
 
     try:

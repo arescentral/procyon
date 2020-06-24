@@ -217,7 +217,7 @@ def main(args=None):
     """.split()
 
     if len(args) != 1:
-        sys.stderr.write("usage: python -m procyon.lex\n")
+        sys.stderr.write("usage: python3 -m procyon.lex\n")
         sys.exit(64)
     depth = 0
 
@@ -234,9 +234,10 @@ def main(args=None):
         elif token.type.value < Token.ERROR.value:
             print("{0}:{1}\t{2}\t{3}".format(token.lineno, column, type_str, value))
         else:
-            print("{0}:{1}\tERROR\t{2}:{3}:{4}\t{5}".format(
-                token.lineno, column, token.lineno, token.error_column,
-                error.error_message[token.error], value))
+            print("{0}:{1}\tERROR\t{2}:{3}:{4}\t{5}".format(token.lineno, column, token.lineno,
+                                                            token.error_column,
+                                                            error.error_message[token.error],
+                                                            value))
 
 
 __all__ = ["Lexer", "lex"]
