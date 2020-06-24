@@ -78,12 +78,11 @@
 // #define IEEE_MC68k for IEEE-arithmetic machines where the most
 //      significant byte has the lowest address.
 
-#include <pn/procyon.h>
-
 #include <errno.h>
 #include <fenv.h>
 #include <float.h>
 #include <math.h>
+#include <pn/procyon.h>
 #include <pthread.h>
 #include <stdlib.h>
 #include <string.h>
@@ -676,7 +675,7 @@ typedef struct ThInfo {
 
 static pthread_key_t  ti_key;
 static pthread_once_t ti_once;
-static void ti_init() { pthread_key_create(&ti_key, free); }
+static void           ti_init() { pthread_key_create(&ti_key, free); }
 
 static ThInfo* get_TI(void) {
     pthread_once(&ti_once, ti_init);
@@ -2288,6 +2287,7 @@ static bool pn_strtod2(const char* data, size_t size, double* f, pn_error_code_t
     }
     string_view s = {data, size};
 
+#if defined(__i386__) || defined(__x86_64__)
     uint16_t save_control_word    = fpu_get_control_word();
     uint16_t use_double_precision = (save_control_word & ~0x0f00) | 0x0200;
     if (save_control_word != use_double_precision) {
@@ -2297,6 +2297,11 @@ static bool pn_strtod2(const char* data, size_t size, double* f, pn_error_code_t
     if (save_control_word != use_double_precision) {
         fpu_set_control_word(save_control_word);
     }
+#elif defined(__arm__) || defined(__arm64__)
+    *f = pn_strtod3(s, error);
+#else
+#error "Unknown architecture"
+#endif
 
     return *error == PN_OK;
 }
@@ -2546,8 +2551,7 @@ char* dtoa_r(
             i       = 18;
             ndigits = 0;
             break;
-        case 2:
-            leftright = 0;
+        case 2: leftright = 0;
         // no break
         case 4:
             if (ndigits <= 0) {
@@ -2555,8 +2559,7 @@ char* dtoa_r(
             }
             ilim = ilim1 = i = ndigits;
             break;
-        case 3:
-            leftright = 0;
+        case 3: leftright = 0;
         // no break
         case 5:
             i     = ndigits + k + 1;
