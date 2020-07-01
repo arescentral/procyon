@@ -77,7 +77,7 @@ void main(int argc, char* const* argv) {
         progname = argv[0];
     }
 
-    char ch;
+    int ch;
     while ((ch = getopt_long(argc, argv, "rmh", opts, NULL)) != -1) {
         switch (ch) {
             case 'r': style = ROOT; break;
