@@ -91,7 +91,7 @@ void main(int argc, char* const* argv) {
     pn::value output;
     bool      dump = false;
 
-    char ch;
+    int ch;
     while ((ch = getopt_long(argc, argv, "hio:", opts, NULL)) != -1) {
         switch (ch) {
             case 'h': usage(pn::out, 0);
