@@ -2266,6 +2266,7 @@ range_err:
 static const uint64_t nan_u64 = UINT64_C(0x7ff8000000000000);
 static const uint64_t inf_u64 = UINT64_C(0x7ff0000000000000);
 
+#if defined(__i386__) || defined(__x86_64__)
 static uint16_t fpu_get_control_word() {
     uint16_t control_word;
     __asm__ __volatile__("fnstcw %0" : "=m"(control_word));
@@ -2275,6 +2276,7 @@ static uint16_t fpu_get_control_word() {
 static void fpu_set_control_word(uint16_t control_word) {
     __asm__ __volatile__("fldcw %0" : : "m"(control_word));
 }
+#endif
 
 static bool pn_strtod2(const char* data, size_t size, double* f, pn_error_code_t* error) {
     if (size == 0) {
