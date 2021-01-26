@@ -199,7 +199,7 @@ TEST_F(ValueppTest, List) {
         EXPECT_CALL(fn, Call(IsFloat(M_PI)));
         EXPECT_CALL(fn, Call(IsString("four")));
     }
-    for (const auto& x : a) {
+    for (auto x : a) {
         fn.Call(x);
     }
 }
@@ -230,7 +230,7 @@ TEST_F(ValueppTest, Map) {
         EXPECT_CALL(fn, Call(IsString("3"), IsFloat(M_PI)));
         EXPECT_CALL(fn, Call(IsString("4"), IsString("four")));
     }
-    for (const auto& x : m) {
+    for (auto x : m) {
         fn.Call(x.key(), x.value());
     }
 }
