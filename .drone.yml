@@ -16,7 +16,7 @@ steps:
   commands:
   - apt-get update
   - apt-get install -y --no-install-recommends python3 python3-pip build-essential clang make
-  - pip3 install --user pytest pygments
+  - pip3 install --user "pytest<6.2" "importlib_metadata<3.0" pygments
 
   - ./configure
   - make
