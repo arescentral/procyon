@@ -1,4 +1,4 @@
-# Copyright 2017 The Procyon Authors
+# Copyright 2020 The Procyon Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,12 +12,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-include out/cur/args.gn
-NINJA=build/lib/bin/ninja -C out/cur
-
-.PHONY: all
 all:
-	@$(NINJA)
+
+OUT ?= out/cur
+PROCYON ?= .
+EXT ?= ext
+GMOCK ?= $(EXT)/gmock
+MKDIR_P ?= mkdir -p
+
+-include $(OUT)/config.mk
+
+CPPFLAGS += -MMD -MP
+CFLAGS += -Wall
+CXXFLAGS += -std=c++11 -Wall
+
+include ext/gmock/build/targets.mk
+include build/targets.mk
+
+all: lib bin
+lib: $(LIBPROCYON) $(LIBPROCYON_CPP) $(PROCYON_CPP_TEST)
+bin: $(LIBPROCYON_BIN) $(PN2JSON) $(PNDUMP) $(PNFMT) $(PNPARSE) $(PNTOK)
 
 .PHONY: test
 test: test-python
@@ -33,12 +47,12 @@ test-vim:
 	misc/vim/test/syntax.vroom
 
 .PHONY: test-cpp
-test-cpp:
-	out/cur/procyon-cpp-test
+test-cpp: $(PROCYON_CPP_TEST)
+	$<
 
 .PHONY: test-wine
-test-wine:
-	xvfb-run wine64 out/cur/procyon-cpp-test.exe
+test-wine: $(PROCYON_CPP_TEST)
+	xvfb-run wine64 $<
 
 .PHONY: regen
 regen:
@@ -48,15 +62,15 @@ regen:
 
 .PHONY: clean
 clean:
-	@$(NINJA) -t clean
+	$(RM) -r $(OUT)/
 
 .PHONY: distclean
 distclean:
-	rm -Rf out/
+	$(RM) -r out
 
 .PHONY: friends
 friends:
-	@echo "Sure! You can email me at sfiera@sfzmail.com."
+	@echo "Sure! You can email me at sfiera@twotaled.com."
 
 .PHONY: love
 love:
