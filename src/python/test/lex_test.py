@@ -17,12 +17,9 @@
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-try:
-    from io import BytesIO, StringIO
-except ImportError:
-    from cStringIO import StringIO
-    BytesIO = StringIO
+import io
 import sys
+
 from .context import procyon, pntest
 """
 def test_xlist():
@@ -158,8 +155,8 @@ def test_unicode():
 
 
 def tokenize(source):
-    sys.stdin = BytesIO(source)
-    sys.stdout = StringIO()
+    sys.stdin = io.BytesIO(source)
+    sys.stdout = io.StringIO()
     procyon.lex.main(["procyon.lex"])
     output = sys.stdout.getvalue()
     sys.stdin = sys.__stdin__

@@ -18,14 +18,10 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import collections
+import io
 import pytest
 import sys
 
-try:
-    from io import BytesIO, StringIO
-except ImportError:
-    from cStringIO import StringIO
-    BytesIO = StringIO
 from .context import procyon, pntest
 
 
@@ -299,9 +295,7 @@ def test_map():
     ])) == ("1:  \"one\"\n"
             "2:  \"two\"\n"
             "3:  \"three\"\n")
-    assert procyon.dumps({
-        "n": "one\ntwo\nthree\n"
-    }) == (
+    assert procyon.dumps({"n": "one\ntwo\nthree\n"}) == (
         "n:\n"  # force multi-line
         "\t>\tone\n"
         "\t|\ttwo\n"
@@ -439,9 +433,9 @@ def test_circular():
 def do_dump(source):
     from procyon.dump import main
 
-    sys.stdin = BytesIO(source)
-    sys.stdout = StringIO()
-    sys.stderr = StringIO()
+    sys.stdin = io.BytesIO(source)
+    sys.stdout = io.StringIO()
+    sys.stderr = io.StringIO()
     if not main(["procyon.dump"]):
         out = sys.stdout.getvalue().encode("utf-8")
         err = None
