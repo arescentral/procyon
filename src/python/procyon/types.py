@@ -18,7 +18,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import enum
-from . import py3
 
 
 class Type(enum.Enum):
@@ -37,13 +36,13 @@ def typeof(x):
         return Type.NULL
     elif (x is True) or (x is False):
         return Type.BOOL
-    elif isinstance(x, (int, py3.long)):
+    elif isinstance(x, int):
         return Type.INT
     elif isinstance(x, float):
         return Type.FLOAT
     elif isinstance(x, (bytes, bytearray, memoryview)):
         return Type.DATA
-    elif isinstance(x, py3.unicode):
+    elif isinstance(x, str):
         return Type.STRING
     elif isinstance(x, (tuple, list)):
         return Type.ARRAY

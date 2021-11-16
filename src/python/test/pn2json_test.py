@@ -39,7 +39,7 @@ def jsonify(source):
 
 def flatten(source):
     x = procyon.load(io.StringIO(source.decode("utf-8")))
-    if isinstance(x, procyon.py3.unicode):
+    if isinstance(x, str):
         return x.encode("utf-8")
     else:
         assert isinstance(x, (bytes, bytearray, memoryview))
