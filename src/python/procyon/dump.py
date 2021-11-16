@@ -15,13 +15,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import absolute_import, division, print_function, unicode_literals
-
 import math
 import re
 import unicodedata
 from . import error
-from . import py3
 from . import utf
 from .types import Type, typeof
 
@@ -80,7 +77,7 @@ class ProcyonEncoder(object):
     def _dump_int(self, i):
         if not (-0x8000000000000000 <= i < 0x8000000000000000):
             raise OverflowError("Python int too large to convert to Procyon int")
-        return py3.unicode(i)
+        return str(i)
 
     def _dump_float(self, f):
         if math.isnan(f):
@@ -90,7 +87,7 @@ class ProcyonEncoder(object):
                 return "inf"
             else:
                 return "-inf"
-        return py3.repr(f)
+        return repr(f)
 
     @staticmethod
     def _should_dump_short_data(d):
@@ -171,7 +168,7 @@ class ProcyonEncoder(object):
         prev_space = None
         space = None
         space_width = None
-        for i in py3.xrange(len(s)):
+        for i in range(len(s)):
             ch = s[i]
             width += ProcyonEncoder._char_width(ch)
             if ch == " ":
@@ -283,7 +280,7 @@ class ProcyonEncoder(object):
 
     @staticmethod
     def _should_dump_short_map(m):
-        for x in py3.itervalues(m):
+        for x in m.values():
             if typeof(x).value <= Type.FLOAT.value:
                 continue
             return False
@@ -297,8 +294,8 @@ class ProcyonEncoder(object):
             markers.add(id_m)
         yield "{"
         separator = ""
-        for k, v in py3.iteritems(m):
-            if not isinstance(k, py3.unicode):
+        for k, v in m.items():
+            if not isinstance(k, str):
                 raise TypeError("key %r is not a string" % k)
 
             if separator:
@@ -325,8 +322,8 @@ class ProcyonEncoder(object):
 
         adjusted = []
         max_short_key_width = 0
-        for k, v in py3.iteritems(m):
-            if not isinstance(k, py3.unicode):
+        for k, v in m.items():
+            if not isinstance(k, str):
                 raise TypeError("key %r is not a string" % k)
             k = self._dump_key(k)
             if self.converter is not None:
@@ -416,34 +413,34 @@ def _make_converter(converter):
     convert_int = converter.pop(int, None)
     convert_float = converter.pop(float, None)
     convert_data = converter.pop(bytes, None)
-    convert_string = converter.pop(py3.unicode, None)
+    convert_string = converter.pop(str, None)
     convert_array = converter.pop(list, None)
     convert_map = converter.pop(dict, None)
 
     if not all(isinstance(k, (type, type(None))) for k in converter):
         raise TypeError("converter dict keys must be type or None")
-    elif not all(isinstance(v, tuple) or callable(v) for v in py3.itervalues(converter)):
+    elif not all(isinstance(v, tuple) or callable(v) for v in converter.values()):
         raise TypeError("converter dict values must be tuple or callable")
-    converter = {k: _make_converter(v) for k, v in py3.iteritems(converter)}
+    converter = {k: _make_converter(v) for k, v in converter.items()}
 
     def convert(x):
         if x is None:
             return convert_none(x) if convert_none is not None else x
         elif (x is True) or (x is False):
             return convert_bool(x) if convert_bool is not None else x
-        elif isinstance(x, (int, py3.long)):
+        elif isinstance(x, int):
             return convert_int(x) if convert_int is not None else x
         elif isinstance(x, float):
             return convert_float(x) if convert_float is not None else x
         elif isinstance(x, (bytes, bytearray, memoryview)):
             return convert_data(x) if convert_data is not None else x
-        elif isinstance(x, py3.unicode):
+        elif isinstance(x, str):
             return convert_string(x) if convert_string is not None else x
         elif isinstance(x, (list, tuple)):
             return convert_array(x) if convert_array is not None else x
         elif isinstance(x, dict):
             return convert_map(x) if convert_map is not None else x
-        for t, convert_t in py3.iteritems(converter):
+        for t, convert_t in converter.items():
             if isinstance(x, t):
                 return convert_t(x)
         raise TypeError("%r is not Procyon-serializable" % x)

@@ -15,23 +15,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import absolute_import, division, print_function, unicode_literals
-
+import io
 import pytest
-
-try:
-    from io import BytesIO, StringIO
-except ImportError:
-    from cStringIO import StringIO
-    BytesIO = StringIO
 import sys
+
 from .context import procyon, pntest
 
 
 def do_parse(source):
-    sys.stdin = BytesIO(source)
-    sys.stdout = StringIO()
-    sys.stderr = StringIO()
+    sys.stdin = io.BytesIO(source)
+    sys.stdout = io.StringIO()
+    sys.stderr = io.StringIO()
     if not procyon.parse.main(["procyon.parse"]):
         out = sys.stdout.getvalue().encode("utf-8")
         err = None

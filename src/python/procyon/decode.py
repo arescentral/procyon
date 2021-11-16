@@ -15,14 +15,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import absolute_import, division, print_function, unicode_literals
-
-import collections
 import json
+import sys
 from .error import Error, ProcyonDecodeError
 from .lex import Lexer
 from .parse import EventType, ProcyonParser
 from .token import Token
+
+if sys.version_info >= (3, 6):
+    OrderedDict = dict
+else:
+    from collections import OrderedDict
 
 
 class ProcyonDecoder(object):
@@ -38,7 +41,7 @@ class ProcyonDecoder(object):
                 stack.append((p.event.key, []))
                 continue
             elif p.event.type == EventType.MAP_IN:
-                stack.append((p.event.key, collections.OrderedDict()))
+                stack.append((p.event.key, OrderedDict()))
                 continue
             else:
                 stack.append((p.event.key, p.event.value))

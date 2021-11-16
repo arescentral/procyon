@@ -15,16 +15,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import absolute_import, division, print_function, unicode_literals
-
 import json
 import math
-from . import py3
 from .parse import EventType, parse
 
 
 def _is_scalar(x):
-    return (x is None) or isinstance(x, (bool, int, py3.long, float))
+    return (x is None) or isinstance(x, (bool, int, float))
 
 
 def _jsonify_scalar(x):

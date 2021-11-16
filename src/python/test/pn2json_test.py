@@ -15,8 +15,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import absolute_import, division, print_function, unicode_literals
-
 import io
 import json
 import math
@@ -39,7 +37,7 @@ def jsonify(source):
 
 def flatten(source):
     x = procyon.load(io.StringIO(source.decode("utf-8")))
-    if isinstance(x, procyon.py3.unicode):
+    if isinstance(x, str):
         return x.encode("utf-8")
     else:
         assert isinstance(x, (bytes, bytearray, memoryview))

@@ -15,10 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import absolute_import, division, print_function, unicode_literals
-
 import sys
-from . import py3
 
 if sys.maxunicode == 0x10FFFF:
 
@@ -39,9 +36,9 @@ else:
         return struct.pack(">L", ch).decode("utf-32be")
 
     def code_points(s):
-        assert isinstance(s, py3.unicode)
+        assert isinstance(s, str)
         utf32 = s.encode("utf-32be")
-        for i in py3.xrange(0, len(utf32), 4):
+        for i in range(0, len(utf32), 4):
             yield struct.unpack(">L", utf32[i:i + 4])[0]
 
 
@@ -65,5 +62,5 @@ else:
 
 
 def has_surrogates(s):
-    assert isinstance(s, py3.unicode)
+    assert isinstance(s, str)
     return any(0xD800 <= cp < 0xE000 for cp in code_points(s))
