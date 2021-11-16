@@ -20,6 +20,11 @@ import io
 import pytest
 import sys
 
+if sys.version_info >= (3, 6):
+    OrderedDict = dict
+else:
+    from collections import OrderedDict
+
 from .context import procyon, pntest
 
 
@@ -271,14 +276,13 @@ def test_list():
 
 def test_map():
     assert procyon.dumps({"null": None}) == "{null: null}\n"
-    assert procyon.dumps(collections.OrderedDict([("t", True),
-                                                  ("f", False)])) == "{t: true, f: false}\n"
-    assert procyon.dumps(collections.OrderedDict([("one", 1), ("two", 2),
-                                                  ("three", 3)])) == "{one: 1, two: 2, three: 3}\n"
-    assert procyon.dumps(collections.OrderedDict([("less", 0.1),
-                                                  ("more", 0.2)])) == ("{less: 0.1, more: 0.2}\n")
+    assert procyon.dumps(OrderedDict([("t", True), ("f", False)])) == "{t: true, f: false}\n"
+    assert procyon.dumps(OrderedDict([("one", 1), ("two", 2),
+                                      ("three", 3)])) == "{one: 1, two: 2, three: 3}\n"
+    assert procyon.dumps(OrderedDict([("less", 0.1),
+                                      ("more", 0.2)])) == ("{less: 0.1, more: 0.2}\n")
     assert procyon.dumps(
-        collections.OrderedDict([
+        OrderedDict([
             ("null", None),
             ("bool", True),
             ("int", 1),
@@ -286,7 +290,7 @@ def test_map():
         ])) == ("{null: null, bool: true, int: 1, float: 1.0}\n")
 
     assert procyon.dumps({"hello": "world"}) == ("hello:  \"world\"\n")
-    assert procyon.dumps(collections.OrderedDict([
+    assert procyon.dumps(OrderedDict([
         ("1", "one"),
         ("2", "two"),
         ("3", "three"),
@@ -299,7 +303,7 @@ def test_map():
         "\t|\ttwo\n"
         "\t|\tthree\n")
 
-    assert procyon.dumps(collections.OrderedDict([
+    assert procyon.dumps(OrderedDict([
         ("one", "a\nb\n"),
         ("two", "c\nd\n"),
     ])) == ("one:\n"
@@ -310,7 +314,7 @@ def test_map():
             "\t|\td\n")
 
     assert procyon.dumps(
-        collections.OrderedDict([
+        OrderedDict([
             ("one", "one\n"),
             ("two", 2),
             ("three", "three\n"),
@@ -325,9 +329,9 @@ def test_map():
 
 def test_composite():
     assert procyon.dumps(
-        collections.OrderedDict([
+        OrderedDict([
             ("us",
-             collections.OrderedDict([
+             OrderedDict([
                  ("name", "United States of America"),
                  ("ratio", 1.9),
                  ("stars", 50),
@@ -344,7 +348,7 @@ def test_composite():
                  ]),
              ])),
             ("cl",
-             collections.OrderedDict([
+             OrderedDict([
                  ("name", "Republic of Chile"),
                  ("ratio", 1.5),
                  ("stars", 1),
@@ -356,7 +360,7 @@ def test_composite():
                  ]),
              ])),
             ("cu",
-             collections.OrderedDict([
+             OrderedDict([
                  ("name", "Republic of Cuba"),
                  ("ratio", 2.0),
                  ("stars", 1),
@@ -414,7 +418,7 @@ def test_circular():
         procyon.dumps(m)
 
     # Not an error for an object to appear multiple times
-    m = collections.OrderedDict()
+    m = OrderedDict()
     m["a"] = [None]
     m["b"] = m["a"]
     m["c"] = [m["a"]]

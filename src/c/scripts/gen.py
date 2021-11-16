@@ -22,6 +22,11 @@ import re
 import struct
 import sys
 
+if sys.version_info >= (3, 6):
+    OrderedDict = dict
+else:
+    from collections import OrderedDict
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "python"))
 import procyon
 from procyon.error import Error
@@ -191,13 +196,13 @@ def lex_transition_value(kind, value):
 
 class Lexer:
     def __init__(self, spec):
-        lex = collections.OrderedDict()
+        lex = OrderedDict()
         for s, t in spec["lex"].items():
             lex[s] = t
             if "utf8" in t:
                 Lexer.add_utf8_transitions(lex, t["utf8"])
 
-        states = collections.OrderedDict((state, i) for i, state in enumerate(lex))
+        states = OrderedDict((state, i) for i, state in enumerate(lex))
         self.tables = [Lexer.build_lex_table(lex[state], spec, states) for state in states]
         self.partitions = Lexer.partition_lex(self.tables)
 
@@ -253,7 +258,7 @@ class Lexer:
             outs[tuple(row[i] for row in table)].append(i)
         outs = list(enumerate(sorted(outs.values())))
 
-        char_classes = collections.OrderedDict()
+        char_classes = OrderedDict()
         for i, values in outs:
             for v in values:
                 char_classes[v] = i
@@ -289,8 +294,8 @@ class Lexer:
 
 class Parser:
     def __init__(self, spec):
-        parse_states = collections.OrderedDict((state, i) for i, state in enumerate(spec["parse"]))
-        self.defs = collections.OrderedDict()
+        parse_states = OrderedDict((state, i) for i, state in enumerate(spec["parse"]))
+        self.defs = OrderedDict()
         for state, index in parse_states.items():
             for token, token_table in spec["parse"][state].items():
                 if "extend" in token_table:
