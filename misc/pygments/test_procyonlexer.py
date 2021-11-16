@@ -15,12 +15,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import absolute_import, division, print_function, unicode_literals
-
 import os
 import pygments
 from pygments.token import Comment, Error, Keyword, Literal, Name, Number, Punctuation, String, Text
 import sys
+
 sys.path.insert(0, os.path.dirname(__file__))
 from procyonlexer import ProcyonLexer
 
@@ -34,52 +33,53 @@ def test_null():
 
 def test_keywords():
     assert list(
-        pygments.lex("*\tnull\n"
-                     "*\ttrue\n"
-                     "*\tfalse\n"
-                     "*\tinf\n"
-                     "*\t+inf\n"
-                     "*\t-inf\n"
-                     "*\tnan\n"
-                     "*\tfloop\n"
-                     "*\tinferno\n", ProcyonLexer())) == [
-                         (Punctuation, "*"),
-                         (Text, "\t"),
-                         (Keyword.Constant, "null"),
-                         (Text, "\n"),
-                         (Punctuation, "*"),
-                         (Text, "\t"),
-                         (Keyword.Constant, "true"),
-                         (Text, "\n"),
-                         (Punctuation, "*"),
-                         (Text, "\t"),
-                         (Keyword.Constant, "false"),
-                         (Text, "\n"),
-                         (Punctuation, "*"),
-                         (Text, "\t"),
-                         (Keyword.Constant, "inf"),
-                         (Text, "\n"),
-                         (Punctuation, "*"),
-                         (Text, "\t"),
-                         (Keyword.Constant, "+inf"),
-                         (Text, "\n"),
-                         (Punctuation, "*"),
-                         (Text, "\t"),
-                         (Keyword.Constant, "-inf"),
-                         (Text, "\n"),
-                         (Punctuation, "*"),
-                         (Text, "\t"),
-                         (Keyword.Constant, "nan"),
-                         (Text, "\n"),
-                         (Punctuation, "*"),
-                         (Text, "\t"),
-                         (Error, "floop"),
-                         (Text, "\n"),
-                         (Punctuation, "*"),
-                         (Text, "\t"),
-                         (Error, "inferno"),
-                         (Text, "\n"),
-                     ]
+        pygments.lex(
+            "*\tnull\n"
+            "*\ttrue\n"
+            "*\tfalse\n"
+            "*\tinf\n"
+            "*\t+inf\n"
+            "*\t-inf\n"
+            "*\tnan\n"
+            "*\tfloop\n"
+            "*\tinferno\n", ProcyonLexer())) == [
+                (Punctuation, "*"),
+                (Text, "\t"),
+                (Keyword.Constant, "null"),
+                (Text, "\n"),
+                (Punctuation, "*"),
+                (Text, "\t"),
+                (Keyword.Constant, "true"),
+                (Text, "\n"),
+                (Punctuation, "*"),
+                (Text, "\t"),
+                (Keyword.Constant, "false"),
+                (Text, "\n"),
+                (Punctuation, "*"),
+                (Text, "\t"),
+                (Keyword.Constant, "inf"),
+                (Text, "\n"),
+                (Punctuation, "*"),
+                (Text, "\t"),
+                (Keyword.Constant, "+inf"),
+                (Text, "\n"),
+                (Punctuation, "*"),
+                (Text, "\t"),
+                (Keyword.Constant, "-inf"),
+                (Text, "\n"),
+                (Punctuation, "*"),
+                (Text, "\t"),
+                (Keyword.Constant, "nan"),
+                (Text, "\n"),
+                (Punctuation, "*"),
+                (Text, "\t"),
+                (Error, "floop"),
+                (Text, "\n"),
+                (Punctuation, "*"),
+                (Text, "\t"),
+                (Error, "inferno"),
+                (Text, "\n"),
+            ]
 
     assert list(
         pygments.lex("[null, true, false, inf, +inf, -inf, nan, floop, inferno]\n",

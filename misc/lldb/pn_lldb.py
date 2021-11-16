@@ -20,8 +20,6 @@ Load them in ~/.lldbinit or a running session with this command:
     command script import $PROCYON/misc/lldb/procyon.py
 """
 
-from __future__ import absolute_import, division, print_function
-
 import functools
 import lldb
 import struct

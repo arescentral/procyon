@@ -15,16 +15,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import absolute_import, division, print_function, unicode_literals
-
 import os
 import subprocess
 from .context import PN2JSON, pntest
 
 
 def pn2json(source):
-    p = subprocess.Popen(
-        [PN2JSON], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    p = subprocess.Popen([PN2JSON],
+                         stdin=subprocess.PIPE,
+                         stdout=subprocess.PIPE,
+                         stderr=subprocess.PIPE)
     json, err = p.communicate(source)
     if p.returncode == 0:
         return json, None
