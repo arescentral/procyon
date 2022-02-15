@@ -430,7 +430,7 @@ TEST_F(DumpTest, AllCTypes) {
     EXPECT_THAT(dump<intptr_t>('p', -128), IsString("-128\n"));
     EXPECT_THAT(dump<uintptr_t>('P', 128), IsString("128\n"));
     EXPECT_THAT(dump<size_t>('z', -256), IsString("-256\n"));
-    EXPECT_THAT(dump<ssize_t>('Z', 256), IsString("256\n"));
+    EXPECT_THAT(dump<ptrdiff_t>('Z', 256), IsString("256\n"));
 
     EXPECT_THAT(dump<float>('f', 1.5), IsString("1.5\n"));
     EXPECT_THAT(dump<double>('d', 2.5), IsString("2.5\n"));

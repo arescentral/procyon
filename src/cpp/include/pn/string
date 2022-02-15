@@ -21,6 +21,7 @@
 #include <pn/fwd>
 #include <pn/value>
 #include <string>
+#include <array>
 
 namespace pn {
 
@@ -73,7 +74,7 @@ class rune {
     uint32_t              value() const { return pn_rune(data(), 4, 0); }
     constexpr const char* data() const { return _data; }
     constexpr size_type   size() const {
-        return (char[]){1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 2, 2, 3, 4}[uint8_t(*data()) >> 4];
+        return static_cast<size_type>("\1\1\1\1\1\1\1\1\0\0\0\0\2\2\3\4"[((*data()) >> 4) & 0xf]);
     }
 
     string copy() const;

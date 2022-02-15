@@ -99,7 +99,7 @@ TEST_F(FormatTest, Scalar) {
     EXPECT_THAT(pn::format<intptr_t>("format: {0}", 1), IsString("format: 1"));
     EXPECT_THAT(pn::format<uintptr_t>("format: {0}", 1), IsString("format: 1"));
     EXPECT_THAT(pn::format<size_t>("format: {0}", 1), IsString("format: 1"));
-    EXPECT_THAT(pn::format<ssize_t>("format: {0}", 1), IsString("format: 1"));
+    EXPECT_THAT(pn::format<ptrdiff_t>("format: {0}", 1), IsString("format: 1"));
 
     EXPECT_THAT(pn::format<float>("format: {0}", 1.0), IsString("format: 1.0"));
     EXPECT_THAT(pn::format<double>("format: {0}", 1.0), IsString("format: 1.0"));

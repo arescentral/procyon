@@ -30,18 +30,18 @@
 #include "./io.h"
 
 union pn_primitive {
-    int       i;
-    unsigned  I;
-    int16_t   h;
-    uint16_t  H;
-    int32_t   l;
-    uint32_t  L;
-    int64_t   q;
-    uint64_t  Q;
-    intptr_t  p;
-    uintptr_t P;
-    size_t    z;
-    ssize_t   Z;
+    int        i;
+    unsigned   I;
+    int16_t    h;
+    uint16_t   H;
+    int32_t    l;
+    uint32_t   L;
+    int64_t    q;
+    uint64_t   Q;
+    intptr_t   p;
+    uintptr_t  P;
+    size_t     z;
+    ptrdiff_t  Z;
 
     float  f;
     double d;
@@ -111,14 +111,22 @@ bool pn_read_arg(pn_input_t* in, char format, va_list* vl) {
         case 'p': return PN_READ_PRIMITIVE(p, intptr_t);
         case 'P': return PN_READ_PRIMITIVE(P, uintptr_t);
         case 'z': return PN_READ_PRIMITIVE(z, size_t);
-        case 'Z': return PN_READ_PRIMITIVE(Z, ssize_t);
+        case 'Z': return PN_READ_PRIMITIVE(Z, ptrdiff_t);
 
         case 'f': return PN_READ_PRIMITIVE(f, float);
         case 'd': return PN_READ_PRIMITIVE(d, double);
 
         case 's': return read_bytes_strlen(in, va_arg(*vl, char*));
-        case 'S': return pn_raw_read(in, va_arg(*vl, char*), va_arg(*vl, size_t));
-        case '$': return pn_raw_read(in, va_arg(*vl, uint8_t*), va_arg(*vl, size_t));
+        case 'S': {
+            char* data_ptr = va_arg(*vl, char*);
+            size_t data_size = va_arg(*vl, size_t);
+            return pn_raw_read(in, data_ptr, data_size);
+        }
+        case '$': {
+            uint8_t* data_ptr  = va_arg(*vl, uint8_t*);
+            size_t data_size = va_arg(*vl, size_t);
+            return pn_raw_read(in, data_ptr, data_size);
+        }
         case 'c': return PN_READ_BYTE(char);
         case 'C': return PN_READ_PRIMITIVE(L, uint32_t);
 
@@ -186,14 +194,22 @@ static bool pn_write_arg(pn_output_t* out, char format, va_list* vl) {
         case 'p': return PN_WRITE_PRIMITIVE(p, intptr_t, intptr_t);
         case 'P': return PN_WRITE_PRIMITIVE(P, uintptr_t, uintptr_t);
         case 'z': return PN_WRITE_PRIMITIVE(z, size_t, size_t);
-        case 'Z': return PN_WRITE_PRIMITIVE(Z, ssize_t, ssize_t);
+        case 'Z': return PN_WRITE_PRIMITIVE(Z, ptrdiff_t, ptrdiff_t);
 
         case 'f': return PN_WRITE_PRIMITIVE(f, float, double);
         case 'd': return PN_WRITE_PRIMITIVE(d, double, double);
 
         case 's': return write_bytes_strlen(out, va_arg(*vl, const char*));
-        case 'S': return pn_raw_write(out, va_arg(*vl, const char*), va_arg(*vl, size_t));
-        case '$': return pn_raw_write(out, va_arg(*vl, const uint8_t*), va_arg(*vl, size_t));
+        case 'S': {
+            const char* data_ptr = va_arg(*vl, const char*);
+            const size_t data_size = va_arg(*vl, size_t);
+            return pn_raw_write(out, data_ptr, data_size);
+        }
+        case '$': {
+            const uint8_t* data_ptr = va_arg(*vl, const uint8_t*);
+            const size_t data_size = va_arg(*vl, size_t);
+            return pn_raw_write(out, data_ptr, data_size);
+        }
         case 'c': return write_byte(out, va_arg(*vl, int));
         case 'C': return PN_WRITE_PRIMITIVE(L, uint32_t, uint32_t);
 
@@ -227,7 +243,7 @@ int pn_getc(pn_input_t* in) {
             }
             char ch = *(char*)in->view->data;
             --in->view->size;
-            ++in->view->data;
+            in->view->data = (char*)in->view->data + 1;
             return ch;
     }
 }
@@ -267,7 +283,7 @@ bool pn_raw_read(pn_input_t* in, void* data, size_t size) {
             }
             memmove(data, in->view->data, size);
             in->view->size -= size;
-            in->view->data += size;
+            in->view->data = (char*)in->view->data + size;
             return true;
     }
 }
@@ -283,7 +299,7 @@ bool pn_raw_write(pn_output_t* out, const void* data, size_t size) {
     }
 }
 
-ssize_t pn_file_getline(FILE* f, char** data, size_t* size) {
+ptrdiff_t pn_file_getline(FILE* f, char** data, size_t* size) {
     if (!(data && size)) {
         errno = EINVAL;
         return -1;
@@ -298,7 +314,7 @@ ssize_t pn_file_getline(FILE* f, char** data, size_t* size) {
                 return -1;
             }
             break;
-        } else if (len == SSIZE_MAX) {
+        } else if (len == PTRDIFF_MAX) {
             errno = EOVERFLOW;
             return -1;
         } else if (*size == 0) {
@@ -313,7 +329,7 @@ ssize_t pn_file_getline(FILE* f, char** data, size_t* size) {
     return len;
 }
 
-ssize_t pn_getline(pn_input_t* in, char** data, size_t* size) {
+ptrdiff_t pn_getline(pn_input_t* in, char** data, size_t* size) {
     switch (in->type) {
         case PN_INPUT_TYPE_INVALID: return -1;
         case PN_INPUT_TYPE_C_FILE: return pn_file_getline(in->c_file, data, size);
@@ -332,14 +348,14 @@ ssize_t pn_getline(pn_input_t* in, char** data, size_t* size) {
             }
 
             void*  nl       = memchr(in->view->data, '\n', in->view->size);
-            size_t out_size = nl ? (nl - in->view->data + 1) : in->view->size;
+            size_t out_size = nl ? ((char*)nl - (char*)in->view->data + 1) : in->view->size;
             if (*size < (out_size + 1)) {
                 *data = realloc(*data, (out_size + 1));
                 *size = (out_size + 1);
             }
             memmove(*data, in->view->data, out_size);
             (*data)[out_size] = '\0';
-            in->view->data += out_size;
+            in->view->data = (char*)in->view->data + out_size;
             in->view->size -= out_size;
             return out_size;
         }

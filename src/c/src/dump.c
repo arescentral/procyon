@@ -109,7 +109,7 @@ static bool dump_bool(pn_bool_t b, pn_output_t* out) {
 
 static bool dump_int(pn_int_t i, pn_output_t* out) {
     char    buf[32];
-    ssize_t len;
+    ptrdiff_t len;
     return ((len = sprintf(buf, "%" PRId64, i)) > 0) && pn_raw_write(out, buf, len);
 }
 
@@ -576,7 +576,7 @@ bool pn_dump(pn_output_t* out, int flags, int format, ...) {
         case 'p': x.type = PN_INT, x.i = va_arg(vl, intptr_t); break;
         case 'P': x.type = PN_INT, x.i = va_arg(vl, uintptr_t); break;
         case 'z': x.type = PN_INT, x.i = va_arg(vl, size_t); break;
-        case 'Z': x.type = PN_INT, x.i = va_arg(vl, ssize_t); break;
+        case 'Z': x.type = PN_INT, x.i = va_arg(vl, ptrdiff_t); break;
 
         case 'f': x.type = PN_FLOAT, x.f = va_arg(vl, double); break;
         case 'd': x.type = PN_FLOAT, x.f = va_arg(vl, double); break;

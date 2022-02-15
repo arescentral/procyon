@@ -163,16 +163,19 @@ string dump(const arg& x, int flags) {
 
 template <typename... args>
 output& output::write(const args&... arg) {
+    const char str[] = {internal::arg<typename std::decay<args>::type>::code..., '\0'};
     internal::write(
-            c_obj(), (char[]){internal::arg<typename std::decay<args>::type>::code..., '\0'},
+            c_obj(), str,
             std::tuple_cat(internal::arg<typename std::decay<args>::type>::write_args(arg)...));
     return *this;
 }
 
+
 template <typename... args>
 output_view& output_view::write(const args&... arg) {
+    const char str[] = {internal::arg<typename std::decay<args>::type>::code..., '\0'};
     internal::write(
-            c_obj(), (char[]){internal::arg<typename std::decay<args>::type>::code..., '\0'},
+            c_obj(), str,
             std::tuple_cat(internal::arg<typename std::decay<args>::type>::write_args(arg)...));
     return *this;
 }
@@ -195,16 +198,18 @@ output_view& output_view::dump(const arg& x, int flags) {
 
 template <typename... args>
 output& output::format(const char* fmt, const args&... arg) {
+    const char str[] = {internal::arg<typename std::decay<args>::type>::code..., '\0'};
     internal::format(
-            c_obj(), fmt, (char[]){internal::arg<typename std::decay<args>::type>::code..., '\0'},
+            c_obj(), fmt, str,
             std::tuple_cat(internal::arg<typename std::decay<args>::type>::write_args(arg)...));
     return *this;
 }
 
 template <typename... args>
 output_view& output_view::format(const char* fmt, const args&... arg) {
+    const char str[] = {internal::arg<typename std::decay<args>::type>::code..., '\0'};
     internal::format(
-            c_obj(), fmt, (char[]){internal::arg<typename std::decay<args>::type>::code..., '\0'},
+            c_obj(), fmt, str,
             std::tuple_cat(internal::arg<typename std::decay<args>::type>::write_args(arg)...));
     return *this;
 }
