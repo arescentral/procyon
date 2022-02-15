@@ -5178,7 +5178,7 @@ pn_parser_transition_t parse_defs[] = {
     {.extend_count = 2, .extend0 = 2, .extend1 = 5},
     {.extend_count = 2, .extend0 = 3, .extend1 = 5},
     {.extend_count = 1, .extend0 = 4},
-    {},
+    {.error = 0},
     {.extend_count = 1, .extend0 = 3},
     {.error = PN_ERROR_SIBLING},
     {.error = PN_ERROR_CHILD},
