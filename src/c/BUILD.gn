@@ -43,19 +43,26 @@ static_library("procyon") {
 
 config("procyon_public") {
   include_dirs = [ "include" ]
-  libs = [ "m" ]
-  if (target_os == "win") {
-    libs += [ "ws2_32" ]
+  libs = []
+  if (current_toolchain == "//build/lib/win:msvc") {
+    libs += [ "ws2_32.lib" ]
+  } else {
+    libs += [ "m" ]
+    if (target_os == "win") {
+      libs += [ "ws2_32" ]
+    }
   }
 }
 
 config("procyon_private") {
   include_dirs = [ "src" ]
-  cflags = [
-    "-Wall",
-    "-Wextra",
-    "-Wsign-compare",
-    "-Werror",
-    "-Wno-initializer-overrides",
-  ]
+  if (current_toolchain != "//build/lib/win:msvc") {
+    cflags = [
+      "-Wall",
+      "-Wextra",
+      "-Wsign-compare",
+      "-Werror",
+      "-Wno-initializer-overrides",
+    ]
+  }
 }

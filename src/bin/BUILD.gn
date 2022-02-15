@@ -14,7 +14,9 @@
 
 config("procyon_public") {
   include_dirs = [ "include" ]
-  libs = [ "m" ]
+  if (current_toolchain != "//build/lib/win:msvc") {
+    libs = [ "m" ]
+  }
 }
 
 config("procyon_private") {

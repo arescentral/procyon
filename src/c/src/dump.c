@@ -98,6 +98,7 @@ static bool dump_long_value(const pn_value_t* x, pn_string_t** indent, pn_output
         case PN_STRING: return dump_long_string(x->s, indent, out);
         case PN_ARRAY: return dump_long_array(x->a, indent, out);
         case PN_MAP: return dump_long_map(x->m, indent, out);
+        default: return false;
     }
 }
 
