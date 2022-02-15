@@ -101,8 +101,9 @@ void read(pn_input_t* in, const char* format, const tuple& args) {
 
 template <typename... args>
 input& input::read(args... arg) {
+    const char str[] = {internal::read_arg<typename std::decay<args>::type>::code..., '\0'};
     internal::read(
-            c_obj(), (char[]){internal::read_arg<typename std::decay<args>::type>::code..., '\0'},
+            c_obj(), str,
             std::tuple_cat(
                     internal::read_arg<typename std::decay<args>::type>::read_args(arg)...));
     return *this;
@@ -110,8 +111,9 @@ input& input::read(args... arg) {
 
 template <typename... args>
 input_view& input_view::read(args... arg) {
+    const char str[] = {internal::read_arg<typename std::decay<args>::type>::code..., '\0'};
     internal::read(
-            c_obj(), (char[]){internal::read_arg<typename std::decay<args>::type>::code..., '\0'},
+            c_obj(), str,
             std::tuple_cat(
                     internal::read_arg<typename std::decay<args>::type>::read_args(arg)...));
     return *this;

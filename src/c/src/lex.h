@@ -76,7 +76,7 @@ typedef struct {
         char*           end;
     } token;
     size_t  lineno;
-    ssize_t indent;
+    ptrdiff_t indent;
     size_t  prev_width;
     bool    eq;
 
@@ -93,7 +93,7 @@ typedef struct {
     struct {
         size_t  count;
         size_t  size;
-        ssize_t values[];
+        ptrdiff_t values[];
     } * levels;
 } pn_lexer_t;
 

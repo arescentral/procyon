@@ -132,7 +132,7 @@ TEST_F(ValueTest, Set) {
     EXPECT_THAT(set<intptr_t>('p', 11), IsInt(11));
     EXPECT_THAT(set<uintptr_t>('P', 12), IsInt(12));
     EXPECT_THAT(set<size_t>('z', 13), IsInt(13));
-    EXPECT_THAT(set<ssize_t>('Z', 14), IsInt(14));
+    EXPECT_THAT(set<ptrdiff_t>('Z', 14), IsInt(14));
 
     EXPECT_THAT(set<float>('f', M_PI), IsFloat(static_cast<float>(M_PI)));
     EXPECT_THAT(set<double>('d', M_PI), IsFloat(static_cast<double>(M_PI)));

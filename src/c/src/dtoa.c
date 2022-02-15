@@ -83,9 +83,16 @@
 #include <float.h>
 #include <math.h>
 #include <pn/procyon.h>
+#ifndef _MSC_VER
 #include <pthread.h>
+#endif
 #include <stdlib.h>
 #include <string.h>
+
+#if defined(_M_AMD64) || (defined(_M_IX86_FP) && _M_IX86_FP >= 2)
+#define DTOA_IS_SSE2_ARCH 1
+#include <immintrin.h>
+#endif
 
 #define IEEE_8087
 #define Omit_Private_Memory
@@ -673,6 +680,12 @@ typedef struct ThInfo {
     Bigint* P5s;
 } ThInfo;
 
+#ifdef _MSC_VER
+static __declspec(thread) ThInfo ti_instance;
+static ThInfo* get_TI(void) {
+    return &ti_instance;
+}
+#else
 static pthread_key_t  ti_key;
 static pthread_once_t ti_once;
 static void           ti_init() { pthread_key_create(&ti_key, free); }
@@ -687,6 +700,7 @@ static ThInfo* get_TI(void) {
     }
     return ti;
 }
+#endif
 
 static Bigint* Balloc(int k, ThInfo** PTI) {
     int     x;
@@ -2266,7 +2280,7 @@ range_err:
 static const uint64_t nan_u64 = UINT64_C(0x7ff8000000000000);
 static const uint64_t inf_u64 = UINT64_C(0x7ff0000000000000);
 
-#if defined(__i386__) || defined(__x86_64__)
+#if (defined(__i386__) || defined(__x86_64__)) && !defined(DTOA_IS_SSE2_ARCH)
 static uint16_t fpu_get_control_word() {
     uint16_t control_word;
     __asm__ __volatile__("fnstcw %0" : "=m"(control_word));
@@ -2289,7 +2303,13 @@ static bool pn_strtod2(const char* data, size_t size, double* f, pn_error_code_t
     }
     string_view s = {data, size};
 
-#if defined(__i386__) || defined(__x86_64__)
+#if defined(DTOA_IS_SSE2_ARCH)
+    unsigned int old_csr = _mm_getcsr();
+    // Disable floating point exceptions, round nearest, allow denormals
+    _mm_setcsr(_MM_MASK_MASK | _MM_ROUND_NEAREST | _MM_FLUSH_ZERO_OFF);
+    *f = pn_strtod3(s, error);
+    _mm_setcsr(old_csr);
+#elif defined(__i386__) || defined(__x86_64__)
     uint16_t save_control_word    = fpu_get_control_word();
     uint16_t use_double_precision = (save_control_word & ~0x0f00) | 0x0200;
     if (save_control_word != use_double_precision) {

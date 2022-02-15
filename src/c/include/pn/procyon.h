@@ -16,6 +16,7 @@
 #define PROCYON_H_
 
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 
@@ -131,7 +132,7 @@ extern const struct pn_value pn_mapempty;    // {}
 // ?: bool
 // i: int I: unsigned int
 // b: int8, B: uint8, h: int16, H: uint16, l: int32, L: uint32, q: int64, Q: uint64
-// p: intptr_t, P: uintptr_t (or a pointer), z: size_t, Z: ssize_t
+// p: intptr_t, P: uintptr_t (or a pointer), z: size_t, Z: ptrdiff_t
 // f: float, d: double
 // s: const char* (NUL-terminated), S: const char* and size_t
 // c: char (becomes a 1-character string), C: uint32_t (becomes a 1-rune string)

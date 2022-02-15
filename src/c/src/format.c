@@ -45,7 +45,7 @@ struct format_arg {
         intptr_t          p;
         uintptr_t         P;
         size_t            z;
-        ssize_t           Z;
+        ptrdiff_t         Z;
         double            d;  // f
         const char*       s;
         const pn_array_t* a;
@@ -78,7 +78,7 @@ static void set_arg(char format, struct format_arg* dst, va_list* vl) {
         case 'p': dst->p = va_arg(*vl, intptr_t); break;
         case 'P': dst->P = va_arg(*vl, uintptr_t); break;
         case 'z': dst->z = va_arg(*vl, size_t); break;
-        case 'Z': dst->Z = va_arg(*vl, ssize_t); break;
+        case 'Z': dst->Z = va_arg(*vl, ptrdiff_t); break;
 
         case 'f': format = 'f';
         case 'd': dst->d = va_arg(*vl, double); break;
@@ -110,7 +110,7 @@ static void set_arg(char format, struct format_arg* dst, va_list* vl) {
 
 static bool print_u(pn_output_t* out, uint64_t u) {
     char    buf[32];
-    ssize_t len;
+    ptrdiff_t len;
     return ((len = sprintf(buf, "%" PRIu64, u)) > 0) && pn_write(out, "S", buf, (size_t)len);
 }
 

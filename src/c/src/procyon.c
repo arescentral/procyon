@@ -26,7 +26,7 @@
 #include "./utf8.h"
 #include "./vector.h"
 
-const pn_value_t pn_null    = {};
+const pn_value_t pn_null    = {.type = PN_NULL};
 const pn_value_t pn_true    = {.type = PN_BOOL, .b = true};
 const pn_value_t pn_false   = {.type = PN_BOOL, .b = false};
 const pn_value_t pn_inf     = {.type = PN_FLOAT, .f = INFINITY};
@@ -105,7 +105,7 @@ bool pn_vset(pn_value_t* dst, char format, va_list* vl) {
         case 'p': dst->type = PN_INT; dst->i = va_arg(*vl, intptr_t); return true;
         case 'P': dst->type = PN_INT; dst->i = va_arg(*vl, uintptr_t); return true;
         case 'z': dst->type = PN_INT; dst->i = va_arg(*vl, size_t); return true;
-        case 'Z': dst->type = PN_INT; dst->i = va_arg(*vl, ssize_t); return true;
+        case 'Z': dst->type = PN_INT; dst->i = va_arg(*vl, ptrdiff_t); return true;
 
         case 'f': dst->type = PN_FLOAT; dst->f = va_arg(*vl, double); return true;
         case 'd': dst->type = PN_FLOAT; dst->f = va_arg(*vl, double); return true;
@@ -399,7 +399,7 @@ void pn_arrayins(pn_array_t** a, size_t index, int format, ...) {
     pn_value_t* src = &(*a)->values[index];
     void*       dst = src + 1;
     void*       end = &(*a)->values[(*a)->count];
-    memmove(dst, src, end - dst);
+    memmove(dst, src, (char*)end - (char*)dst);
 
     va_list vl;
     va_start(vl, format);
@@ -412,7 +412,7 @@ void pn_arraydel(pn_array_t** a, size_t index) {
     void*       src = dst + 1;
     void*       end = &(*a)->values[(*a)->count--];
     pn_clear(dst);
-    memmove(dst, src, end - src);
+    memmove(dst, src, (char*)end - (char*)src);
 }
 
 void pn_arrayresize(pn_array_t** a, size_t size) {
