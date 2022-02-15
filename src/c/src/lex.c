@@ -167,7 +167,7 @@ void pn_lexer_next(pn_lexer_t* lex, pn_error_t* error) {
             }
             break;
     }
-    return lexer_fail(lex, error, at, state & PN_TOK_FLAG_VALUE);
+    lexer_fail(lex, error, at, state & PN_TOK_FLAG_VALUE);
 }
 
 void pn_lexer_init(pn_lexer_t* lex, pn_input_t* in) {

@@ -28,6 +28,7 @@ pn_input_t pn_path_input(const char* path, pn_path_flags_t flags) {
         case PN_APPEND_TEXT: return pn_file_input(fopen(path, "r"));
         case PN_BINARY:
         case PN_APPEND_BINARY: return pn_file_input(fopen(path, "rb"));
+        default: return pn_file_input(NULL);
     }
 }
 
@@ -66,6 +67,7 @@ pn_output_t pn_path_output(const char* path, pn_path_flags_t flags) {
         case PN_APPEND_TEXT: return pn_file_output(fopen(path, "a"));
         case PN_BINARY: return pn_file_output(fopen(path, "wb"));
         case PN_APPEND_BINARY: return pn_file_output(fopen(path, "ab"));
+        default: return pn_file_output(NULL);
     }
 }
 
@@ -98,6 +100,7 @@ bool pn_input_close(pn_input_t* in) {
         case PN_INPUT_TYPE_C_FILE: return !fclose(in->c_file);
         case PN_INPUT_TYPE_STDIN: return !fclose(stdin);
         case PN_INPUT_TYPE_VIEW: return free(in->view), true;
+        default: return false;
     }
 }
 
@@ -107,6 +110,7 @@ bool pn_input_eof(const pn_input_t* in) {
         case PN_INPUT_TYPE_C_FILE: return feof(in->c_file);
         case PN_INPUT_TYPE_STDIN: return feof(stdin);
         case PN_INPUT_TYPE_VIEW: return !in->view->data;
+        default: return false;
     }
 }
 
@@ -116,6 +120,7 @@ bool pn_input_error(const pn_input_t* in) {
         case PN_INPUT_TYPE_C_FILE: return ferror(in->c_file);
         case PN_INPUT_TYPE_STDIN: return ferror(stdin);
         case PN_INPUT_TYPE_VIEW: return false;
+        default: return false;
     }
 }
 
@@ -127,6 +132,7 @@ bool pn_output_close(pn_output_t* out) {
         case PN_OUTPUT_TYPE_STDERR: return !fclose(stderr);
         case PN_OUTPUT_TYPE_DATA: return true;
         case PN_OUTPUT_TYPE_STRING: return true;
+        default: return false;
     }
 }
 
@@ -138,6 +144,7 @@ bool pn_output_eof(const pn_output_t* out) {
         case PN_OUTPUT_TYPE_STDERR: return feof(stderr);
         case PN_OUTPUT_TYPE_DATA: return !out->data;
         case PN_OUTPUT_TYPE_STRING: return !out->string;
+        default: return false;
     }
 }
 
@@ -149,6 +156,7 @@ bool pn_output_error(const pn_output_t* out) {
         case PN_OUTPUT_TYPE_STDERR: return ferror(stderr);
         case PN_OUTPUT_TYPE_DATA: return false;
         case PN_OUTPUT_TYPE_STRING: return false;
+        default: return false;
     }
 }
 

@@ -45,17 +45,21 @@ static_library("procyon-cpp") {
 
 config("procyon_public") {
   include_dirs = [ "include" ]
-  libs = [ "m" ]
+  if (current_toolchain != "//build/lib/win:msvc") {
+    libs = [ "m" ]
+  }
 }
 
 config("procyon_private") {
-  cflags = [
-    "-Wall",
-    "-Wextra",
-    "-Wsign-compare",
-    "-Werror",
-    "-Wno-initializer-overrides",
-  ]
+  if (current_toolchain != "//build/lib/win:msvc") {
+    cflags = [
+      "-Wall",
+      "-Wextra",
+      "-Wsign-compare",
+      "-Werror",
+      "-Wno-initializer-overrides",
+    ]
+  }
 }
 
 executable("procyon-cpp-test") {

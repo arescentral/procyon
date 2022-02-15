@@ -245,6 +245,7 @@ int pn_getc(pn_input_t* in) {
             --in->view->size;
             in->view->data = (char*)in->view->data + 1;
             return ch;
+        default: return EOF;
     }
 }
 
@@ -266,6 +267,7 @@ int pn_putc(int ch, pn_output_t* f) {
             pn_strncat(f->string, s, 1);
             return true;
         }
+        default: return EOF;
     }
 }
 
@@ -285,6 +287,7 @@ bool pn_raw_read(pn_input_t* in, void* data, size_t size) {
             in->view->size -= size;
             in->view->data = (char*)in->view->data + size;
             return true;
+        default: return false;
     }
 }
 
@@ -296,6 +299,7 @@ bool pn_raw_write(pn_output_t* out, const void* data, size_t size) {
         case PN_OUTPUT_TYPE_STDERR: return fwrite(data, 1, size, stderr) == size;
         case PN_OUTPUT_TYPE_DATA: return pn_datacat(out->data, data, size), true;
         case PN_OUTPUT_TYPE_STRING: return pn_strncat(out->string, data, size), true;
+        default: return false;
     }
 }
 
@@ -359,5 +363,6 @@ ptrdiff_t pn_getline(pn_input_t* in, char** data, size_t* size) {
             in->view->size -= out_size;
             return out_size;
         }
+        default: return -1;
     }
 }
