@@ -1,0 +1,47 @@
+
+// -*- mode: C++ -*-
+// Copyright 2022 The Procyon Authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+#ifndef PN_TUPLE_TYPE_CAT_
+#define PN_TUPLE_TYPE_CAT_
+
+namespace pn {
+namespace internal {
+
+template <typename... ty>
+struct tuple_type_cat;
+
+template <typename ty>
+struct tuple_type_cat<ty>
+{
+    typedef ty type;
+};
+
+template <typename... ty0, typename... ty1>
+struct tuple_type_cat<std::tuple<ty0...>, std::tuple<ty1...>>
+{
+    typedef std::tuple<ty0..., ty1...> type;
+};
+
+template <typename... ty0, typename... ty1, typename... ty_more>
+struct tuple_type_cat<std::tuple<ty0...>, std::tuple<ty1...>, ty_more...>
+    : public tuple_type_cat<std::tuple<ty0...>, typename tuple_type_cat<std::tuple<ty1...>, ty_more...>::type>
+{
+};
+
+}  // namespace internal
+}  // namespace pn
+
+#endif

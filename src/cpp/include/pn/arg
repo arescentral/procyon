@@ -44,6 +44,8 @@ struct read_arg<T*> : arg<T> {};
 template <>
 struct arg<pad> {
     static constexpr char     code = '#';
+    typedef std::tuple<size_t> write_args_type;
+    typedef std::tuple<size_t> read_args_type;
     static std::tuple<size_t> write_args(pad p) { return std::make_tuple(p.size); }
     static std::tuple<size_t> read_args(pad p) { return std::make_tuple(p.size); }
 };
@@ -53,12 +55,16 @@ struct read_arg<pad> : arg<pad> {};
 template <>
 struct arg<std::nullptr_t> {
     static constexpr char code = 'n';
+    typedef std::tuple<> write_args_type;
+    typedef std::tuple<> read_args_type;
     static std::tuple<>   write_args(std::nullptr_t) { return std::make_tuple(); }
 };
 
 template <typename T, char C>
 struct pod_arg {
     static constexpr char code = C;
+    typedef std::tuple<T> write_args_type;
+    typedef std::tuple<T> read_args_type;
     static std::tuple<T> write_args(T t) { return std::make_tuple(t); }
     static std::tuple<T*> read_args(T* t) { return std::make_tuple(t); }
 };
@@ -115,6 +121,8 @@ struct arg<void*> : pod_arg<void*, 'P'> {};
 template <>
 struct arg<const char*> {
     static constexpr char          code = 's';
+    typedef std::tuple<const char*> write_args_type;
+    typedef std::tuple<const char*> read_args_type;
     static std::tuple<const char*> write_args(const char* s) { return std::make_tuple(s); }
 };
 template <>
@@ -123,6 +131,7 @@ struct arg<char*> : arg<const char*> {};
 template <>
 struct arg<data_view> {
     static constexpr char code = '$';
+    typedef std::tuple<const uint8_t*, size_t> write_args_type;
     static std::tuple<const uint8_t*, size_t> write_args(data_view d) {
         return std::make_tuple(d.data(), d.size());
     }
@@ -131,6 +140,8 @@ struct arg<data_view> {
 template <>
 struct arg<data> {
     static constexpr char code = '$';
+    typedef std::tuple<const uint8_t*, size_t> write_args_type;
+    typedef std::tuple<uint8_t*, size_t> read_args_type;
     static std::tuple<const uint8_t*, size_t> write_args(const data& d) {
         return std::make_tuple(d.data(), d.size());
     }
@@ -142,6 +153,8 @@ struct arg<data> {
 template <>
 struct arg<data_ref> {
     static constexpr char code = '$';
+    typedef std::tuple<const uint8_t*, size_t> write_args_type;
+    typedef std::tuple<uint8_t*, size_t> read_args_type;
     static std::tuple<const uint8_t*, size_t> write_args(const data_ref& d) {
         return std::make_tuple(d.data(), d.size());
     }
@@ -153,6 +166,7 @@ struct arg<data_ref> {
 template <>
 struct arg<string_view> {
     static constexpr char code = 'S';
+    typedef std::tuple<const char*, size_t> write_args_type;
     static std::tuple<const char*, size_t> write_args(string_view s) {
         return std::make_tuple(s.data(), s.size());
     }
@@ -169,6 +183,7 @@ struct arg<rune> : arg<string_view> {};
 template <>
 struct arg<array_cref> {
     static constexpr char                code = 'a';
+    typedef std::tuple<const pn_array_t*> write_args_type;
     static std::tuple<const pn_array_t*> write_args(array_cref a) {
         return std::make_tuple(*a.c_obj());
     }
@@ -181,6 +196,7 @@ struct arg<array_ref> : arg<array_cref> {};
 template <>
 struct arg<map_cref> {
     static constexpr char              code = 'm';
+    typedef std::tuple<const pn_map_t*> write_args_type;
     static std::tuple<const pn_map_t*> write_args(map_cref m) {
         return std::make_tuple(*m.c_obj());
     }
@@ -193,6 +209,7 @@ struct arg<map_ref> : arg<map_cref> {};
 template <>
 struct arg<value_cref> {
     static constexpr char                code = 'x';
+    typedef std::tuple<const pn_value_t*> write_args_type;
     static std::tuple<const pn_value_t*> write_args(value_cref x) {
         return std::make_tuple(x.c_obj());
     }
