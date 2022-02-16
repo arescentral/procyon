@@ -20,13 +20,15 @@ config("procyon_public") {
 }
 
 config("procyon_private") {
-  cflags = [
-    "-Wall",
-    "-Wextra",
-    "-Wsign-compare",
-    "-Werror",
-    "-Wno-initializer-overrides",
-  ]
+  if (current_toolchain != "//build/lib/win:msvc") {
+    cflags = [
+      "-Wall",
+      "-Wextra",
+      "-Wsign-compare",
+      "-Werror",
+      "-Wno-initializer-overrides",
+    ]
+  }
 }
 
 executable("pnfmt") {
