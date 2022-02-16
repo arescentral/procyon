@@ -34,7 +34,9 @@ str = type("")  # For Python2
 
 
 def main():
-    os.chdir(os.path.dirname(sys.argv[0]))
+    config_dir = os.path.dirname(sys.argv[0])
+    if config_dir != "":
+        os.chdir(config_dir)
     progname = sys.argv[0]
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument("-m", "--mode", metavar="MODE",
@@ -58,7 +60,9 @@ def main():
 
     with cfg.step("configure mode") as msg:
         msg(args.mode, color="green")
-    cfg.gn(mode=args.mode,
+    cfg.gn(gn="gn",
+           ninja="ninja",
+           mode=args.mode,
            target_os=args.target_os,
            prefix=args.prefix,
            sanitizer=args.sanitizer)
@@ -85,11 +89,11 @@ def check_submodules():
 
 def check_host():
     with cfg.step("checking host os") as msg:
-        if cfg.host_os() in ["mac", "linux"]:
+        if cfg.host_os() in ["mac", "linux", "win"]:
             msg(cfg.host_os(), color="green")
         else:
             msg(cfg.host_os(), color="red")
-            print("\nSorry! procyon requires Mac OS X or Linux")
+            print("\nSorry! procyon requires Mac OS X, Linux, or Windows")
             sys.exit(1)
 
 
@@ -102,6 +106,7 @@ def check_target(args):
             ("linux", "linux"): check_linux_native,
             ("linux", "mac"): check_mac_on_linux,
             ("linux", "win"): check_win_on_linux,
+            ("win", "win"): check_win_native,
         }.get((cfg.host_os(), args.target_os))
         if checker is None:
             msg(args.target_os, color="red")
@@ -121,7 +126,7 @@ def check_mac(args):
         msg("%d.%d" % ver, color="green")
 
     missing = collections.OrderedDict()
-    if not (check_clang() and check_libcxx()):
+    if not (cfg.check_clang() and cfg.check_libcxx()):
         missing["xcode"] = (
                 "* Xcode can be installed via the App Store:\n"
                 "    https://itunes.apple.com/en/app/xcode/id497799835\n"
@@ -164,7 +169,7 @@ def check_linux_native(args):
             msg(" ".join(distro) + " (untested)", color="yellow")
 
     missing = collections.OrderedDict()
-    if not check_clang("clang++"):
+    if not cfg.check_clang("clang++"):
         missing["clang"] = "clang"
 
     if missing:
@@ -179,8 +184,8 @@ def check_linux_native(args):
 
 def check_mac_on_linux(args):
     missing = collections.OrderedDict()
-    if not (check_clang("x86_64-apple-darwin15-clang++") and
-            check_libcxx("x86_64-apple-darwin15-clang++")):
+    if not (cfg.check_clang("x86_64-apple-darwin15-clang++") and
+            cfg.check_libcxx("x86_64-apple-darwin15-clang++")):
         missing["osxcross"] = (
                 "* OSXCross can be found here:\n"
                 "    https://github.com/tpoechtrager/osxcross\n"
@@ -204,7 +209,7 @@ def check_win_on_linux(args):
             sys.exit(1)
 
     missing = collections.OrderedDict()
-    if not check_clang("clang++"):
+    if not cfg.check_clang("clang++"):
         missing["clang"] = "clang"
 
     with cfg.step("checking for mingw") as msg:
@@ -224,22 +229,8 @@ def check_win_on_linux(args):
         sys.exit(1)
 
 
-def check_clang(executable=""):
-    """Compile a basic C++11 binary."""
-    executable = executable or "clang++"
-    return cfg.check_bin(
-            ("%s -x c++ -std=c++11 - -o /dev/null" % executable).split(),
-            what="clang",
-            input="int main() { return 1; }")
-
-
-def check_libcxx(executable=""):
-    """Compile a basic C++11, libc++ binary."""
-    executable = executable or "clang++"
-    return cfg.check_bin(
-            ("%s -x c++ -std=c++11 -stdlib=libc++ - -o /dev/null" % executable).split(),
-            what="libc++",
-            input="#include <chrono>\n\nint main() { return std::chrono::seconds(1).count(); }")
+def check_win_native(args):
+    pass
 
 
 if __name__ == "__main__":
