@@ -38,9 +38,7 @@ static_library("procyon-cpp") {
   public_configs = [ ":procyon_public" ]
   configs += [ ":procyon_private" ]
 
-  public_deps = [
-    "../c:procyon",
-  ]
+  public_deps = [ "../c:procyon" ]
 }
 
 config("procyon_public") {
@@ -81,6 +79,7 @@ executable("procyon-cpp-test") {
   ]
   if (target_os == "win") {
     output_extension = "exe"
+    sources -= [ "test/utf8.test.cpp" ]
   }
   deps = [
     ":procyon-cpp",

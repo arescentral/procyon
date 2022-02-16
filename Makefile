@@ -12,8 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-include out/cur/args.gn
-NINJA=build/lib/bin/ninja -C out/cur
+NINJA=ninja -C out/cur
 
 .PHONY: all
 all:

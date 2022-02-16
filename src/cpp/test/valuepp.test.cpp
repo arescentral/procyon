@@ -99,9 +99,10 @@ TEST_F(ValueppTest, Assignment) {
 }
 
 TEST_F(ValueppTest, IsAs) {
-    pn::data  d{(uint8_t[]){0x1f}, 1};
-    pn::array a{3};
-    pn::map   m{{"3.5", 4}};
+    const uint8_t d_vals[] = {0x1f};
+    pn::data      d{d_vals, 1};
+    pn::array     a{3};
+    pn::map       m{{"3.5", 4}};
 
     EXPECT_THAT(pn::value{nullptr}.is_null(), Eq(true));
     for (pn::value_cref x : pn::array{true, 1, 1.5, d.copy(), "2", a.copy(), m.copy()}) {

@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
+
+jobs:
+  Ubuntu:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with: { submodules: true }
+      - run: .github/workflows/ci-deps.sh ubuntu-latest
+      - run: ./configure
+      - run: make
+      - run: make test
+
+  macOS:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v2
+        with: { submodules: true }
+      - run: .github/workflows/ci-deps.sh macos-latest
+      - run: ./configure
+      - run: make
+      - run: make test
+
+  Windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+        with: { submodules: true }
+      - run: bash .github/workflows/ci-deps.sh windows-latest
+      - uses: ilammy/msvc-dev-cmd@v1
+      - run: python configure
+      - run: ./ninja -C out/win/opt
+      # - run: out/win/opt/procyon-cpp-test
+
+  Wine:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with: { submodules: true }
+      - run: .github/workflows/ci-deps.sh ubuntu-latest
+      - run: sudo apt-get install mingw-w64 xvfb wine
+      - run: ./configure -o win
+      - run: make
+      - run: make test-wine
