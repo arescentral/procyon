@@ -117,6 +117,9 @@ def output_c(lex, parser):
         if "key" in parse_def:
             fields.append(".key = PN_PRS_KEY_%s" % parse_def["key"])
 
+        if len(fields) == 0:
+            fields.append(".emit = PN_PRS_EMIT_NONE")
+
         yield "    {%s}," % ", ".join(fields)
 
     yield "};"
