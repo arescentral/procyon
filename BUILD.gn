@@ -13,25 +13,19 @@
 # limitations under the License.
 
 source_set("procyon") {
-  public_deps = [
-    "src/c:procyon",
-  ]
+  public_deps = [ "src/c:procyon" ]
 }
 
 source_set("procyon-cpp") {
-  public_deps = [
-    "src/cpp:procyon-cpp",
-  ]
+  public_deps = [ "src/cpp:procyon-cpp" ]
 }
 
-source_set("pnfmt") {
-  public_deps = [
-    "src/bin:pnfmt",
-  ]
-}
+if (host_os != "win") {
+  source_set("pnfmt") {
+    public_deps = [ "src/bin:pnfmt" ]
+  }
 
-source_set("pn2json") {
-  public_deps = [
-    "src/bin:pn2json",
-  ]
+  source_set("pn2json") {
+    public_deps = [ "src/bin:pn2json" ]
+  }
 }

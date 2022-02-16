@@ -27,6 +27,17 @@ jobs:
       - run: make
       - run: make test
 
+  Windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+        with: { submodules: true }
+      - run: bash .github/workflows/ci-deps.sh windows-latest
+      - uses: ilammy/msvc-dev-cmd@v1
+      - run: python configure
+      - run: .\ninja -C out\win\opt
+	  - run: out\win\opt\procyon-cpp-test
+
   Wine:
     runs-on: ubuntu-latest
     steps:
