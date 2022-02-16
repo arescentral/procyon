@@ -37,18 +37,28 @@ def main():
     os.chdir(os.path.dirname(sys.argv[0]))
     progname = sys.argv[0]
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
-    parser.add_argument("-m", "--mode", metavar="MODE",
-                        type=str, choices="dbg dev opt".split(), default="opt",
+    parser.add_argument("-m",
+                        "--mode",
+                        metavar="MODE",
+                        type=str,
+                        choices="dbg dev opt".split(),
+                        default="opt",
                         help="set build configuration:\n"
                         "  - opt: compile for fast binaries (default)\n"
                         "  - dev: compile for fast builds\n"
                         "  - dbg: add debugging symbols")
-    parser.add_argument("-o", "--target-os", metavar="OS",
+    parser.add_argument("-o",
+                        "--target-os",
+                        metavar="OS",
                         type=str,
                         help="target os (default: host os)")
-    parser.add_argument("--prefix", type=str, default="/usr/local",
+    parser.add_argument("--prefix",
+                        type=str,
+                        default="/usr/local",
                         help="installation prefix (default: /usr/local)")
-    parser.add_argument("--sanitizer", choices="memory address undefined".split(), default="",
+    parser.add_argument("--sanitizer",
+                        choices="memory address undefined".split(),
+                        default="",
                         help="run sanitizer (memory, address, or undefined)")
     args = parser.parse_args()
 
@@ -58,7 +68,9 @@ def main():
 
     with cfg.step("configure mode") as msg:
         msg(args.mode, color="green")
-    cfg.gn(mode=args.mode,
+    cfg.gn(gn="gn",
+           ninja="ninja",
+           mode=args.mode,
            target_os=args.target_os,
            prefix=args.prefix,
            sanitizer=args.sanitizer)
@@ -121,11 +133,10 @@ def check_mac(args):
         msg("%d.%d" % ver, color="green")
 
     missing = collections.OrderedDict()
-    if not (check_clang() and check_libcxx()):
-        missing["xcode"] = (
-                "* Xcode can be installed via the App Store:\n"
-                "    https://itunes.apple.com/en/app/xcode/id497799835\n"
-                "  After installing, open it and accept the license agreement\n")
+    if not (cfg.check_clang() and cfg.check_libcxx()):
+        missing["xcode"] = ("* Xcode can be installed via the App Store:\n"
+                            "    https://itunes.apple.com/en/app/xcode/id497799835\n"
+                            "  After installing, open it and accept the license agreement\n")
 
     if missing:
         print("\nmissing dependencies: %s\n" % " ".join(missing.keys()))
@@ -133,7 +144,9 @@ def check_mac(args):
             sys.stdout.write(step)
         if any("Homebrew" in v for v in missing.values()):
             print("* Homebrew can be installed like so:")
-            print('    $ ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"')
+            print(
+                '    $ ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"'
+            )
         sys.exit(1)
 
 
@@ -164,7 +177,7 @@ def check_linux_native(args):
             msg(" ".join(distro) + " (untested)", color="yellow")
 
     missing = collections.OrderedDict()
-    if not check_clang("clang++"):
+    if not cfg.check_clang("clang++"):
         missing["clang"] = "clang"
 
     if missing:
@@ -179,12 +192,11 @@ def check_linux_native(args):
 
 def check_mac_on_linux(args):
     missing = collections.OrderedDict()
-    if not (check_clang("x86_64-apple-darwin15-clang++") and
-            check_libcxx("x86_64-apple-darwin15-clang++")):
-        missing["osxcross"] = (
-                "* OSXCross can be found here:\n"
-                "    https://github.com/tpoechtrager/osxcross\n"
-                "  Download and build it, and ensure target/bin is in your $PATH\n")
+    if not (cfg.check_clang("x86_64-apple-darwin15-clang++")
+            and cfg.check_libcxx("x86_64-apple-darwin15-clang++")):
+        missing["osxcross"] = ("* OSXCross can be found here:\n"
+                               "    https://github.com/tpoechtrager/osxcross\n"
+                               "  Download and build it, and ensure target/bin is in your $PATH\n")
 
     if missing:
         print("\nmissing dependencies: %s\n" % " ".join(missing.keys()))
@@ -204,7 +216,7 @@ def check_win_on_linux(args):
             sys.exit(1)
 
     missing = collections.OrderedDict()
-    if not check_clang("clang++"):
+    if not cfg.check_clang("clang++"):
         missing["clang"] = "clang"
 
     with cfg.step("checking for mingw") as msg:
@@ -222,24 +234,6 @@ def check_win_on_linux(args):
             print("\nYou can install them with:\n")
         print("    $ sudo apt-get install %s" % (" ".join(missing.values())))
         sys.exit(1)
-
-
-def check_clang(executable=""):
-    """Compile a basic C++11 binary."""
-    executable = executable or "clang++"
-    return cfg.check_bin(
-            ("%s -x c++ -std=c++11 - -o /dev/null" % executable).split(),
-            what="clang",
-            input="int main() { return 1; }")
-
-
-def check_libcxx(executable=""):
-    """Compile a basic C++11, libc++ binary."""
-    executable = executable or "clang++"
-    return cfg.check_bin(
-            ("%s -x c++ -std=c++11 -stdlib=libc++ - -o /dev/null" % executable).split(),
-            what="libc++",
-            input="#include <chrono>\n\nint main() { return std::chrono::seconds(1).count(); }")
 
 
 if __name__ == "__main__":
