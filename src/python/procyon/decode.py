@@ -29,6 +29,7 @@ else:
 
 
 class ProcyonDecoder(object):
+
     def parse(self, lines):
         return self._decode(ProcyonParser(Lexer(lines)))
 

@@ -200,6 +200,7 @@ def lex_transition_value(kind, value):
 
 
 class Lexer:
+
     def __init__(self, spec):
         lex = OrderedDict()
         for s, t in spec["lex"].items():
@@ -298,6 +299,7 @@ class Lexer:
 
 
 class Parser:
+
     def __init__(self, spec):
         parse_states = OrderedDict((state, i) for i, state in enumerate(spec["parse"]))
         self.defs = OrderedDict()

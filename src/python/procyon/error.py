@@ -87,6 +87,7 @@ error_message[Error.RECURSION] = "recursion limit exceeded"
 
 
 class ProcyonDecodeError(ValueError):
+
     def __init__(self, code, lineno, column):
         ValueError.__init__(self, "{0}:{1}: {2}".format(lineno, column, error_message[code]))
         self.code = code

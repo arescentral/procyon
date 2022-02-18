@@ -23,13 +23,12 @@ with open("../../README.md") as f:
 with open("../../LICENSE") as f:
     license = f.read()
 
-setup(
-    name="procyon",
-    version="1.0.0",
-    description="Procyon object notation",
-    long_description=readme,
-    author="Chris Pickel",
-    author_email="sfiera@twotaled.com",
-    url="https://github.com/arescentral/procyon",
-    license=license,
-    packages=find_packages(exclude=("test", )))
+setup(name="procyon",
+      version="1.0.0",
+      description="Procyon object notation",
+      long_description=readme,
+      author="Chris Pickel",
+      author_email="sfiera@twotaled.com",
+      url="https://github.com/arescentral/procyon",
+      license=license,
+      packages=find_packages(exclude=("test", )))
