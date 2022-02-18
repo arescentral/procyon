@@ -138,6 +138,7 @@ def output_python(lex, parser):
     yield "from .error import Error"
     yield "from .parse_enums import Acc, Emit, Key"
     yield
+    yield "# yapf: disable"
 
     lines = []
     for i in range(0, 256, 16):
