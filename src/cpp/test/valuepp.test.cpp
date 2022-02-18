@@ -273,20 +273,22 @@ TEST_F(ValueppTest, Nested) {
     }
 
     EXPECT_THAT(
-            pn::value(pn::array{pn::map{{"name", "Jane Doe"},
-                                        {"number", "555-1234"},
-                                        {"born", pn::array{1980, 10, 10}}},
-                                pn::map{{"name", "John Doe"},
-                                        {"number", "555-6789"},
-                                        {"born", pn::array{1981, 2, 3}}}}),
+            pn::value(pn::array{
+                    pn::map{{"name", "Jane Doe"},
+                            {"number", "555-1234"},
+                            {"born", pn::array{1980, 10, 10}}},
+                    pn::map{{"name", "John Doe"},
+                            {"number", "555-6789"},
+                            {"born", pn::array{1981, 2, 3}}}}),
             matches);
 
-    pn::value orig = pn::array{pn::map{{"name", "Jane Doe"},
-                                       {"number", "555-1234"},
-                                       {"born", pn::array{1980, 10, 10}}},
-                               pn::map{{"name", "John Doe"},
-                                       {"number", "555-6789"},
-                                       {"born", pn::array{1981, 2, 3}}}};
+    pn::value orig = pn::array{
+            pn::map{{"name", "Jane Doe"},
+                    {"number", "555-1234"},
+                    {"born", pn::array{1980, 10, 10}}},
+            pn::map{{"name", "John Doe"},
+                    {"number", "555-6789"},
+                    {"born", pn::array{1981, 2, 3}}}};
     pn::value copy = orig.copy();
     orig           = nullptr;
     EXPECT_THAT(copy, matches);

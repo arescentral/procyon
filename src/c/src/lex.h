@@ -75,10 +75,10 @@ typedef struct {
         char*           begin;
         char*           end;
     } token;
-    size_t  lineno;
+    size_t    lineno;
     ptrdiff_t indent;
-    size_t  prev_width;
-    bool    eq;
+    size_t    prev_width;
+    bool      eq;
 
     struct {
         char* begin;  // data in current line (not NUL-terminated)
@@ -91,8 +91,8 @@ typedef struct {
     } buffer;
 
     struct {
-        size_t  count;
-        size_t  size;
+        size_t    count;
+        size_t    size;
         ptrdiff_t values[];
     } * levels;
 } pn_lexer_t;

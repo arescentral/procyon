@@ -56,6 +56,7 @@ def _parse_short_string(s):
 
 
 class ProcyonParser(object):
+
     def __init__(self, l):
         self.l = l
         self.stack = [0]

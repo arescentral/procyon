@@ -22,109 +22,108 @@
 #include <pn/data>
 #include <pn/map>
 #include <pn/string>
-#include <pn/value>
 #include <pn/tuple_type_cat>
+#include <pn/value>
 #include <type_traits>
 
 namespace pn {
 
 namespace internal {
 
-
-template<typename... args>
-struct write_and_concat_args
-{
-    static typename tuple_type_cat<typename internal::arg<typename std::decay<args>::type>::write_args_type...>::type process(const args&... arg);
+template <typename... args>
+struct write_and_concat_args {
+    static typename tuple_type_cat<
+            typename internal::arg<typename std::decay<args>::type>::write_args_type...>::type
+    process(const args&... arg);
 };
 
-template<>
-struct write_and_concat_args<>
-{
+template <>
+struct write_and_concat_args<> {
     static typename std::tuple<> process();
 };
 
 #ifdef _MSC_VER
 // Workaround for VS internal compiler error in pack expander
 
-template<typename dest_tuple, int dest_index, typename src_tuple, int src_index>
-void tuple_copy_element(dest_tuple& dest, const src_tuple& src)
-{
+template <typename dest_tuple, int dest_index, typename src_tuple, int src_index>
+void tuple_copy_element(dest_tuple& dest, const src_tuple& src) {
     std::get<dest_index>(dest) = std::get<src_index>(src);
 }
 
-template<typename dest_tuple, int dest_index, typename src_tuple, int src_index, int remaining>
-struct tuple_copy_range_part
-{
+template <typename dest_tuple, int dest_index, typename src_tuple, int src_index, int remaining>
+struct tuple_copy_range_part {
     static void copy(dest_tuple& dest, const src_tuple& src);
 };
 
-template<typename dest_tuple, int dest_index, typename src_tuple, int src_index>
-struct tuple_copy_range_part<dest_tuple, dest_index, src_tuple, src_index, 0>
-{
+template <typename dest_tuple, int dest_index, typename src_tuple, int src_index>
+struct tuple_copy_range_part<dest_tuple, dest_index, src_tuple, src_index, 0> {
     static void copy(dest_tuple& dest, const src_tuple& src) {}
 };
 
-
-template<typename dest_tuple, int dest_index, typename src_tuple, int src_index, int remaining>
-void tuple_copy_range_part<dest_tuple, dest_index, src_tuple, src_index, remaining>::copy(dest_tuple& dest, const src_tuple& src)
-{
+template <typename dest_tuple, int dest_index, typename src_tuple, int src_index, int remaining>
+void tuple_copy_range_part<dest_tuple, dest_index, src_tuple, src_index, remaining>::copy(
+        dest_tuple& dest, const src_tuple& src) {
     tuple_copy_element<dest_tuple, dest_index, src_tuple, src_index>(dest, src);
-	tuple_copy_range_part<dest_tuple, dest_index + 1, src_tuple, src_index + 1, remaining - 1>::copy(dest, src);
+    tuple_copy_range_part<
+            dest_tuple, dest_index + 1, src_tuple, src_index + 1, remaining - 1>::copy(dest, src);
 }
 
-template<typename dest_tuple, int dest_index, typename src_tuple>
-void insert_tuple(dest_tuple& dest, const src_tuple& src)
-{
-    tuple_copy_range_part<dest_tuple, dest_index, src_tuple, 0, std::tuple_size<src_tuple>::value>::copy(dest, src);
+template <typename dest_tuple, int dest_index, typename src_tuple>
+void insert_tuple(dest_tuple& dest, const src_tuple& src) {
+    tuple_copy_range_part<
+            dest_tuple, dest_index, src_tuple, 0,
+            std::tuple_size<src_tuple>::value>::copy(dest, src);
 }
 
-template<typename dest_tuple, int dest_index, typename arg_type>
-void write_one_arg(dest_tuple& dest, const arg_type& arg)
-{
-    typedef typename internal::arg<typename std::decay<arg_type>::type>::write_args_type arg_write_type_t;
-    insert_tuple<dest_tuple, dest_index, arg_write_type_t>(dest, internal::arg<typename std::decay<arg_type>::type>::write_args(arg));
+template <typename dest_tuple, int dest_index, typename arg_type>
+void write_one_arg(dest_tuple& dest, const arg_type& arg) {
+    typedef typename internal::arg<typename std::decay<arg_type>::type>::write_args_type
+            arg_write_type_t;
+    insert_tuple<dest_tuple, dest_index, arg_write_type_t>(
+            dest, internal::arg<typename std::decay<arg_type>::type>::write_args(arg));
 }
 
-template<typename dest_tuple, size_t dest_index, typename... args>
+template <typename dest_tuple, size_t dest_index, typename... args>
 void write_args(dest_tuple& dest, const args&... arg);
 
-template<typename dest_tuple, size_t dest_index, typename args>
-void write_args(dest_tuple& dest, const args& arg)
-{
+template <typename dest_tuple, size_t dest_index, typename args>
+void write_args(dest_tuple& dest, const args& arg) {
     write_one_arg<dest_tuple, dest_index, args>(dest, arg);
 }
 
-template<typename dest_tuple, size_t dest_index, typename arg0_type, typename... args>
-void write_args(dest_tuple& dest, const arg0_type& arg0, const args&... arg)
-{
-    typedef typename internal::arg<typename std::decay<arg0_type>::type>::write_args_type arg0_write_type_t;
+template <typename dest_tuple, size_t dest_index, typename arg0_type, typename... args>
+void write_args(dest_tuple& dest, const arg0_type& arg0, const args&... arg) {
+    typedef typename internal::arg<typename std::decay<arg0_type>::type>::write_args_type
+            arg0_write_type_t;
     write_one_arg<dest_tuple, dest_index, arg0_type>(dest, arg0);
-    write_args<dest_tuple, dest_index + std::tuple_size<arg0_write_type_t>::value, args...>(dest, arg...);
+    write_args<dest_tuple, dest_index + std::tuple_size<arg0_write_type_t>::value, args...>(
+            dest, arg...);
 }
 
-template<typename... args>
-typename tuple_type_cat<typename internal::arg<typename std::decay<args>::type>::write_args_type...>::type write_and_concat_args<args...>::process(const args&... arg)
-{
-    typedef typename tuple_type_cat<typename internal::arg<typename std::decay<args>::type>::write_args_type...>::type dest_tuple_t;
-	dest_tuple_t result;
-	write_args<dest_tuple_t, 0, args...>(result, arg...);
-	return result;
+template <typename... args>
+typename tuple_type_cat<
+        typename internal::arg<typename std::decay<args>::type>::write_args_type...>::type
+write_and_concat_args<args...>::process(const args&... arg) {
+    typedef typename tuple_type_cat<
+            typename internal::arg<typename std::decay<args>::type>::write_args_type...>::type
+                 dest_tuple_t;
+    dest_tuple_t result;
+    write_args<dest_tuple_t, 0, args...>(result, arg...);
+    return result;
 }
 
 #else
 
-template<typename... args>
-typename tuple_type_cat<typename internal::arg<typename std::decay<args>::type>::write_args_type...>::type write_and_concat_args<args...>::process(const args&... arg)
-{
+template <typename... args>
+typename tuple_type_cat<
+        typename internal::arg<typename std::decay<args>::type>::write_args_type...>::type
+write_and_concat_args<args...>::process(const args&... arg) {
     return std::tuple_cat(internal::arg<typename std::decay<args>::type>::write_args(arg)...);
 }
 
 #endif
 
-inline std::tuple<> write_and_concat_args<>::process()
-{
-    return std::tuple<>();
-}
+inline std::tuple<> write_and_concat_args<>::process() { return std::tuple<>(); }
 
 }  // namespace internal
 
@@ -265,19 +264,14 @@ string dump(const arg& x, int flags) {
 template <typename... args>
 output& output::write(const args&... arg) {
     const char str[] = {internal::arg<typename std::decay<args>::type>::code..., '\0'};
-    internal::write(
-            c_obj(), str,
-            internal::write_and_concat_args<args...>::process(arg...));
+    internal::write(c_obj(), str, internal::write_and_concat_args<args...>::process(arg...));
     return *this;
 }
-
 
 template <typename... args>
 output_view& output_view::write(const args&... arg) {
     const char str[] = {internal::arg<typename std::decay<args>::type>::code..., '\0'};
-    internal::write(
-            c_obj(), str,
-            internal::write_and_concat_args<args...>::process(arg...));
+    internal::write(c_obj(), str, internal::write_and_concat_args<args...>::process(arg...));
     return *this;
 }
 
@@ -300,18 +294,14 @@ output_view& output_view::dump(const arg& x, int flags) {
 template <typename... args>
 output& output::format(const char* fmt, const args&... arg) {
     const char str[] = {internal::arg<typename std::decay<args>::type>::code..., '\0'};
-    internal::format(
-            c_obj(), fmt, str,
-            internal::write_and_concat_args<args...>::process(arg...));
+    internal::format(c_obj(), fmt, str, internal::write_and_concat_args<args...>::process(arg...));
     return *this;
 }
 
 template <typename... args>
 output_view& output_view::format(const char* fmt, const args&... arg) {
     const char str[] = {internal::arg<typename std::decay<args>::type>::code..., '\0'};
-    internal::format(
-            c_obj(), fmt, str,
-            internal::write_and_concat_args<args...>::process(arg...));
+    internal::format(c_obj(), fmt, str, internal::write_and_concat_args<args...>::process(arg...));
     return *this;
 }
 

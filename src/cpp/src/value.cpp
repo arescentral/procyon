@@ -68,9 +68,9 @@ struct helper<PN_STRING> {
     }
     template <typename value_api>
     static string_view as(const value_api& x) {
-        return x.is_string() ? string_view{x.c_obj()->s->values,
-                                           static_cast<int>(x.c_obj()->s->count) - 1}
-                             : string_view{};
+        return x.is_string()
+                       ? string_view{x.c_obj()->s->values, static_cast<int>(x.c_obj()->s->count) - 1}
+                       : string_view{};
     }
 };
 

@@ -31,4 +31,5 @@ setuptools.setup(
         "Topic :: Text Processing :: Filters",
         "Topic :: Text Processing :: Markup",
         "Topic :: Utilities",
-    ], )
+    ],
+)

@@ -24,22 +24,20 @@ template <typename... ty>
 struct tuple_type_cat;
 
 template <typename ty>
-struct tuple_type_cat<ty>
-{
+struct tuple_type_cat<ty> {
     typedef ty type;
 };
 
 template <typename... ty0, typename... ty1>
-struct tuple_type_cat<std::tuple<ty0...>, std::tuple<ty1...>>
-{
+struct tuple_type_cat<std::tuple<ty0...>, std::tuple<ty1...>> {
     typedef std::tuple<ty0..., ty1...> type;
 };
 
 template <typename... ty0, typename... ty1, typename... ty_more>
 struct tuple_type_cat<std::tuple<ty0...>, std::tuple<ty1...>, ty_more...>
-    : public tuple_type_cat<std::tuple<ty0...>, typename tuple_type_cat<std::tuple<ty1...>, ty_more...>::type>
-{
-};
+        : public tuple_type_cat<
+                  std::tuple<ty0...>,
+                  typename tuple_type_cat<std::tuple<ty1...>, ty_more...>::type> {};
 
 }  // namespace internal
 }  // namespace pn

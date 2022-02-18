@@ -18,10 +18,10 @@
 
 #include <pn/procyon.h>
 #include <string.h>
+#include <array>
 #include <pn/fwd>
 #include <pn/value>
 #include <string>
-#include <array>
 
 namespace pn {
 

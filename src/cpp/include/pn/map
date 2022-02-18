@@ -56,8 +56,8 @@ class key_value {
 
     key_reference       key() { return key_reference{&c_obj()->key}; }
     key_const_reference key() const {
-        return key_const_reference{c_obj()->key->values,
-                                   static_cast<int>(c_obj()->key->count) - 1};
+        return key_const_reference{
+                c_obj()->key->values, static_cast<int>(c_obj()->key->count) - 1};
     }
     value_reference       value() { return value_reference{&c_obj()->value}; }
     value_const_reference value() const { return value_const_reference{&c_obj()->value}; }

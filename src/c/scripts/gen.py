@@ -65,6 +65,7 @@ def output_c(lex, parser):
     yield "#include \"gen_table.h\""
 
     yield
+    yield "// clang-format off"
     yield "const uint8_t lex_classes[256] = {"
     for i in range(0, 256, 16):
         line = "   "
@@ -137,6 +138,7 @@ def output_python(lex, parser):
     yield "from .error import Error"
     yield "from .parse_enums import Acc, Emit, Key"
     yield
+    yield "# yapf: disable"
 
     lines = []
     for i in range(0, 256, 16):
@@ -198,6 +200,7 @@ def lex_transition_value(kind, value):
 
 
 class Lexer:
+
     def __init__(self, spec):
         lex = OrderedDict()
         for s, t in spec["lex"].items():
@@ -296,6 +299,7 @@ class Lexer:
 
 
 class Parser:
+
     def __init__(self, spec):
         parse_states = OrderedDict((state, i) for i, state in enumerate(spec["parse"]))
         self.defs = OrderedDict()

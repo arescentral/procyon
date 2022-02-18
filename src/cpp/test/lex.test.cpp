@@ -199,7 +199,8 @@ TEST_F(LexTest, Bad) {
                 "\037\n"
                 "\177\n"
                 "\310\n"),
-            LexesTo({line_in, error("\001", {PN_ERROR_CTRL, 1, 1}), line_eq,
+            LexesTo(
+                    {line_in, error("\001", {PN_ERROR_CTRL, 1, 1}), line_eq,
                      error("\037", {PN_ERROR_CTRL, 2, 1}), line_eq,
                      error("\177", {PN_ERROR_CTRL, 3, 1}), line_eq,
                      error("\310", {PN_ERROR_NONASCII, 4, 1}), line_out}));
@@ -247,7 +248,8 @@ TEST_F(LexTest, Indent) {
             lex("1\n"
                 "  2\n"
                 "    3\n"),
-            LexesTo({line_in, i("1"), line_in, i("2"), line_in, i("3"), line_out, line_out,
+            LexesTo(
+                    {line_in, i("1"), line_in, i("2"), line_in, i("3"), line_out, line_out,
                      line_out}));
 
     EXPECT_THAT(
@@ -255,7 +257,8 @@ TEST_F(LexTest, Indent) {
                 "  2\n"
                 "    3\n"
                 " \t4\n"),
-            LexesTo({line_in, i("1"), line_in, i("2"), line_in, i("3"), line_out, line_eq, i("4"),
+            LexesTo(
+                    {line_in, i("1"), line_in, i("2"), line_in, i("3"), line_out, line_eq, i("4"),
                      line_out, line_out}));
 
     EXPECT_THAT(
@@ -269,14 +272,16 @@ TEST_F(LexTest, Indent) {
                 "  2\n"
                 "3\n"
                 "  4\n"),
-            LexesTo({line_in, i("1"), line_in, i("2"), line_out, line_eq, i("3"), line_in, i("4"),
+            LexesTo(
+                    {line_in, i("1"), line_in, i("2"), line_out, line_eq, i("3"), line_in, i("4"),
                      line_out, line_out}));
     EXPECT_THAT(
             lex("1\n"
                 "  2\n"
                 "3\n"
                 "        4\n"),
-            LexesTo({line_in, i("1"), line_in, i("2"), line_out, line_eq, i("3"), line_in, i("4"),
+            LexesTo(
+                    {line_in, i("1"), line_in, i("2"), line_out, line_eq, i("3"), line_in, i("4"),
                      line_out, line_out}));
 
     EXPECT_THAT(
@@ -286,7 +291,8 @@ TEST_F(LexTest, Indent) {
                 "4\n"
                 "5\n"
                 "  6\n"),
-            LexesTo({line_in, i("1"), line_in, i("2"), line_in, i("3"), line_out, line_out,
+            LexesTo(
+                    {line_in, i("1"), line_in, i("2"), line_in, i("3"), line_out, line_out,
                      line_eq, i("4"), line_eq, i("5"), line_in, i("6"), line_out, line_out}));
 
     EXPECT_THAT(
@@ -294,14 +300,16 @@ TEST_F(LexTest, Indent) {
                 "    \n"
                 "  2\n"
                 "    3\n"),
-            LexesTo({line_in, i("1"), line_in, i("2"), line_in, i("3"), line_out, line_out,
+            LexesTo(
+                    {line_in, i("1"), line_in, i("2"), line_in, i("3"), line_out, line_out,
                      line_out}));
 
     EXPECT_THAT(
             lex("1\n"
                 "    2\n"
                 "  3\n"),
-            LexesTo({line_in, i("1"), line_in, i("2"), line_out,
+            LexesTo(
+                    {line_in, i("1"), line_in, i("2"), line_out,
                      error("  3", {PN_ERROR_OUTDENT, 3, 3}), line_out}));
 }
 
@@ -425,13 +433,15 @@ TEST_F(LexTest, Data) {
 
     EXPECT_THAT(
             lex("[$, $1f, $ffff, $ 0f 1e 2d 3c]"),
-            LexesTo({line_in, array_in, data("$"), comma, data("$1f"), comma, data("$ffff"), comma,
+            LexesTo(
+                    {line_in, array_in, data("$"), comma, data("$1f"), comma, data("$ffff"), comma,
                      data("$ 0f 1e 2d 3c"), array_out, line_out}));
 
     EXPECT_THAT(
             lex("[$abcd\n"
                 "$1234]\n"),
-            LexesTo({line_in, array_in, data("$abcd"), line_eq, data("$1234"), array_out,
+            LexesTo(
+                    {line_in, array_in, data("$abcd"), line_eq, data("$1234"), array_out,
                      line_out}));
 
     EXPECT_THAT(lex("$a"), LexesTo({line_in, error("$a", {PN_ERROR_PARTIAL, 1, 2}), line_out}));
@@ -508,7 +518,8 @@ TEST_F(LexTest, String) {
 
     EXPECT_THAT(
             lex("[\"a\", \"b\", \"c\"]"),
-            LexesTo({line_in, array_in, str("\"a\""), comma, str("\"b\""), comma, str("\"c\""),
+            LexesTo(
+                    {line_in, array_in, str("\"a\""), comma, str("\"b\""), comma, str("\"c\""),
                      array_out, line_out}));
 }
 
@@ -562,7 +573,8 @@ TEST_F(LexTest, XString) {
                 "| two\n"
                 "| three\n"
                 "!\n"),
-            LexesTo({line_in, wrap("> one"), line_eq, pipe("| two"), line_eq, pipe("| three"),
+            LexesTo(
+                    {line_in, wrap("> one"), line_eq, pipe("| two"), line_eq, pipe("| three"),
                      line_eq, bang, line_out}));
 }
 
@@ -573,7 +585,8 @@ TEST_F(LexTest, XList) {
             lex("***"),
             LexesTo({line_in, star, line_in, star, line_in, star, line_out, line_out, line_out}));
     EXPECT_THAT(
-            lex("***0"), LexesTo({line_in, star, line_in, star, line_in, star, line_in, i("0"),
+            lex("***0"), LexesTo(
+                                 {line_in, star, line_in, star, line_in, star, line_in, i("0"),
                                   line_out, line_out, line_out, line_out}));
 
     EXPECT_THAT(lex("* *"), LexesTo({line_in, star, line_in, star, line_out, line_out}));
@@ -595,12 +608,14 @@ TEST_F(LexTest, XList) {
             lex("***\n"
                 " **\n"
                 "  *\n"),
-            LexesTo({line_in, star, line_in, star, line_in, star, line_out, line_eq, star, line_in,
+            LexesTo(
+                    {line_in, star, line_in, star, line_in, star, line_out, line_eq, star, line_in,
                      star, line_eq, star, line_out, line_out, line_out}));
     EXPECT_THAT(
             lex("* \t  *\t*\n"
                 "        *\n"),
-            LexesTo({line_in, star, line_in, star, line_in, star, line_eq, star, line_out,
+            LexesTo(
+                    {line_in, star, line_in, star, line_in, star, line_eq, star, line_out,
                      line_out, line_out}));
 }
 
@@ -619,13 +634,15 @@ TEST_F(LexTest, Map) {
             lex("1:2\n3:4"),
             LexesTo({line_in, key("1:"), i("2"), line_eq, key("3:"), i("4"), line_out}));
     EXPECT_THAT(
-            lex("{1:2,3:4}"), LexesTo({line_in, map_in, key("1:"), i("2"), comma, key("3:"),
+            lex("{1:2,3:4}"), LexesTo(
+                                      {line_in, map_in, key("1:"), i("2"), comma, key("3:"),
                                        i("4"), map_out, line_out}));
     EXPECT_THAT(
             lex("1:  2\n3:  4"),
             LexesTo({line_in, key("1:"), i("2"), line_eq, key("3:"), i("4"), line_out}));
     EXPECT_THAT(
-            lex("{1: 2, 3: 4}"), LexesTo({line_in, map_in, key("1:"), i("2"), comma, key("3:"),
+            lex("{1: 2, 3: 4}"), LexesTo(
+                                         {line_in, map_in, key("1:"), i("2"), comma, key("3:"),
                                           i("4"), map_out, line_out}));
 }
 

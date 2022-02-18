@@ -30,18 +30,18 @@
 #include "./io.h"
 
 union pn_primitive {
-    int        i;
-    unsigned   I;
-    int16_t    h;
-    uint16_t   H;
-    int32_t    l;
-    uint32_t   L;
-    int64_t    q;
-    uint64_t   Q;
-    intptr_t   p;
-    uintptr_t  P;
-    size_t     z;
-    ptrdiff_t  Z;
+    int       i;
+    unsigned  I;
+    int16_t   h;
+    uint16_t  H;
+    int32_t   l;
+    uint32_t  L;
+    int64_t   q;
+    uint64_t  Q;
+    intptr_t  p;
+    uintptr_t P;
+    size_t    z;
+    ptrdiff_t Z;
 
     float  f;
     double d;
@@ -118,13 +118,13 @@ bool pn_read_arg(pn_input_t* in, char format, va_list* vl) {
 
         case 's': return read_bytes_strlen(in, va_arg(*vl, char*));
         case 'S': {
-            char* data_ptr = va_arg(*vl, char*);
+            char*  data_ptr  = va_arg(*vl, char*);
             size_t data_size = va_arg(*vl, size_t);
             return pn_raw_read(in, data_ptr, data_size);
         }
         case '$': {
             uint8_t* data_ptr  = va_arg(*vl, uint8_t*);
-            size_t data_size = va_arg(*vl, size_t);
+            size_t   data_size = va_arg(*vl, size_t);
             return pn_raw_read(in, data_ptr, data_size);
         }
         case 'c': return PN_READ_BYTE(char);
@@ -201,13 +201,13 @@ static bool pn_write_arg(pn_output_t* out, char format, va_list* vl) {
 
         case 's': return write_bytes_strlen(out, va_arg(*vl, const char*));
         case 'S': {
-            const char* data_ptr = va_arg(*vl, const char*);
+            const char*  data_ptr  = va_arg(*vl, const char*);
             const size_t data_size = va_arg(*vl, size_t);
             return pn_raw_write(out, data_ptr, data_size);
         }
         case '$': {
-            const uint8_t* data_ptr = va_arg(*vl, const uint8_t*);
-            const size_t data_size = va_arg(*vl, size_t);
+            const uint8_t* data_ptr  = va_arg(*vl, const uint8_t*);
+            const size_t   data_size = va_arg(*vl, size_t);
             return pn_raw_write(out, data_ptr, data_size);
         }
         case 'c': return write_byte(out, va_arg(*vl, int));
@@ -359,7 +359,7 @@ ptrdiff_t pn_getline(pn_input_t* in, char** data, size_t* size) {
             }
             memmove(*data, in->view->data, out_size);
             (*data)[out_size] = '\0';
-            in->view->data = (char*)in->view->data + out_size;
+            in->view->data    = (char*)in->view->data + out_size;
             in->view->size -= out_size;
             return out_size;
         }

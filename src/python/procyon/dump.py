@@ -42,6 +42,7 @@ class MinifiedStyle(object):
 
 
 class ProcyonEncoder(object):
+
     def __init__(self, style, converter):
         self.always_short = style.always_short
         self.colon, self.comma = style.separators
