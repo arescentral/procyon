@@ -1,0 +1,16 @@
+name: Lint
+
+on: pull_request
+
+jobs:
+  clang-format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: jidicula/clang-format-action@v4.6.1
+
+  yapf:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: AlexanderMelde/yapf-action@v1.0
