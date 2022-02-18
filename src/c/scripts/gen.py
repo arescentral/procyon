@@ -65,6 +65,7 @@ def output_c(lex, parser):
     yield "#include \"gen_table.h\""
 
     yield
+    yield "// clang-format off"
     yield "const uint8_t lex_classes[256] = {"
     for i in range(0, 256, 16):
         line = "   "
