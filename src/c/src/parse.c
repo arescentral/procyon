@@ -144,8 +144,9 @@ static void parse_short_string_value(pn_string_t** s, const char* begin, const c
             char utf[] = {0340 | ((u >> 12) & 0017), 0200 | ((u >> 6) & 0077), 0200 | (u & 0077)};
             pn_strncat(s, utf, 3);
         } else {
-            char utf[] = {0360 | ((u >> 18) & 0x007), 0200 | ((u >> 12) & 0077),
-                          0200 | ((u >> 6) & 0077), 0200 | (u & 0077)};
+            char utf[] = {
+                    0360 | ((u >> 18) & 0x007), 0200 | ((u >> 12) & 0077),
+                    0200 | ((u >> 6) & 0077), 0200 | (u & 0077)};
             pn_strncat(s, utf, 4);
         }
     }

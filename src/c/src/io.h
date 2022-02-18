@@ -26,11 +26,11 @@ struct pn_input_view {
     size_t      size;
 };
 
-int        pn_getc(pn_input_t* in);
-int        pn_putc(int ch, pn_output_t* out);
-bool       pn_raw_read(pn_input_t* in, void* data, size_t size);
-bool       pn_raw_write(pn_output_t* out, const void* data, size_t size);
-ptrdiff_t  pn_getline(pn_input_t* in, char** data, size_t* size);
+int       pn_getc(pn_input_t* in);
+int       pn_putc(int ch, pn_output_t* out);
+bool      pn_raw_read(pn_input_t* in, void* data, size_t size);
+bool      pn_raw_write(pn_output_t* out, const void* data, size_t size);
+ptrdiff_t pn_getline(pn_input_t* in, char** data, size_t* size);
 
 #ifdef __cplusplus
 }  // extern "C"

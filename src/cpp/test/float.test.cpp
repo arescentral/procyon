@@ -157,20 +157,21 @@ TEST_F(FloatTest, ParseSpecial) {
         char        sign;
         int         fp_type;
         const char* s;
-    } tests[] = {{'+', FP_ZERO, "0"},
-                 {'+', FP_ZERO, "0.0"},
-                 {'+', FP_ZERO, "0e0"},
-                 {'+', FP_ZERO, "0.0e0"},
-                 {'+', FP_ZERO, "0.00000000000000000000000"},
-                 {'-', FP_ZERO, "-0"},
-                 {'-', FP_ZERO, "-0.0"},
-                 {'-', FP_ZERO, "-0e0"},
-                 {'-', FP_ZERO, "-0.0e0"},
-                 {'-', FP_ZERO, "-0.00000000000000000000000"},
-                 {'+', FP_INFINITE, "inf"},
-                 {'+', FP_INFINITE, "+inf"},
-                 {'-', FP_INFINITE, "-inf"},
-                 {'+', FP_NAN, "nan"}};
+    } tests[] = {
+            {'+', FP_ZERO, "0"},
+            {'+', FP_ZERO, "0.0"},
+            {'+', FP_ZERO, "0e0"},
+            {'+', FP_ZERO, "0.0e0"},
+            {'+', FP_ZERO, "0.00000000000000000000000"},
+            {'-', FP_ZERO, "-0"},
+            {'-', FP_ZERO, "-0.0"},
+            {'-', FP_ZERO, "-0e0"},
+            {'-', FP_ZERO, "-0.0e0"},
+            {'-', FP_ZERO, "-0.00000000000000000000000"},
+            {'+', FP_INFINITE, "inf"},
+            {'+', FP_INFINITE, "+inf"},
+            {'-', FP_INFINITE, "-inf"},
+            {'+', FP_NAN, "nan"}};
     for (const auto& test : tests) {
         double          d   = 0.0;
         pn_error_code_t err = PN_OK;
