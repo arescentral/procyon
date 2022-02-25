@@ -273,26 +273,85 @@ TEST_F(ValueppTest, Nested) {
     }
 
     EXPECT_THAT(
-            pn::value(pn::array{pn::map{{"name", "Jane Doe"},
-                                        {"number", "555-1234"},
-                                        {"born", pn::array{1980, 10, 10}}},
-                                pn::map{{"name", "John Doe"},
-                                        {"number", "555-6789"},
-                                        {"born", pn::array{1981, 2, 3}}}}),
+            pn::value(pn::array{
+                    pn::map{{"name", "Jane Doe"},
+                            {"number", "555-1234"},
+                            {"born", pn::array{1980, 10, 10}}},
+                    pn::map{{"name", "John Doe"},
+                            {"number", "555-6789"},
+                            {"born", pn::array{1981, 2, 3}}}}),
             matches);
 
-    pn::value orig = pn::array{pn::map{{"name", "Jane Doe"},
-                                       {"number", "555-1234"},
-                                       {"born", pn::array{1980, 10, 10}}},
-                               pn::map{{"name", "John Doe"},
-                                       {"number", "555-6789"},
-                                       {"born", pn::array{1981, 2, 3}}}};
+    pn::value orig = pn::array{
+            pn::map{{"name", "Jane Doe"},
+                    {"number", "555-1234"},
+                    {"born", pn::array{1980, 10, 10}}},
+            pn::map{{"name", "John Doe"},
+                    {"number", "555-6789"},
+                    {"born", pn::array{1981, 2, 3}}}};
     pn::value copy = orig.copy();
     orig           = nullptr;
     EXPECT_THAT(copy, matches);
 }
 
-TEST_F(ValueppTest, String) {
+TEST_F(ValueppTest, StringUnicode) {
+    EXPECT_THAT(pn::value{"Рядок"}, IsString("Рядок"));
+    EXPECT_THAT(pn::value{u"Рядок"}, IsString("Рядок"));
+    EXPECT_THAT(pn::value{U"Рядок"}, IsString("Рядок"));
+
+    EXPECT_THAT(pn::value{"文字列"}, IsString("文字列"));
+    EXPECT_THAT(pn::value{u"文字列"}, IsString("文字列"));
+    EXPECT_THAT(pn::value{U"文字列"}, IsString("文字列"));
+
+    EXPECT_THAT(pn::value{"🧵"}, IsString("🧵"));
+    EXPECT_THAT(pn::value{u"🧵"}, IsString("🧵"));
+    EXPECT_THAT(pn::value{U"🧵"}, IsString("🧵"));
+
+    EXPECT_THAT(pn::value(std::string{"\0", 1}), IsString(std::string{"\0", 1}));
+    EXPECT_THAT(pn::value(std::u16string{u"\0", 1}), IsString(std::string{"\0", 1}));
+    EXPECT_THAT(pn::value(std::u32string{U"\0", 1}), IsString(std::string{"\0", 1}));
+
+    EXPECT_THAT(pn::value{"\177"}, IsString("\177"));
+    EXPECT_THAT(pn::value{u"\177"}, IsString("\177"));
+    EXPECT_THAT(pn::value{U"\177"}, IsString("\177"));
+
+    EXPECT_THAT(pn::value{"\200"}, IsString("\200"));  // non-validating
+    EXPECT_THAT(pn::value{"\377"}, IsString("\377"));  // non-validating
+
+    EXPECT_THAT(pn::value{"\u0080"}, IsString("\302\200"));
+    EXPECT_THAT(pn::value{u"\u0080"}, IsString("\302\200"));
+    EXPECT_THAT(pn::value{U"\u0080"}, IsString("\302\200"));
+
+    EXPECT_THAT(pn::value{"\u0100"}, IsString("\304\200"));
+    EXPECT_THAT(pn::value{u"\u0100"}, IsString("\304\200"));
+    EXPECT_THAT(pn::value{U"\u0100"}, IsString("\304\200"));
+
+    EXPECT_THAT(pn::value{"\u07ff"}, IsString("\337\277"));
+    EXPECT_THAT(pn::value{u"\u07ff"}, IsString("\337\277"));
+    EXPECT_THAT(pn::value{U"\u07ff"}, IsString("\337\277"));
+
+    EXPECT_THAT(pn::value{"\u0800"}, IsString("\340\240\200"));
+    EXPECT_THAT(pn::value{u"\u0800"}, IsString("\340\240\200"));
+    EXPECT_THAT(pn::value{U"\u0800"}, IsString("\340\240\200"));
+
+    EXPECT_THAT(pn::value{"\ufffd"}, IsString("\357\277\275"));
+    EXPECT_THAT(pn::value{u"\ufffd"}, IsString("\357\277\275"));
+    EXPECT_THAT(pn::value{U"\ufffd"}, IsString("\357\277\275"));
+
+    EXPECT_THAT(pn::value{"\uffff"}, IsString("\357\277\277"));
+    EXPECT_THAT(pn::value{u"\uffff"}, IsString("\357\277\277"));
+    EXPECT_THAT(pn::value{U"\uffff"}, IsString("\357\277\277"));
+
+    EXPECT_THAT(pn::value{"\U00010000"}, IsString("\360\220\200\200"));
+    EXPECT_THAT(pn::value{u"\U00010000"}, IsString("\360\220\200\200"));
+    EXPECT_THAT(pn::value{U"\U00010000"}, IsString("\360\220\200\200"));
+
+    EXPECT_THAT(pn::value{"\U0010ffff"}, IsString("\364\217\277\277"));
+    EXPECT_THAT(pn::value{u"\U0010ffff"}, IsString("\364\217\277\277"));
+    EXPECT_THAT(pn::value{U"\U0010ffff"}, IsString("\364\217\277\277"));
+}
+
+TEST_F(ValueppTest, StringOperations) {
     pn::string x{""};
     EXPECT_THAT(pn::value(x.copy()), IsString(""));
     x.append(nullptr, 0);

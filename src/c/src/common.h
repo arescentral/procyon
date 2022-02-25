@@ -24,6 +24,8 @@ extern "C" {
 #define PN_CMP(x, y) (((x) < (y)) ? -1 : ((x) > (y)) ? 1 : 0)
 
 pn_string_t* pn_string_new(const char* src, size_t len);
+pn_string_t* pn_string_new16(const uint16_t* src, size_t len);
+pn_string_t* pn_string_new32(const uint32_t* src, size_t len);
 pn_data_t*   pn_data_new(const uint8_t* src, size_t len);
 
 int pn_memncmp(const void* data1, size_t size1, const void* data2, size_t size2);

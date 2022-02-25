@@ -135,6 +135,7 @@ extern const struct pn_value pn_mapempty;    // {}
 // p: intptr_t, P: uintptr_t (or a pointer), z: size_t, Z: ptrdiff_t
 // f: float, d: double
 // s: const char* (NUL-terminated), S: const char* and size_t
+// u: const uint16_t* (UTF-16) and size_t, U: const uint32_t* (UTF-32) and size_t
 // c: char (becomes a 1-character string), C: uint32_t (becomes a 1-rune string)
 // $: const uint8_t* and size_t, #: size_t (zeroed out data)
 // a: const pn_array_t* (copy), A: pn_array_t* (move)

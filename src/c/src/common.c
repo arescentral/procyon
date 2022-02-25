@@ -16,6 +16,7 @@
 
 #include <string.h>
 
+#include "./unicode.h"
 #include "./vector.h"
 
 pn_string_t* pn_string_new(const char* src, size_t len) {
@@ -25,6 +26,37 @@ pn_string_t* pn_string_new(const char* src, size_t len) {
         memcpy(&s->values, src, len);
     }
     s->values[len] = '\0';
+    return s;
+}
+
+pn_string_t* pn_string_new16(const uint16_t* src, size_t len) {
+    pn_string_t* s;
+    VECTOR_INIT(&s, (len * 3) + 1);
+    char*    out   = &s->values[0];
+    uint16_t state = 0;
+    for (const uint16_t* end = src + len; src != end; ++src) {
+        state = pn_decode_utf16(state, *src, &out);
+    }
+    *(out++) = '\0';
+    s->count = out - &s->values[0];
+    return s;
+}
+
+static void pn_unichr_advance(pn_rune_t rune, char** data) {
+    size_t size;
+    pn_unichr(rune, *data, &size);
+    *data += size;
+}
+
+pn_string_t* pn_string_new32(const uint32_t* src, size_t len) {
+    pn_string_t* s;
+    VECTOR_INIT(&s, (len * 4) + 1);
+    char* out = &s->values[0];
+    for (const uint32_t* end = src + len; src != end; ++src) {
+        pn_unichr_advance(*src, &out);
+    }
+    *(out++) = '\0';
+    s->count = out - &s->values[0];
     return s;
 }
 

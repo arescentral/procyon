@@ -34,6 +34,9 @@ static auto release_c_obj(CppType&& x) ->
 value::value(data d) : _c_obj{pn_value_t{PN_DATA, {.d = release_c_obj(d)}}} {}
 value::value(const std::string& s) : value(string{s}) {}
 value::value(const char* s) : value(string{s}) {}
+value::value(const char16_t* s) : value(string{s}) {}
+value::value(const char32_t* s) : value(string{s}) {}
+value::value(const wchar_t* s) : value(string{s}) {}
 value::value(string s) : _c_obj{pn_value_t{PN_STRING, {.s = release_c_obj(s)}}} {}
 value::value(array a) : _c_obj{pn_value_t{PN_ARRAY, {.a = release_c_obj(a)}}} {}
 value::value(map m) : _c_obj{pn_value_t{PN_MAP, {.m = release_c_obj(m)}}} {}
@@ -68,9 +71,9 @@ struct helper<PN_STRING> {
     }
     template <typename value_api>
     static string_view as(const value_api& x) {
-        return x.is_string() ? string_view{x.c_obj()->s->values,
-                                           static_cast<int>(x.c_obj()->s->count) - 1}
-                             : string_view{};
+        return x.is_string()
+                       ? string_view{x.c_obj()->s->values, static_cast<int>(x.c_obj()->s->count) - 1}
+                       : string_view{};
     }
 };
 

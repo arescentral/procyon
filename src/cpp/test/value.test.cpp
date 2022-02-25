@@ -140,6 +140,9 @@ TEST_F(ValueTest, Set) {
     EXPECT_THAT(set('c', 'c'), IsString("c"));
     EXPECT_THAT(set('C', 'c'), IsString("c"));
     EXPECT_THAT(set('s', "string"), IsString("string"));
+    EXPECT_THAT(set('S', "string", 6), IsString("string"));
+    EXPECT_THAT(set('u', u"string", 6), IsString("string"));
+    EXPECT_THAT(set('U', U"string", 6), IsString("string"));
 
     {
         pn_value_t source;
@@ -192,19 +195,21 @@ TEST_F(ValueTest, Char) {
 }
 
 TEST_F(ValueTest, Setv) {
-    pn_value_t x;
-
     EXPECT_THAT(setv(""), IsList());
-    pn_clear(&x);
-
     EXPECT_THAT(setv("n?ifs", true, 2, M_PI, "four"), IsList(nullptr, true, 2, M_PI, "four"));
-    pn_clear(&x);
+    EXPECT_THAT(
+            setv("SuU", "👍", (size_t)4, u"🤞", (size_t)2, U"🤟", (size_t)1),
+            IsList("👍", "🤞", "🤟"));
 }
 
 TEST_F(ValueTest, Setkv) {
+    EXPECT_THAT(setkv(""), IsMap());
     EXPECT_THAT(
             setkv("sns?sisfss", "0", "1", true, "2", 2, "3", M_PI, "4", "four"),
             IsMap("0", nullptr, "1", true, "2", 2, "3", M_PI, "4", "four"));
+    EXPECT_THAT(
+            setkv("SiuiUi", "👍", (size_t)4, 1, u"🤞", (size_t)2, 2, U"🤟", (size_t)1, 3),
+            IsMap("👍", 1, "🤞", 2, "🤟", 3));
 }
 
 TEST_F(ValueTest, Nested) {
@@ -250,7 +255,64 @@ TEST_F(ValueTest, Nested) {
     EXPECT_THAT(copy, matches);
 }
 
-TEST_F(ValueTest, String) {
+TEST_F(ValueTest, StringUnicode) {
+    EXPECT_THAT(set('S', "Рядок", 10), IsString("Рядок"));
+    EXPECT_THAT(set('u', u"Рядок", 5), IsString("Рядок"));
+    EXPECT_THAT(set('U', U"Рядок", 5), IsString("Рядок"));
+
+    EXPECT_THAT(set('S', "文字列", 9), IsString("文字列"));
+    EXPECT_THAT(set('u', u"文字列", 3), IsString("文字列"));
+    EXPECT_THAT(set('U', U"文字列", 3), IsString("文字列"));
+
+    EXPECT_THAT(set('S', "🧵", 4), IsString("🧵"));
+    EXPECT_THAT(set('u', u"🧵", 2), IsString("🧵"));
+    EXPECT_THAT(set('U', U"🧵", 1), IsString("🧵"));
+
+    EXPECT_THAT(set('S', "\0", 1), IsString(std::string{"\0", 1}));
+    EXPECT_THAT(set('u', u"\0", 1), IsString(std::string{"\0", 1}));
+    EXPECT_THAT(set('U', U"\0", 1), IsString(std::string{"\0", 1}));
+
+    EXPECT_THAT(set('S', "\177", 1), IsString("\177"));
+    EXPECT_THAT(set('u', u"\177", 1), IsString("\177"));
+    EXPECT_THAT(set('U', U"\177", 1), IsString("\177"));
+
+    EXPECT_THAT(set('S', "\200", 1), IsString("\200"));  // non-validating
+    EXPECT_THAT(set('S', "\377", 1), IsString("\377"));  // non-validating
+
+    EXPECT_THAT(set('S', "\u0080", 2), IsString("\302\200"));
+    EXPECT_THAT(set('u', u"\u0080", 1), IsString("\302\200"));
+    EXPECT_THAT(set('U', U"\u0080", 1), IsString("\302\200"));
+
+    EXPECT_THAT(set('S', "\u0100", 2), IsString("\304\200"));
+    EXPECT_THAT(set('u', u"\u0100", 1), IsString("\304\200"));
+    EXPECT_THAT(set('U', U"\u0100", 1), IsString("\304\200"));
+
+    EXPECT_THAT(set('S', "\u07ff", 2), IsString("\337\277"));
+    EXPECT_THAT(set('u', u"\u07ff", 1), IsString("\337\277"));
+    EXPECT_THAT(set('U', U"\u07ff", 1), IsString("\337\277"));
+
+    EXPECT_THAT(set('S', "\u0800", 3), IsString("\340\240\200"));
+    EXPECT_THAT(set('u', u"\u0800", 1), IsString("\340\240\200"));
+    EXPECT_THAT(set('U', U"\u0800", 1), IsString("\340\240\200"));
+
+    EXPECT_THAT(set('S', "\ufffd", 3), IsString("\357\277\275"));
+    EXPECT_THAT(set('u', u"\ufffd", 1), IsString("\357\277\275"));
+    EXPECT_THAT(set('U', U"\ufffd", 1), IsString("\357\277\275"));
+
+    EXPECT_THAT(set('S', "\uffff", 3), IsString("\357\277\277"));
+    EXPECT_THAT(set('u', u"\uffff", 1), IsString("\357\277\277"));
+    EXPECT_THAT(set('U', U"\uffff", 1), IsString("\357\277\277"));
+
+    EXPECT_THAT(set('S', "\U00010000", 4), IsString("\360\220\200\200"));
+    EXPECT_THAT(set('u', u"\U00010000", 2), IsString("\360\220\200\200"));
+    EXPECT_THAT(set('U', U"\U00010000", 1), IsString("\360\220\200\200"));
+
+    EXPECT_THAT(set('S', "\U0010ffff", 4), IsString("\364\217\277\277"));
+    EXPECT_THAT(set('u', u"\U0010ffff", 2), IsString("\364\217\277\277"));
+    EXPECT_THAT(set('U', U"\U0010ffff", 1), IsString("\364\217\277\277"));
+}
+
+TEST_F(ValueTest, StringOperations) {
     pn::value x = set('s', "");
     EXPECT_THAT(x, IsString(""));
     pn_strcat(&x.c_obj()->s, "");
