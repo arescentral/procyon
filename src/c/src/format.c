@@ -20,7 +20,7 @@
 #include <string.h>
 
 #include "./io.h"
-#include "./utf8.h"
+#include "./unicode.h"
 
 struct strsize {
     const char* data;
@@ -109,7 +109,7 @@ static void set_arg(char format, struct format_arg* dst, va_list* vl) {
 }
 
 static bool print_u(pn_output_t* out, uint64_t u) {
-    char    buf[32];
+    char      buf[32];
     ptrdiff_t len;
     return ((len = sprintf(buf, "%" PRIu64, u)) > 0) && pn_write(out, "S", buf, (size_t)len);
 }

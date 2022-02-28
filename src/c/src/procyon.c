@@ -23,7 +23,7 @@
 #include <string.h>
 
 #include "./common.h"
-#include "./utf8.h"
+#include "./unicode.h"
 #include "./vector.h"
 
 const pn_value_t pn_null    = {.type = PN_NULL};

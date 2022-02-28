@@ -25,7 +25,7 @@
 
 #include "./common.h"
 #include "./io.h"
-#include "./utf8.h"
+#include "./unicode.h"
 #include "./vector.h"
 
 static bool dump_null(pn_output_t* out);

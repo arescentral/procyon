@@ -17,17 +17,17 @@
 #include <gmock/gmock.h>
 #include <limits>
 
-#include "../src/utf8.h"
+#include "../src/unicode.h"
 #include "./matchers.hpp"
 
 using StringTest = ::testing::Test;
 using ::testing::ElementsAre;
 using ::testing::Eq;
-using ::testing::Ne;
-using ::testing::Lt;
-using ::testing::Le;
-using ::testing::Gt;
 using ::testing::Ge;
+using ::testing::Gt;
+using ::testing::Le;
+using ::testing::Lt;
+using ::testing::Ne;
 
 namespace pntest {
 

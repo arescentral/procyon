@@ -20,7 +20,7 @@
 #include <pn/output>
 #include <pn/string>
 
-#include "../src/utf8.h"
+#include "../src/unicode.h"
 #include "./matchers.hpp"
 
 using Utf8Test = ::testing::Test;

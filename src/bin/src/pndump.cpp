@@ -25,7 +25,7 @@
 
 #include "../../c/src/lex.h"
 #include "../../c/src/parse.h"
-#include "../../c/src/utf8.h"
+#include "../../c/src/unicode.h"
 #include "./lex.hpp"
 #include "./parse.hpp"
 

@@ -32,8 +32,8 @@ static_library("procyon") {
     "src/parse.c",
     "src/parse.h",
     "src/procyon.c",
-    "src/utf8.c",
-    "src/utf8.h",
+    "src/unicode.c",
+    "src/unicode.h",
     "src/vector.h",
   ]
 
