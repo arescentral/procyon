@@ -17,14 +17,9 @@
 #include <limits>
 
 using ValueTest = ::testing::Test;
-using ::testing::Eq;
-using ::testing::MakeMatcher;
 using ::testing::MakePolymorphicMatcher;
-using ::testing::MatchResultListener;
 using ::testing::Matcher;
-using ::testing::MatcherInterface;
-using ::testing::Ne;
-using ::testing::Not;
+using ::testing::MatchResultListener;
 using ::testing::PolymorphicMatcher;
 using ::testing::PrintToString;
 
@@ -38,6 +33,7 @@ std::ostream& operator<<(std::ostream& ostr, pn_type_t x) {
         case PN_STRING: return ostr << "a string";
         case PN_ARRAY: return ostr << "a array";
         case PN_MAP: return ostr << "a map";
+        default: return ostr << "INVALID";
     }
 }
 
