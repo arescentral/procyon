@@ -36,7 +36,7 @@ TEST_F(FloatTest, ParseZero) {
     EXPECT_THAT(pn::strtod("0.0", &d, &err), Eq(true)) << err;
     EXPECT_THAT(err, Eq(PN_OK));
     EXPECT_THAT(std::fpclassify(d), Eq(FP_ZERO)) << d;
-    EXPECT_THAT(std::signbit(d), Eq(0)) << d;
+    EXPECT_THAT(std::signbit(d), Eq(false)) << d;
 }
 
 TEST_F(FloatTest, ParseMin) {
@@ -71,7 +71,7 @@ TEST_F(FloatTest, ParseTooSmall) {
     pn_error_code_t err = PN_OK;
     EXPECT_THAT(pn::strtod("5e-999", &d, &err), Eq(false)) << d;
     EXPECT_THAT(std::fpclassify(d), Eq(FP_ZERO));
-    EXPECT_THAT(std::signbit(d), Eq(0));
+    EXPECT_THAT(std::signbit(d), Eq(false));
 }
 
 TEST_F(FloatTest, ParseGoogol) {
@@ -157,27 +157,28 @@ TEST_F(FloatTest, ParseSpecial) {
         char        sign;
         int         fp_type;
         const char* s;
-    } tests[] = {{'+', FP_ZERO, "0"},
-                 {'+', FP_ZERO, "0.0"},
-                 {'+', FP_ZERO, "0e0"},
-                 {'+', FP_ZERO, "0.0e0"},
-                 {'+', FP_ZERO, "0.00000000000000000000000"},
-                 {'-', FP_ZERO, "-0"},
-                 {'-', FP_ZERO, "-0.0"},
-                 {'-', FP_ZERO, "-0e0"},
-                 {'-', FP_ZERO, "-0.0e0"},
-                 {'-', FP_ZERO, "-0.00000000000000000000000"},
-                 {'+', FP_INFINITE, "inf"},
-                 {'+', FP_INFINITE, "+inf"},
-                 {'-', FP_INFINITE, "-inf"},
-                 {'+', FP_NAN, "nan"}};
+    } tests[] = {
+            {'+', FP_ZERO, "0"},
+            {'+', FP_ZERO, "0.0"},
+            {'+', FP_ZERO, "0e0"},
+            {'+', FP_ZERO, "0.0e0"},
+            {'+', FP_ZERO, "0.00000000000000000000000"},
+            {'-', FP_ZERO, "-0"},
+            {'-', FP_ZERO, "-0.0"},
+            {'-', FP_ZERO, "-0e0"},
+            {'-', FP_ZERO, "-0.0e0"},
+            {'-', FP_ZERO, "-0.00000000000000000000000"},
+            {'+', FP_INFINITE, "inf"},
+            {'+', FP_INFINITE, "+inf"},
+            {'-', FP_INFINITE, "-inf"},
+            {'+', FP_NAN, "nan"}};
     for (const auto& test : tests) {
         double          d   = 0.0;
         pn_error_code_t err = PN_OK;
         EXPECT_THAT(pn::strtod(test.s, &d, &err), Eq(true)) << test.s << ": " << err;
         EXPECT_THAT(err, Eq(PN_OK));
         EXPECT_THAT(std::fpclassify(d), Eq(test.fp_type)) << test.s << " -> " << d;
-        EXPECT_THAT(std::signbit(d) == 0 ? '+' : '-', Eq(test.sign)) << test.s << " -> " << d;
+        EXPECT_THAT(std::signbit(d) ? '-' : '+', Eq(test.sign)) << test.s << " -> " << d;
     }
 }
 
