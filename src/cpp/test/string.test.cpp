@@ -147,4 +147,70 @@ TEST_F(StringTest, ReverseIterator) {
     EXPECT_THAT(it++, Eq(second));
 }
 
+TEST_F(StringTest, Unicode) {
+    EXPECT_THAT(pn::string{"Рядок"}, IsString("Рядок"));
+    EXPECT_THAT(pn::string{u"Рядок"}, IsString("Рядок"));
+    EXPECT_THAT(pn::string{U"Рядок"}, IsString("Рядок"));
+    EXPECT_THAT(pn::string{"Рядок"}.cpp_str(), Eq("Рядок"));
+    EXPECT_THAT(pn::string{"Рядок"}.cpp_u16str(), Eq(u"Рядок"));
+    EXPECT_THAT(pn::string{"Рядок"}.cpp_u32str(), Eq(U"Рядок"));
+
+    EXPECT_THAT(pn::string{"文字列"}, IsString("文字列"));
+    EXPECT_THAT(pn::string{u"文字列"}, IsString("文字列"));
+    EXPECT_THAT(pn::string{U"文字列"}, IsString("文字列"));
+    EXPECT_THAT(pn::string{"文字列"}.cpp_str(), Eq("文字列"));
+    EXPECT_THAT(pn::string{"文字列"}.cpp_u16str(), Eq(u"文字列"));
+    EXPECT_THAT(pn::string{"文字列"}.cpp_u32str(), Eq(U"文字列"));
+
+    EXPECT_THAT(pn::string{"🧵"}, IsString("🧵"));
+    EXPECT_THAT(pn::string{u"🧵"}, IsString("🧵"));
+    EXPECT_THAT(pn::string{U"🧵"}, IsString("🧵"));
+    EXPECT_THAT(pn::string{"🧵"}.cpp_str(), Eq("🧵"));
+    EXPECT_THAT(pn::string{"🧵"}.cpp_u16str(), Eq(u"🧵"));
+    EXPECT_THAT(pn::string{"🧵"}.cpp_u32str(), Eq(U"🧵"));
+
+    EXPECT_THAT((pn::string{"\0", 1}), IsString(std::string("\0", 1)));
+    EXPECT_THAT((pn::string{u"\0", 1}), IsString(std::string("\0", 1)));
+    EXPECT_THAT((pn::string{U"\0", 1}), IsString(std::string("\0", 1)));
+
+    EXPECT_THAT(pn::string{"\177"}, IsString("\177"));
+    EXPECT_THAT(pn::string{u"\177"}, IsString("\177"));
+    EXPECT_THAT(pn::string{U"\177"}, IsString("\177"));
+
+    EXPECT_THAT(pn::string{"\200"}, IsString("\200"));  // non-validating
+    EXPECT_THAT(pn::string{"\377"}, IsString("\377"));  // non-validating
+
+    EXPECT_THAT(pn::string{"\u0080"}, IsString("\302\200"));
+    EXPECT_THAT(pn::string{u"\u0080"}, IsString("\302\200"));
+    EXPECT_THAT(pn::string{U"\u0080"}, IsString("\302\200"));
+
+    EXPECT_THAT(pn::string{"\u0100"}, IsString("\304\200"));
+    EXPECT_THAT(pn::string{u"\u0100"}, IsString("\304\200"));
+    EXPECT_THAT(pn::string{U"\u0100"}, IsString("\304\200"));
+
+    EXPECT_THAT(pn::string{"\u07ff"}, IsString("\337\277"));
+    EXPECT_THAT(pn::string{u"\u07ff"}, IsString("\337\277"));
+    EXPECT_THAT(pn::string{U"\u07ff"}, IsString("\337\277"));
+
+    EXPECT_THAT(pn::string{"\u0800"}, IsString("\340\240\200"));
+    EXPECT_THAT(pn::string{u"\u0800"}, IsString("\340\240\200"));
+    EXPECT_THAT(pn::string{U"\u0800"}, IsString("\340\240\200"));
+
+    EXPECT_THAT(pn::string{"\ufffd"}, IsString("\357\277\275"));
+    EXPECT_THAT(pn::string{u"\ufffd"}, IsString("\357\277\275"));
+    EXPECT_THAT(pn::string{U"\ufffd"}, IsString("\357\277\275"));
+
+    EXPECT_THAT(pn::string{"\uffff"}, IsString("\357\277\277"));
+    EXPECT_THAT(pn::string{u"\uffff"}, IsString("\357\277\277"));
+    EXPECT_THAT(pn::string{U"\uffff"}, IsString("\357\277\277"));
+
+    EXPECT_THAT(pn::string{"\U00010000"}, IsString("\360\220\200\200"));
+    EXPECT_THAT(pn::string{u"\U00010000"}, IsString("\360\220\200\200"));
+    EXPECT_THAT(pn::string{U"\U00010000"}, IsString("\360\220\200\200"));
+
+    EXPECT_THAT(pn::string{"\U0010ffff"}, IsString("\364\217\277\277"));
+    EXPECT_THAT(pn::string{u"\U0010ffff"}, IsString("\364\217\277\277"));
+    EXPECT_THAT(pn::string{U"\U0010ffff"}, IsString("\364\217\277\277"));
+}
+
 }  // namespace pntest

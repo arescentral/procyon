@@ -16,11 +16,13 @@
 
 #include <string.h>
 
-#define UFFFD_REPLACEMENT_CHARACTER 0xfffd;
+#define UFFFD_REPLACEMENT_CHARACTER 0xfffd
 
 static bool is_ascii(uint8_t byte) { return byte < 0200; }
 static bool is_continuation(uint8_t byte) { return (0200 <= byte) && (byte < 0300); }
 static bool is_header(uint8_t byte) { return (0302 <= byte) && (byte < 0365); }
+static bool is_high_surrogate(uint16_t ch) { return 0xd800 <= ch && ch <= 0xdbff; }
+static bool is_low_surrogate(uint16_t ch) { return 0xdc00 <= ch && ch <= 0xdfff; }
 
 static size_t continuation_count_for_header(uint8_t byte, pn_rune_t* rune) {
     if (byte >= 0360) {
@@ -145,6 +147,37 @@ void pn_unichr(pn_rune_t rune, char* data, size_t* size) {
         data[1] = 0x80 | ((rune >> 12) & 0x3f);
         data[2] = 0x80 | ((rune >> 6) & 0x3f);
         data[3] = 0x80 | ((rune >> 0) & 0x3f);
+    }
+}
+
+uint16_t pn_decode_utf16(uint16_t state, uint16_t this_ch, char** data) {
+    size_t size;
+    if (is_low_surrogate(this_ch)) {
+        if (is_high_surrogate(state)) {
+            pn_rune_t r = (((state & 0x3ff) << 10) | (this_ch & 0x3ff)) + 0x10000;
+            *data -= 3;  // Rewind behind U+FFFD REPLACEMENT CHARACTER
+            pn_unichr(r, *data, &size);
+        } else {
+            pn_unichr(UFFFD_REPLACEMENT_CHARACTER, *data, &size);
+        }
+    } else if (is_high_surrogate(this_ch)) {
+        pn_unichr(UFFFD_REPLACEMENT_CHARACTER, *data, &size);
+    } else {
+        pn_unichr(this_ch, *data, &size);
+    }
+    *data += size;
+    return this_ch;
+}
+
+void pn_encode_utf16(pn_rune_t r, uint16_t* data, size_t* size) {
+    if (r >= 0x10000) {
+        r -= 0x10000;
+        *size   = 2;
+        data[0] = 0xd800 | ((r >> 10) & 0x3ff);
+        data[1] = 0xdc00 | ((r >> 0) & 0x3ff);
+    } else {
+        *size   = 1;
+        data[0] = r;
     }
 }
 
