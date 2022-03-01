@@ -152,21 +152,34 @@ void pn_unichr(pn_rune_t rune, char* data, size_t* size) {
 
 uint16_t pn_decode_utf16(uint16_t state, uint16_t this_ch, char** data) {
     size_t size;
-    if (is_low_surrogate(this_ch)) {
-        if (is_high_surrogate(state)) {
+    if (is_high_surrogate(state)) {
+        if (is_low_surrogate(this_ch)) {
             pn_rune_t r = (((state & 0x3ff) << 10) | (this_ch & 0x3ff)) + 0x10000;
-            *data -= 3;  // Rewind behind U+FFFD REPLACEMENT CHARACTER
             pn_unichr(r, *data, &size);
-        } else {
-            pn_unichr(UFFFD_REPLACEMENT_CHARACTER, *data, &size);
+            *data += size;
+            return 0;
         }
-    } else if (is_high_surrogate(this_ch)) {
+        pn_unichr(UFFFD_REPLACEMENT_CHARACTER, *data, &size);
+        *data += size;
+    }
+
+    if (is_high_surrogate(this_ch)) {
+        return this_ch;
+    } else if (is_low_surrogate(this_ch)) {
         pn_unichr(UFFFD_REPLACEMENT_CHARACTER, *data, &size);
     } else {
         pn_unichr(this_ch, *data, &size);
     }
     *data += size;
-    return this_ch;
+    return 0;
+}
+
+void pn_decode_utf16_done(uint16_t state, char** data) {
+    size_t size;
+    if (is_high_surrogate(state)) {
+        pn_unichr(UFFFD_REPLACEMENT_CHARACTER, *data, &size);
+        *data += size;
+    }
 }
 
 void pn_encode_utf16(pn_rune_t r, uint16_t* data, size_t* size) {

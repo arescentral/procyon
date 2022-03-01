@@ -26,6 +26,7 @@ void pn_ascchr(uint8_t rune, char* data, size_t* size);
 void pn_unichr(pn_rune_t rune, char* data, size_t* size);
 
 uint16_t pn_decode_utf16(uint16_t state, uint16_t this_ch, char** data);
+void     pn_decode_utf16_done(uint16_t state, char** data);
 void     pn_encode_utf16(pn_rune_t r, uint16_t* data, size_t* size);
 
 #ifdef __cplusplus

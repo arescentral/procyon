@@ -37,6 +37,7 @@ pn_string_t* pn_string_new16(const uint16_t* src, size_t len) {
     for (const uint16_t* end = src + len; src != end; ++src) {
         state = pn_decode_utf16(state, *src, &out);
     }
+    pn_decode_utf16_done(state, &out);
     *(out++) = '\0';
     s->count = out - &s->values[0];
     return s;

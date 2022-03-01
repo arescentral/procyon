@@ -39,6 +39,7 @@ struct utf<char_type, 16> {
         for (const char_type* end = data + size; data != end; ++data) {
             state = pn_decode_utf16(state, *data, &out);
         }
+        pn_decode_utf16_done(state, &out);
         *(out++)    = '\0';
         (*s)->count = out - &(*s)->values[0];
     }
