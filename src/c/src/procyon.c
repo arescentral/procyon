@@ -246,6 +246,7 @@ int pn_cmp(const pn_value_t* x, const pn_value_t* y) {
         return (x->type < y->type) ? -1 : 1;
     }
     switch (x->type) {
+        default:
         case PN_NULL: return 0;
         case PN_BOOL: return PN_CMP(x->b, y->b);
         case PN_INT: return PN_CMP(x->i, y->i);

@@ -85,6 +85,7 @@ static bool dump_short_value(const pn_value_t* x, pn_output_t* out) {
         case PN_STRING: return dump_short_string(x->s, out);
         case PN_ARRAY: return dump_short_array(x->a, out);
         case PN_MAP: return dump_short_map(x->m, out);
+        default: return false;
     }
 }
 
@@ -109,7 +110,7 @@ static bool dump_bool(pn_bool_t b, pn_output_t* out) {
 }
 
 static bool dump_int(pn_int_t i, pn_output_t* out) {
-    char    buf[32];
+    char      buf[32];
     ptrdiff_t len;
     return ((len = sprintf(buf, "%" PRId64, i)) > 0) && pn_raw_write(out, buf, len);
 }
