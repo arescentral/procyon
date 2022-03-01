@@ -17,14 +17,9 @@
 #include <limits>
 
 using ValueTest = ::testing::Test;
-using ::testing::Eq;
-using ::testing::MakeMatcher;
 using ::testing::MakePolymorphicMatcher;
-using ::testing::MatchResultListener;
 using ::testing::Matcher;
-using ::testing::MatcherInterface;
-using ::testing::Ne;
-using ::testing::Not;
+using ::testing::MatchResultListener;
 using ::testing::PolymorphicMatcher;
 using ::testing::PrintToString;
 
