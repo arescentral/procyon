@@ -38,13 +38,13 @@ jobs:
       - run: ./ninja -C out/win/opt
       # - run: out/win/opt/procyon-cpp-test
 
-  Wine:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-        with: { submodules: true }
-      - run: .github/workflows/ci-deps.sh ubuntu-latest
-      - run: sudo apt-get install mingw-w64 xvfb wine
-      - run: ./configure -o win
-      - run: make
-      - run: make test-wine
+#  Wine:
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v2
+#        with: { submodules: true }
+#      - run: .github/workflows/ci-deps.sh ubuntu-latest
+#      - run: sudo apt-get install mingw-w64 xvfb wine
+#      - run: ./configure -o win
+#      - run: make
+#      - run: make test-wine

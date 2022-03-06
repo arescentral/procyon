@@ -48,9 +48,6 @@ config("procyon_public") {
     libs += [ "ws2_32.lib" ]
   } else {
     libs += [ "m" ]
-    if (target_os == "win") {
-      libs += [ "ws2_32" ]
-    }
   }
 }
 
