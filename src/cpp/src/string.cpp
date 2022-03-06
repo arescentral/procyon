@@ -18,14 +18,85 @@
 #include <pn/output>
 
 #include "../../c/src/common.h"
+#include "../../c/src/unicode.h"
 #include "../../c/src/vector.h"
 #include "./common.hpp"
 
 namespace pn {
+namespace {
+
+template <typename char_type, int char_size = sizeof(char_type) * 8>
+struct utf;
+
+template <typename char_type>
+struct utf<char_type, 16> {
+    static constexpr int max_expansion = 3;
+
+    static void init(pn_string** s, const char_type* data, int size) {
+        VECTOR_INIT(s, (size * max_expansion) + 1);
+        char*    out   = &(*s)->values[0];
+        uint16_t state = 0;
+        for (const char_type* end = data + size; data != end; ++data) {
+            state = pn_decode_utf16(state, *data, &out);
+        }
+        pn_decode_utf16_done(state, &out);
+        *(out++)    = '\0';
+        (*s)->count = out - &(*s)->values[0];
+    }
+
+    static std::basic_string<char_type> str(const char* data, int size) {
+        std::basic_string<char_type> out;
+        for (int i = 0; i < size; i = pn_rune_next(data, size, i)) {
+            uint16_t rune_data[2];
+            size_t   rune_size;
+            pn_encode_utf16(pn_rune(data, size, i), rune_data, &rune_size);
+            out.append(rune_data, rune_data + rune_size);
+        }
+        return out;
+    }
+};
+
+static void pn_unichr_advance(pn_rune_t rune, char** data) {
+    size_t size;
+    pn_unichr(rune, *data, &size);
+    *data += size;
+}
+
+template <typename char_type>
+struct utf<char_type, 32> {
+    static constexpr int max_expansion = 4;
+
+    static void init(pn_string** s, const char_type* data, int size) {
+        VECTOR_INIT(s, (size * max_expansion) + 1);
+        char* out = &(*s)->values[0];
+        for (const char_type* end = data + size; data != end; ++data) {
+            pn_unichr_advance(*data, &out);
+        }
+        *(out++)    = '\0';
+        (*s)->count = out - &(*s)->values[0];
+    }
+
+    static std::basic_string<char_type> str(const char* data, int size) {
+        std::basic_string<char_type> out;
+        for (int i = 0; i < size; i = pn_rune_next(data, size, i)) {
+            out.push_back(pn_rune(data, size, i));
+        }
+        return out;
+    }
+};
+
+}  // namespace
 
 string::string(const char* data, size_type size) : _c_obj{pn_string_new(data, size)} {}
+string::string(const char16_t* data, size_type size) { utf<char16_t>::init(&_c_obj, data, size); }
+string::string(const char32_t* data, size_type size) { utf<char32_t>::init(&_c_obj, data, size); }
+string::string(const wchar_t* data, size_type size) { utf<wchar_t>::init(&_c_obj, data, size); }
 
 string::~string() { free(_c_obj); }
+
+std::u16string string::cpp_u16str() const { return utf<char16_t>::str(data(), size()); }
+std::u32string string::cpp_u32str() const { return utf<char32_t>::str(data(), size()); }
+std::wstring   string::cpp_wstr() const { return utf<wchar_t>::str(data(), size()); }
 
 static_assert(sizeof(string) == sizeof(pn_string_t*), "string size wrong");
 static_assert(sizeof(string_ref) == sizeof(pn_string_t**), "string_ref size wrong");

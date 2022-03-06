@@ -18,10 +18,10 @@
 
 #include <pn/procyon.h>
 #include <string.h>
+#include <array>
 #include <pn/fwd>
 #include <pn/value>
 #include <string>
-#include <array>
 
 namespace pn {
 
@@ -207,10 +207,18 @@ class string {
 
     static constexpr size_type npos = -1;
 
-    string() : string(nullptr, 0) {}
-    string(const std::string& s) : string(s.data(), s.size()) {}
-    string(const char* s) : string(s, strlen(s)) {}
+    string() : string(static_cast<const char*>(nullptr), 0) {}
     string(const char* data, size_type size);
+    string(const char16_t* data, size_type size);
+    string(const char32_t* data, size_type size);
+    string(const wchar_t* data, size_type size);
+
+    template <typename char_type, typename traits = std::char_traits<char_type>>
+    string(const char_type* data) : string(data, traits::length(data)) {}
+    template <typename char_type, typename traits, typename allocator>
+    string(const std::basic_string<char_type, traits, allocator>& s)
+            : string(s.data(), s.size()) {}
+
     constexpr explicit string(c_obj_type s) noexcept : _c_obj{s} {}
 
     string(string&& s) noexcept : _c_obj{} { swap(s); }
@@ -252,6 +260,9 @@ class string {
 
     const char*             c_str() const { return data(); }
     std::string             cpp_str() const { return std::string(data(), size()); }
+    std::u16string          cpp_u16str() const;
+    std::u32string          cpp_u32str() const;
+    std::wstring            cpp_wstr() const;
     c_obj_type*             c_obj() { return &_c_obj; }
     c_obj_const_type const* c_obj() const { return &_c_obj; }
 

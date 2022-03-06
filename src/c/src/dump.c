@@ -25,7 +25,7 @@
 
 #include "./common.h"
 #include "./io.h"
-#include "./utf8.h"
+#include "./unicode.h"
 #include "./vector.h"
 
 static bool dump_null(pn_output_t* out);
@@ -593,6 +593,8 @@ bool pn_dump(pn_output_t* out, int flags, int format, ...) {
 
         case 's': s = va_arg(vl, const char*), size = strlen(s); break;
         case 'S': s = va_arg(vl, const char*), size = va_arg(vl, size_t); break;
+        case 'u': s = "TODO", size = 4; break;  // TODO(sfiera): implement
+        case 'U': s = "TODO", size = 4; break;  // TODO(sfiera): implement
         case '$': d = va_arg(vl, const uint8_t*), size = va_arg(vl, size_t); break;
         case 'c': pn_ascchr(va_arg(vl, int), ch, &size), s = ch; break;
         case 'C': pn_unichr(va_arg(vl, uint32_t), ch, &size), s = ch; break;

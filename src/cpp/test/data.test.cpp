@@ -18,16 +18,16 @@
 #include <limits>
 #include <pn/data>
 
-#include "../src/utf8.h"
+#include "../src/unicode.h"
 #include "./matchers.hpp"
 
 using DataTest = ::testing::Test;
 using ::testing::Eq;
-using ::testing::Ne;
-using ::testing::Lt;
-using ::testing::Le;
-using ::testing::Gt;
 using ::testing::Ge;
+using ::testing::Gt;
+using ::testing::Le;
+using ::testing::Lt;
+using ::testing::Ne;
 
 namespace pntest {
 

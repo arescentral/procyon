@@ -39,6 +39,9 @@ class value {
     value(string s);
     value(const std::string& s);
     value(const char* s);
+    value(const char16_t* s);
+    value(const char32_t* s);
+    value(const wchar_t* s);
     value(array a);
     value(map m);
 

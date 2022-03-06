@@ -20,11 +20,15 @@
 #include <string.h>
 
 #include "./io.h"
-#include "./utf8.h"
+#include "./unicode.h"
 
 struct strsize {
-    const char* data;
-    size_t      size;
+    union {
+        const char*     data8;
+        const uint16_t* data16;
+        const uint32_t* data32;
+    };
+    size_t size;
 };
 
 struct datasize {
@@ -48,11 +52,13 @@ struct format_arg {
         ptrdiff_t         Z;
         double            d;  // f
         const char*       s;
+        const uint16_t*   u;
+        const uint32_t*   U;
         const pn_array_t* a;
         const pn_map_t*   m;
         const pn_value_t* x;
-        struct strsize    S;
-        struct datasize   D;  // $
+        struct strsize    ss;
+        struct datasize   ds;  // $
     };
 };
 
@@ -91,13 +97,23 @@ static void set_arg(char format, struct format_arg* dst, va_list* vl) {
         case 's': dst->s = va_arg(*vl, const char*); break;
 
         case 'S':
-            dst->S.data = va_arg(*vl, const char*);
-            dst->S.size = va_arg(*vl, size_t);
+            dst->ss.data8 = va_arg(*vl, const char*);
+            dst->ss.size  = va_arg(*vl, size_t);
+            break;
+
+        case 'u':
+            dst->ss.data16 = va_arg(*vl, const uint16_t*);
+            dst->ss.size   = va_arg(*vl, size_t);
+            break;
+
+        case 'U':
+            dst->ss.data32 = va_arg(*vl, const uint32_t*);
+            dst->ss.size   = va_arg(*vl, size_t);
             break;
 
         case '$':
-            dst->D.data = va_arg(*vl, const uint8_t*);
-            dst->D.size = va_arg(*vl, size_t);
+            dst->ds.data = va_arg(*vl, const uint8_t*);
+            dst->ds.size = va_arg(*vl, size_t);
             break;
 
         case 'c': dst->i = va_arg(*vl, int); break;
@@ -109,9 +125,39 @@ static void set_arg(char format, struct format_arg* dst, va_list* vl) {
 }
 
 static bool print_u(pn_output_t* out, uint64_t u) {
-    char    buf[32];
+    char      buf[32];
     ptrdiff_t len;
     return ((len = sprintf(buf, "%" PRIu64, u)) > 0) && pn_write(out, "S", buf, (size_t)len);
+}
+
+static bool print_s16(pn_output_t* out, const uint16_t* data, size_t len) {
+    char     rune_storage[6];
+    uint16_t state = 0;
+    for (const uint16_t* end = data + len; data != end; ++data) {
+        char* rune = rune_storage;
+        state      = pn_decode_utf16(state, *data, &rune);
+        if (!pn_raw_write(out, rune_storage, rune - rune_storage)) {
+            return false;
+        }
+    }
+    char* rune = rune_storage;
+    pn_decode_utf16_done(state, &rune);
+    if (!pn_raw_write(out, rune_storage, rune - rune_storage)) {
+        return false;
+    }
+    return true;
+}
+
+static bool print_s32(pn_output_t* out, const uint32_t* data, size_t len) {
+    char   rune[4];
+    size_t size;
+    for (const uint32_t* end = data + len; data != end; ++data) {
+        pn_unichr(*data, rune, &size);
+        if (!pn_raw_write(out, rune, size)) {
+            return false;
+        }
+    }
+    return true;
 }
 
 static bool print_arg(pn_output_t* out, const struct format_arg* arg) {
@@ -133,7 +179,7 @@ static bool print_arg(pn_output_t* out, const struct format_arg* arg) {
 
         case 'f':
         case 'd': return pn_dump(out, PN_DUMP_SHORT, 'd', arg->d);
-        case '$': return pn_dump(out, PN_DUMP_SHORT, '$', arg->D.data, arg->D.size);
+        case '$': return pn_dump(out, PN_DUMP_SHORT, '$', arg->ds.data, arg->ds.size);
         case 'a': return pn_dump(out, PN_DUMP_SHORT, 'a', arg->a);
         case 'm': return pn_dump(out, PN_DUMP_SHORT, 'm', arg->m);
 
@@ -146,7 +192,9 @@ static bool print_arg(pn_output_t* out, const struct format_arg* arg) {
             return pn_dump(out, PN_DUMP_SHORT, 'x', arg->x);
 
         case 's': return pn_raw_write(out, arg->s, strlen(arg->s));
-        case 'S': return pn_raw_write(out, arg->S.data, arg->S.size);
+        case 'S': return pn_raw_write(out, arg->ss.data8, arg->ss.size);
+        case 'u': return print_s16(out, arg->ss.data16, arg->ss.size);
+        case 'U': return print_s32(out, arg->ss.data32, arg->ss.size);
 
         case 'c': {
             char   data[4];

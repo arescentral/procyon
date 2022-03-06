@@ -23,7 +23,7 @@
 #include <string.h>
 
 #include "./common.h"
-#include "./utf8.h"
+#include "./unicode.h"
 #include "./vector.h"
 
 const pn_value_t pn_null    = {.type = PN_NULL};
@@ -131,6 +131,22 @@ bool pn_vset(pn_value_t* dst, char format, va_list* vl) {
             const size_t size = va_arg(*vl, size_t);
             dst->type         = PN_STRING;
             dst->s            = pn_string_new(data, size);
+            return true;
+        }
+
+        case 'u': {
+            const uint16_t* data = va_arg(*vl, const uint16_t*);
+            const size_t    size = va_arg(*vl, size_t);
+            dst->type            = PN_STRING;
+            dst->s               = pn_string_new16(data, size);
+            return true;
+        }
+
+        case 'U': {
+            const uint32_t* data = va_arg(*vl, const uint32_t*);
+            const size_t    size = va_arg(*vl, size_t);
+            dst->type            = PN_STRING;
+            dst->s               = pn_string_new32(data, size);
             return true;
         }
 
@@ -525,6 +541,30 @@ static bool map_vfind(
                 return true;
             } else if (key) {
                 *key = pn_string_new(arg_data, arg_size);
+            }
+        } break;
+
+        case 'u': {
+            const uint16_t* arg_data = va_arg(*vl, const uint16_t*);
+            size_t          arg_size = va_arg(*vl, size_t);
+            pn_value_t      arg      = {.s = pn_string_new16(arg_data, arg_size)};
+            if (map_find(*m, arg.s->values, arg.s->count - 1, index)) {
+                pn_clear(&arg);
+                return true;
+            } else if (key) {
+                *key = arg.s;
+            }
+        } break;
+
+        case 'U': {
+            const uint32_t* arg_data = va_arg(*vl, const uint32_t*);
+            size_t          arg_size = va_arg(*vl, size_t);
+            pn_value_t      arg      = {.s = pn_string_new32(arg_data, arg_size)};
+            if (map_find(*m, arg.s->values, arg.s->count - 1, index)) {
+                pn_clear(&arg);
+                return true;
+            } else if (key) {
+                *key = arg.s;
             }
         } break;
 

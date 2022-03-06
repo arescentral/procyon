@@ -20,7 +20,6 @@
 #include "./matchers.hpp"
 
 using FormatTest = ::testing::Test;
-using ::testing::Eq;
 
 namespace pntest {
 
@@ -191,6 +190,32 @@ TEST_F(FormatTest, MapSubscript) {
 
     EXPECT_THAT(pn::format("{[title]} {[family]}", pn::map{}), IsString("null null"));
     EXPECT_THAT(pn::format("{[title]} {[family]}", nullptr), IsString("null null"));
+}
+
+template <typename... args_type>
+static pn::string c_format(
+        const char* output_format, const char* input_format, args_type... args) {
+    pn::string s;
+    pn::output out = s.output();
+    if (!pn_format(out.c_obj(), output_format, input_format, args...)) {
+        throw std::runtime_error("format error");
+    }
+    return s;
+}
+
+TEST_F(FormatTest, CFormat) {
+    EXPECT_THAT(c_format("no formatting", ""), IsString("no formatting"));
+    EXPECT_THAT(
+            c_format("{} {} {} {}", "n?id", (bool)true, (int)2, (double)3.14),
+            IsString("null true 2 3.14"));
+    EXPECT_THAT(c_format("{} {}", "cC", 'A', 0x30d3), IsString("A ビ"));
+    EXPECT_THAT(c_format("{} {}", "Ss", "first", (size_t)5, "second"), IsString("first second"));
+    EXPECT_THAT(
+            c_format("{} {}", "uU", u"第一", (size_t)2, U"第二", (size_t)2),
+            IsString("第一 第二"));
+
+    // UTF-16 surrogate pairs
+    EXPECT_THAT(c_format("{}", "u", u"🤬", (size_t)2), IsString("🤬"));
 }
 
 }  // namespace pntest

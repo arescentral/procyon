@@ -23,7 +23,7 @@
 #include <pn/value>
 #include <vector>
 
-#include "../../c/src/utf8.h"
+#include "../../c/src/unicode.h"
 #include "../../c/src/vector.h"
 #include "./lex.hpp"
 
@@ -170,16 +170,19 @@ static void usage(pn::output_view out, int status) {
 
 static pn::value repr(const token& t) {
     pn::map m{
-            {"type", t.type}, {"column", t.column}, {"content", t.content.copy()},
+            {"type", t.type},
+            {"column", t.column},
+            {"content", t.content.copy()},
     };
     return std::move(m);
 }
 
 static pn::value repr(const line& l) {
-    pn::map m{{"indent", l.indent},
-              {"lineno", l.lineno},
-              {"width", l.width},
-              {"extra_nl_before", l.extra_nl_before}};
+    pn::map m{
+            {"indent", l.indent},
+            {"lineno", l.lineno},
+            {"width", l.width},
+            {"extra_nl_before", l.extra_nl_before}};
     if (!l.tokens.empty()) {
         pn::array_ref a = m["tokens"].to_array();
         for (const token& token : l.tokens) {

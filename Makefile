@@ -32,7 +32,7 @@ test-vim:
 	misc/vim/test/syntax.vroom
 
 .PHONY: test-cpp
-test-cpp:
+test-cpp: all
 	out/cur/procyon-cpp-test
 
 .PHONY: test-wine
