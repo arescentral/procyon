@@ -324,6 +324,9 @@ class string_ref {
 
     const char* c_str() const { return data(); }
     std::string cpp_str() const { return std::string(data(), size()); }
+    std::u16string          cpp_u16str() const;
+    std::u32string          cpp_u32str() const;
+    std::wstring            cpp_wstr() const;
     c_obj_type* c_obj() const { return _c_obj; }
 
   private:
@@ -369,6 +372,9 @@ class string_view {
     ::pn::input input() const;
 
     std::string cpp_str() const { return std::string(data(), size()); }
+    std::u16string          cpp_u16str() const;
+    std::u32string          cpp_u32str() const;
+    std::wstring            cpp_wstr() const;
 
   private:
     const char* _data;

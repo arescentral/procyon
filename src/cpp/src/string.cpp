@@ -98,6 +98,14 @@ std::u16string string::cpp_u16str() const { return utf<char16_t>::str(data(), si
 std::u32string string::cpp_u32str() const { return utf<char32_t>::str(data(), size()); }
 std::wstring   string::cpp_wstr() const { return utf<wchar_t>::str(data(), size()); }
 
+std::u16string string_ref::cpp_u16str() const { return utf<char16_t>::str(data(), size()); }
+std::u32string string_ref::cpp_u32str() const { return utf<char32_t>::str(data(), size()); }
+std::wstring   string_ref::cpp_wstr() const { return utf<wchar_t>::str(data(), size()); }
+
+std::u16string string_view::cpp_u16str() const { return utf<char16_t>::str(data(), size()); }
+std::u32string string_view::cpp_u32str() const { return utf<char32_t>::str(data(), size()); }
+std::wstring   string_view::cpp_wstr() const { return utf<wchar_t>::str(data(), size()); }
+
 static_assert(sizeof(string) == sizeof(pn_string_t*), "string size wrong");
 static_assert(sizeof(string_ref) == sizeof(pn_string_t**), "string_ref size wrong");
 
