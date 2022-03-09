@@ -21,13 +21,69 @@
 #include <string.h>
 
 #include "io.h"
+#include "unicode.h"
+
+#ifdef _WIN32
+#define PN_FOPEN_MODE(s) L ## s
+
+static FILE* pn_fopen_utf8_path(const char* path, const wchar_t* wmode) {
+    if (!path) {
+        return NULL;
+    }
+
+    size_t num_utf16_code_points = 0;
+    const size_t num_utf8_bytes        = strlen(path);
+
+    uint16_t encoded_temp[2];
+    size_t scan_offset = 0;
+    while (scan_offset < num_utf8_bytes) {
+        pn_rune_t rune = pn_rune(path, num_utf8_bytes, scan_offset);
+        scan_offset = pn_rune_next(path, num_utf8_bytes, scan_offset);
+
+        size_t encoded_size = 0;
+        pn_encode_utf16(rune, encoded_temp, &encoded_size);
+
+        num_utf16_code_points += encoded_size;
+    }
+
+    uint16_t* utf16_path = malloc(sizeof(uint16_t) * (num_utf16_code_points + 1));
+
+    scan_offset = 0;
+    num_utf16_code_points = 0;
+    while (scan_offset < num_utf8_bytes) {
+        pn_rune_t rune = pn_rune(path, num_utf8_bytes, scan_offset);
+        scan_offset    = pn_rune_next(path, num_utf8_bytes, scan_offset);
+
+        size_t encoded_size = 0;
+        pn_encode_utf16(rune, utf16_path + num_utf16_code_points, &encoded_size);
+
+        num_utf16_code_points += encoded_size;
+    }
+
+    utf16_path[num_utf16_code_points] = 0;
+    
+    FILE* f = _wfopen((const wchar_t*)utf16_path, wmode);
+    free(utf16_path);
+
+    return f;
+}
+
+#else
+	
+#define PN_FOPEN_MODE(s) s
+
+static FILE* pn_fopen_utf8_path(const char* path, const char* mode) {
+    return fopen(path, mode);
+}
+
+#endif
 
 pn_input_t pn_path_input(const char* path, pn_path_flags_t flags) {
     switch (flags) {
         case PN_TEXT:
-        case PN_APPEND_TEXT: return pn_file_input(fopen(path, "r"));
+        case PN_APPEND_TEXT: return pn_file_input(pn_fopen_utf8_path(path, PN_FOPEN_MODE("r")));
         case PN_BINARY:
-        case PN_APPEND_BINARY: return pn_file_input(fopen(path, "rb"));
+        case PN_APPEND_BINARY: return pn_file_input(pn_fopen_utf8_path(path, PN_FOPEN_MODE("rb")));
         default: return pn_file_input(NULL);
     }
 }
@@ -63,10 +119,10 @@ pn_input_t pn_view_input(const void* data, size_t size) {
 
 pn_output_t pn_path_output(const char* path, pn_path_flags_t flags) {
     switch (flags) {
-        case PN_TEXT: return pn_file_output(fopen(path, "w"));
-        case PN_APPEND_TEXT: return pn_file_output(fopen(path, "a"));
-        case PN_BINARY: return pn_file_output(fopen(path, "wb"));
-        case PN_APPEND_BINARY: return pn_file_output(fopen(path, "ab"));
+        case PN_TEXT: return pn_file_output(pn_fopen_utf8_path(path, PN_FOPEN_MODE("w")));
+        case PN_APPEND_TEXT: return pn_file_output(pn_fopen_utf8_path(path, PN_FOPEN_MODE("a")));
+        case PN_BINARY: return pn_file_output(pn_fopen_utf8_path(path, PN_FOPEN_MODE("wb")));
+        case PN_APPEND_BINARY: return pn_file_output(pn_fopen_utf8_path(path, PN_FOPEN_MODE("ab")));
         default: return pn_file_output(NULL);
     }
 }
