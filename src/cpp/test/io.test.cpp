@@ -62,9 +62,6 @@ class FileIoTest : public testing::Test {
     FileIoTest() : _file{nullptr} {}
 
     pn::input input(pn::string_view s) {
-        if (_file) {
-            fclose(_file);
-        }
         _file = tmpfile();
         fwrite(s.data(), 1, s.size(), _file);
         rewind(_file);
@@ -73,9 +70,6 @@ class FileIoTest : public testing::Test {
     pn::input input(const char* data, int size) { return input(pn::string{data, size}); }
 
     pn::output output() {
-        if (_file) {
-            fclose(_file);
-        }
         _file = tmpfile();
         return pn::output{_file};
     };
@@ -389,6 +383,72 @@ TYPED_TEST(IoTest, WriteString) {
     EXPECT_THAT(out.write(pn::string_view{"\005\006"}), Eq(true));
 
     EXPECT_THAT(this->output_result(), Eq("\001\002\003\004\005\006"));
+}
+
+TYPED_TEST(IoTest, ReadAllDataC) {
+    pn::data  d;
+    uint8_t   b;
+    pn::input in = this->input("\1\2\3");
+    EXPECT_THAT(pn_read(in.c_obj(), "B*", &b, d.c_obj()), Eq(true));
+    EXPECT_THAT(pn_input_eof(in.c_obj()), Eq(true));
+    EXPECT_THAT(b, Eq(1));
+    EXPECT_THAT(d.as_string(), Eq("\2\3"));
+}
+
+TYPED_TEST(IoTest, ReadAllDataCpp) {
+    pn::data  result;
+    pn::input in = this->input("");
+    in.read(all(result));
+    EXPECT_THAT(in.operator bool(), Eq(false));
+    EXPECT_THAT(in.eof(), Eq(true));
+    EXPECT_THAT(in.error(), Eq(false));
+    EXPECT_THAT(result.as_string(), Eq(""));
+
+    pn::string s;
+    for (int i = 0; i < 2000; ++i) {
+        s += "\1\2\3\4\5\6\7";
+    }
+    result.resize(0);
+    in = this->input(s);
+    in.read(all(result));
+    EXPECT_THAT(in.operator bool(), Eq(false));
+    EXPECT_THAT(in.eof(), Eq(true));
+    EXPECT_THAT(in.error(), Eq(false));
+    perror("ReadAllDataCpp");
+    EXPECT_THAT(result.as_string(), Eq(pn::string_view{s}));
+}
+
+TYPED_TEST(IoTest, ReadAllStringC) {
+    pn::string s;
+    uint8_t    b;
+    pn::input  in = this->input("\1\2\3");
+    EXPECT_THAT(pn_read(in.c_obj(), "B+", &b, s.c_obj()), Eq(true));
+    EXPECT_THAT(pn_input_eof(in.c_obj()), Eq(true));
+    EXPECT_THAT(b, Eq(1));
+    EXPECT_THAT(s, Eq("\2\3"));
+}
+
+TYPED_TEST(IoTest, ReadAllStringCpp) {
+    pn::string result;
+    pn::input  in = this->input("");
+    in.read(all(result));
+    EXPECT_THAT(in.operator bool(), Eq(false));
+    EXPECT_THAT(in.eof(), Eq(true));
+    EXPECT_THAT(in.error(), Eq(false));
+    perror("ReadAllStringCpp");
+    EXPECT_THAT(result, Eq(""));
+
+    pn::string s;
+    for (int i = 0; i < 2000; ++i) {
+        s += "\1\2\3\4\5\6\7";
+    }
+    result = "";
+    in     = this->input(s);
+    in.read(all(result));
+    EXPECT_THAT(in.operator bool(), Eq(false));
+    EXPECT_THAT(in.eof(), Eq(true));
+    EXPECT_THAT(in.error(), Eq(false));
+    EXPECT_THAT(result, Eq(pn::string_view{s}));
 }
 
 }  // namespace pntest
