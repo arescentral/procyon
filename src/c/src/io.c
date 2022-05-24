@@ -29,6 +29,9 @@
 
 #include "./io.h"
 
+static bool pn_read_all_data(pn_input_t* in, pn_data_t** data);
+static bool pn_read_all_str(pn_input_t* in, pn_string_t** str);
+
 union pn_primitive {
     int       i;
     unsigned  I;
@@ -141,6 +144,9 @@ bool pn_read_arg(pn_input_t* in, char format, va_list* vl) {
         case 'C': return PN_READ_PRIMITIVE(L, uint32_t);
 
         case '#': return skip_bytes(in, va_arg(*vl, size_t));
+
+        case '*': return pn_read_all_data(in, va_arg(*vl, pn_data_t**));
+        case '+': return pn_read_all_str(in, va_arg(*vl, pn_string_t**));
     }
     return false;
 }
@@ -307,6 +313,73 @@ bool pn_raw_read(pn_input_t* in, void* data, size_t size) {
             in->view->size -= size;
             in->view->data = (char*)in->view->data + size;
             return true;
+        default: return false;
+    }
+}
+
+static bool pn_file_read_data(FILE* in, pn_data_t** data, size_t size) {
+    size_t start = (*data)->count;
+    pn_dataresize(data, (*data)->count + size);
+    size_t count   = fread((*data)->values + start, 1, size, in);
+    (*data)->count = start + count;
+    return count == size;
+}
+
+static bool pn_file_read_all_data(FILE* in, pn_data_t** data) {
+    while (true) {
+        if (!pn_file_read_data(in, data, 4096)) {
+            return feof(in);
+        }
+    }
+}
+
+static bool pn_view_read_all_data(struct pn_input_view* in, pn_data_t** data) {
+    pn_datacat(data, in->data, in->size);
+    in->data = NULL;
+    in->size = 0;
+    return true;
+}
+
+static bool pn_read_all_data(pn_input_t* in, pn_data_t** data) {
+    switch (in->type) {
+        case PN_INPUT_TYPE_INVALID: return false;
+        case PN_INPUT_TYPE_C_FILE: return pn_file_read_all_data(in->c_file, data);
+        case PN_INPUT_TYPE_STDIN: return pn_file_read_all_data(stdin, data);
+        case PN_INPUT_TYPE_VIEW: return pn_view_read_all_data(in->view, data);
+        default: return false;
+    }
+}
+
+static bool pn_file_read_str(FILE* in, pn_string_t** str, size_t size) {
+    size_t start = (*str)->count - 1;
+    pn_strresize(str, (*str)->count + size - 1);
+    size_t count  = fread((*str)->values + start, 1, size, in);
+    (*str)->count = start + count + 1;
+    return count == size;
+}
+
+static bool pn_file_read_all_str(FILE* in, pn_string_t** str) {
+    while (true) {
+        if (!pn_file_read_str(in, str, 4096)) {
+            (*str)->values[(*str)->count - 1] = '\0';
+            return feof(in);
+        }
+    }
+}
+
+static bool pn_view_read_all_str(struct pn_input_view* in, pn_string_t** str) {
+    pn_strncat(str, in->data, in->size);
+    in->data = NULL;
+    in->size = 0;
+    return true;
+}
+
+static bool pn_read_all_str(pn_input_t* in, pn_string_t** str) {
+    switch (in->type) {
+        case PN_INPUT_TYPE_INVALID: return false;
+        case PN_INPUT_TYPE_C_FILE: return pn_file_read_all_str(in->c_file, str);
+        case PN_INPUT_TYPE_STDIN: return pn_file_read_all_str(stdin, str);
+        case PN_INPUT_TYPE_VIEW: return pn_view_read_all_str(in->view, str);
         default: return false;
     }
 }

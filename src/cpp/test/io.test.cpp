@@ -26,14 +26,76 @@ using ::testing::Eq;
 
 namespace pntest {
 
-TEST_F(IoTest, ReadC) {
-    pn::string_view data{
+template <typename T>
+class IoTest : public T {
+  public:
+    template <typename Arg>
+    pn::string write(const Arg arg) {
+        pn::string data;
+        pn::output out = this->output();
+        EXPECT_THAT(out.write(arg), Eq(true));
+        return this->output_result();
+    }
+};
+
+class ViewIoTest : public testing::Test {
+  public:
+    pn::input input(pn::string_view s) {
+        _data = s.as_data().copy();
+        return _data.input();
+    }
+    pn::input input(const char* data, int size) { return input(pn::string{data, size}); }
+
+    pn::output output() {
+        _data.resize(0);
+        return _data.output();
+    };
+
+    pn::string output_result() { return _data.as_string().copy(); }
+
+  private:
+    pn::data _data;
+};
+
+class FileIoTest : public testing::Test {
+  public:
+    FileIoTest() : _file{nullptr} {}
+
+    pn::input input(pn::string_view s) {
+        _file = tmpfile();
+        fwrite(s.data(), 1, s.size(), _file);
+        rewind(_file);
+        return pn::input{_file};
+    }
+    pn::input input(const char* data, int size) { return input(pn::string{data, size}); }
+
+    pn::output output() {
+        _file = tmpfile();
+        return pn::output{_file};
+    };
+
+    pn::string output_result() {
+        pn::data d;
+        d.resize(ftell(_file));
+        rewind(_file);
+        fread(d.data(), 1, d.size(), _file);
+        return d.as_string().copy();
+    }
+
+  private:
+    FILE* _file;
+};
+
+using IoTests = ::testing::Types<ViewIoTest, FileIoTest>;
+TYPED_TEST_SUITE(IoTest, IoTests);
+
+TYPED_TEST(IoTest, ReadC) {
+    pn::input in = this->input(
             "\001\002\003\004\005\006\007\010"
             "\011\012\013\014\015\016\017\020"
             "\021\022\023\024\025\026\027\030"
             "\031\032\033\034\035\036\037\040"
-            "\041\042\043\044"};
-    pn::input in = data.input();
+            "\041\042\043\044");
     EXPECT_THAT(pn_read(in.c_obj(), ""), Eq(true));
 
     int8_t  i8 = 0;
@@ -75,14 +137,13 @@ TEST_F(IoTest, ReadC) {
     EXPECT_THAT(pn_input_eof(in.c_obj()), Eq(true));
 }
 
-TEST_F(IoTest, ReadCpp) {
-    pn::string_view data{
+TYPED_TEST(IoTest, ReadCpp) {
+    pn::input in = this->input(
             "\001\002\003\004\005\006\007\010"
             "\011\012\013\014\015\016\017\020"
             "\021\022\023\024\025\026\027\030"
             "\031\032\033\034\035\036\037\040"
-            "\041\042\043\044"};
-    pn::input in = data.input();
+            "\041\042\043\044");
     EXPECT_THAT(in.read(), Eq(true));
 
     int8_t  i8 = 0;
@@ -124,54 +185,37 @@ TEST_F(IoTest, ReadCpp) {
     EXPECT_THAT(in.eof(), Eq(true));
 }
 
-TEST_F(IoTest, ReadExtrema) {
+TYPED_TEST(IoTest, ReadExtrema) {
     char charmin, charmax;
-    EXPECT_THAT(
-            (pn::string_view{"\200\177", 2}).input().read(&charmin, &charmax).operator bool(),
-            Eq(true));
+    EXPECT_THAT(this->input("\200\177", 2).read(&charmin, &charmax).operator bool(), Eq(true));
     EXPECT_THAT(charmin, Eq(-128));
     EXPECT_THAT(charmax, Eq(127));
 
     int8_t i8min, i8max;
-    EXPECT_THAT(
-            (pn::string_view{"\200\177", 2}).input().read(&i8min, &i8max).operator bool(),
-            Eq(true));
+    EXPECT_THAT(this->input("\200\177", 2).read(&i8min, &i8max).operator bool(), Eq(true));
     EXPECT_THAT(i8min, Eq(-128));
     EXPECT_THAT(i8max, Eq(127));
 
     uint8_t u8min, u8max;
-    EXPECT_THAT(
-            (pn::string_view{"\000\377", 2}).input().read(&u8min, &u8max).operator bool(),
-            Eq(true));
+    EXPECT_THAT(this->input("\000\377", 2).read(&u8min, &u8max).operator bool(), Eq(true));
     EXPECT_THAT(u8min, Eq(0u));
     EXPECT_THAT(u8max, Eq(255u));
 
     int16_t i16min, i16max;
     EXPECT_THAT(
-            (pn::string_view{"\200\000\177\377", 4})
-                    .input()
-                    .read(&i16min, &i16max)
-                    .
-                    operator bool(),
-            Eq(true));
+            this->input("\200\000\177\377", 4).read(&i16min, &i16max).operator bool(), Eq(true));
     EXPECT_THAT(i16min, Eq(-32768));
     EXPECT_THAT(i16max, Eq(32767));
 
     uint16_t u16min, u16max;
     EXPECT_THAT(
-            (pn::string_view{"\000\000\377\377", 4})
-                    .input()
-                    .read(&u16min, &u16max)
-                    .
-                    operator bool(),
-            Eq(true));
+            this->input("\000\000\377\377", 4).read(&u16min, &u16max).operator bool(), Eq(true));
     EXPECT_THAT(u16min, Eq(0u));
     EXPECT_THAT(u16max, Eq(65535u));
 
     int32_t i32min, i32max;
     EXPECT_THAT(
-            (pn::string_view{"\200\000\000\000\177\377\377\377", 8})
-                    .input()
+            this->input("\200\000\000\000\177\377\377\377", 8)
                     .read(&i32min, &i32max)
                     .
                     operator bool(),
@@ -181,8 +225,7 @@ TEST_F(IoTest, ReadExtrema) {
 
     uint32_t u32min, u32max;
     EXPECT_THAT(
-            (pn::string_view{"\000\000\000\000\377\377\377\377", 8})
-                    .input()
+            this->input("\000\000\000\000\377\377\377\377", 8)
                     .read(&u32min, &u32max)
                     .
                     operator bool(),
@@ -192,9 +235,7 @@ TEST_F(IoTest, ReadExtrema) {
 
     int64_t i64min, i64max;
     EXPECT_THAT(
-            (pn::string_view{"\200\000\000\000\000\000\000\000\177\377\377\377\377\377\377\377",
-                             16})
-                    .input()
+            this->input("\200\000\000\000\000\000\000\000\177\377\377\377\377\377\377\377", 16)
                     .read(&i64min, &i64max)
                     .
                     operator bool(),
@@ -204,9 +245,7 @@ TEST_F(IoTest, ReadExtrema) {
 
     uint64_t u64min, u64max;
     EXPECT_THAT(
-            (pn::string_view{"\000\000\000\000\000\000\000\000\377\377\377\377\377\377\377\377",
-                             16})
-                    .input()
+            this->input("\000\000\000\000\000\000\000\000\377\377\377\377\377\377\377\377", 16)
                     .read(&u64min, &u64max)
                     .
                     operator bool(),
@@ -215,118 +254,106 @@ TEST_F(IoTest, ReadExtrema) {
     EXPECT_THAT(u64max, Eq(std::numeric_limits<uint64_t>::max()));
 }
 
-TEST_F(IoTest, WriteC) {
-    pn::string data;
-    pn::output out = data.output();
+TYPED_TEST(IoTest, WriteC) {
+    pn::output out = this->output();
     EXPECT_THAT(pn_write(out.c_obj(), ""), Eq(true));
 
     EXPECT_THAT(pn_write(out.c_obj(), "n"), Eq(true));
-    EXPECT_THAT(data, Eq(""));
+    EXPECT_THAT(this->output_result(), Eq(""));
     EXPECT_THAT(pn_write(out.c_obj(), "nnn"), Eq(true));
-    EXPECT_THAT(data, Eq(""));
+    EXPECT_THAT(this->output_result(), Eq(""));
 
     EXPECT_THAT(
             pn_write(
                     out.c_obj(), "cbB", static_cast<char>(1), static_cast<int8_t>(2),
                     static_cast<uint8_t>(3)),
             Eq(true));
-    EXPECT_THAT(data, Eq("\1\2\3"));
+    EXPECT_THAT(this->output_result(), Eq("\1\2\3"));
 
     EXPECT_THAT(
             pn_write(
                     out.c_obj(), "hH", static_cast<int16_t>(0x0405),
                     static_cast<uint16_t>(0x0607)),
             Eq(true));
-    EXPECT_THAT(data, Eq("\1\2\3\4\5\6\7"));
+    EXPECT_THAT(this->output_result(), Eq("\1\2\3\4\5\6\7"));
 
     EXPECT_THAT(
             pn_write(
                     out.c_obj(), "lL", static_cast<int32_t>(0x01010101),
                     static_cast<uint32_t>(0x02020202)),
             Eq(true));
-    EXPECT_THAT(data, Eq("\1\2\3\4\5\6\7\1\1\1\1\2\2\2\2"));
+    EXPECT_THAT(this->output_result(), Eq("\1\2\3\4\5\6\7\1\1\1\1\2\2\2\2"));
 
     EXPECT_THAT(pn_write(out.c_obj(), "#", static_cast<size_t>(2)), Eq(true));
-    EXPECT_THAT(data, Eq(std::string("\1\2\3\4\5\6\7\1\1\1\1\2\2\2\2\0\0", 17)));
+    EXPECT_THAT(this->output_result(), Eq(std::string("\1\2\3\4\5\6\7\1\1\1\1\2\2\2\2\0\0", 17)));
 }
 
-TEST_F(IoTest, WriteCpp) {
-    pn::string data;
-    pn::output out = data.output();
+TYPED_TEST(IoTest, WriteCpp) {
+    pn::output out = this->output();
     EXPECT_THAT(pn_write(out.c_obj(), ""), Eq(true));
 
     EXPECT_THAT(out.write(nullptr), Eq(true));
-    EXPECT_THAT(data, Eq(""));
+    EXPECT_THAT(this->output_result(), Eq(""));
     EXPECT_THAT(out.write(nullptr, nullptr, nullptr), Eq(true));
-    EXPECT_THAT(data, Eq(""));
+    EXPECT_THAT(this->output_result(), Eq(""));
 
     EXPECT_THAT(
             out.write(static_cast<char>(1), static_cast<int8_t>(2), static_cast<uint8_t>(3)),
             Eq(true));
-    EXPECT_THAT(data, Eq("\1\2\3"));
+    EXPECT_THAT(this->output_result(), Eq("\1\2\3"));
 
     EXPECT_THAT(out.write(static_cast<int16_t>(0x0405), static_cast<uint16_t>(0x0607)), Eq(true));
-    EXPECT_THAT(data, Eq("\1\2\3\4\5\6\7"));
+    EXPECT_THAT(this->output_result(), Eq("\1\2\3\4\5\6\7"));
 
     EXPECT_THAT(
             out.write(static_cast<int32_t>(0x01010101), static_cast<uint32_t>(0x02020202)),
             Eq(true));
-    EXPECT_THAT(data, Eq("\1\2\3\4\5\6\7\1\1\1\1\2\2\2\2"));
+    EXPECT_THAT(this->output_result(), Eq("\1\2\3\4\5\6\7\1\1\1\1\2\2\2\2"));
 
     EXPECT_THAT(out.write(pn::pad(2)), Eq(true));
-    EXPECT_THAT(data, Eq(std::string("\1\2\3\4\5\6\7\1\1\1\1\2\2\2\2\0\0", 17)));
+    EXPECT_THAT(this->output_result(), Eq(std::string("\1\2\3\4\5\6\7\1\1\1\1\2\2\2\2\0\0", 17)));
 }
 
-template <typename... arguments>
-pn::string write(const arguments&... args) {
-    pn::string data;
-    pn::output out = data.output();
-    EXPECT_THAT(out.write(args...), Eq(true));
-    return data;
-}
-
-TEST_F(IoTest, WriteLimits) {
+TYPED_TEST(IoTest, WriteLimits) {
+    EXPECT_THAT(this->write(static_cast<int8_t>(-128)), Eq(std::string("\200")));
+    EXPECT_THAT(this->write(static_cast<uint8_t>(255)), Eq(std::string("\377")));
+    EXPECT_THAT(this->write(static_cast<int16_t>(-32768)), Eq(std::string("\200\000", 2)));
+    EXPECT_THAT(this->write(static_cast<uint16_t>(65535)), Eq(std::string("\377\377", 2)));
+    EXPECT_THAT(this->write(static_cast<int32_t>(-2147483648)), Eq(std::string("\200\0\0\0", 4)));
+    EXPECT_THAT(this->write(static_cast<uint32_t>(4294967295)), Eq(std::string(4, 0377)));
     EXPECT_THAT(
-            write(static_cast<int8_t>(-128), static_cast<uint8_t>(255)),
-            Eq(std::string("\200\377")));
-    EXPECT_THAT(
-            write(static_cast<int16_t>(-32768), static_cast<uint16_t>(65535)),
-            Eq(std::string("\200\000\377\377", 4)));
-    EXPECT_THAT(write(static_cast<int32_t>(-2147483648)), Eq(std::string("\200\0\0\0", 4)));
-    EXPECT_THAT(write(static_cast<uint32_t>(4294967295)), Eq(std::string(4, 0377)));
-    EXPECT_THAT(write(INT64_C(-9223372036854775808u)), Eq(std::string("\200\0\0\0\0\0\0\0", 8)));
-    EXPECT_THAT(write(UINT64_C(18446744073709551615)), Eq(std::string(8, 0377)));
+            this->write(INT64_C(-9223372036854775808u)), Eq(std::string("\200\0\0\0\0\0\0\0", 8)));
+    EXPECT_THAT(this->write(UINT64_C(18446744073709551615)), Eq(std::string(8, 0377)));
 
     using f = std::numeric_limits<float>;
-    EXPECT_THAT(write(-f::infinity()), Eq(std::string("\377\200\0\0", 4)));
-    EXPECT_THAT(write(-f::max()), Eq(std::string("\377\177\377\377", 4)));
-    EXPECT_THAT(write(-f::min()), Eq(std::string("\200\200\0\0", 4)));
-    EXPECT_THAT(write(-f::denorm_min()), Eq(std::string("\200\0\0\1", 4)));
-    EXPECT_THAT(write(-0.0f), Eq(std::string("\200\0\0\0", 4)));
-    EXPECT_THAT(write(0.0f), Eq(std::string("\0\0\0\0", 4)));
-    EXPECT_THAT(write(f::denorm_min()), Eq(std::string("\0\0\0\1", 4)));
-    EXPECT_THAT(write(f::min()), Eq(std::string("\0\200\0\0", 4)));
-    EXPECT_THAT(write(f::max()), Eq(std::string("\177\177\377\377", 4)));
-    EXPECT_THAT(write(f::infinity()), Eq(std::string("\177\200\0\0", 4)));
-    EXPECT_THAT(write(f::quiet_NaN()), Eq(std::string("\177\300\0\0", 4)));
+    EXPECT_THAT(this->write(-f::infinity()), Eq(std::string("\377\200\0\0", 4)));
+    EXPECT_THAT(this->write(-f::max()), Eq(std::string("\377\177\377\377", 4)));
+    EXPECT_THAT(this->write(-f::min()), Eq(std::string("\200\200\0\0", 4)));
+    EXPECT_THAT(this->write(-f::denorm_min()), Eq(std::string("\200\0\0\1", 4)));
+    EXPECT_THAT(this->write(-0.0f), Eq(std::string("\200\0\0\0", 4)));
+    EXPECT_THAT(this->write(0.0f), Eq(std::string("\0\0\0\0", 4)));
+    EXPECT_THAT(this->write(f::denorm_min()), Eq(std::string("\0\0\0\1", 4)));
+    EXPECT_THAT(this->write(f::min()), Eq(std::string("\0\200\0\0", 4)));
+    EXPECT_THAT(this->write(f::max()), Eq(std::string("\177\177\377\377", 4)));
+    EXPECT_THAT(this->write(f::infinity()), Eq(std::string("\177\200\0\0", 4)));
+    EXPECT_THAT(this->write(f::quiet_NaN()), Eq(std::string("\177\300\0\0", 4)));
 
     using d = std::numeric_limits<double>;
-    EXPECT_THAT(write(-d::infinity()), Eq(std::string("\377\360\0\0\0\0\0\0", 8)));
-    EXPECT_THAT(write(-d::max()), Eq(std::string("\377\357\377\377\377\377\377\377", 8)));
-    EXPECT_THAT(write(-d::min()), Eq(std::string("\200\020\0\0\0\0\0\0", 8)));
-    EXPECT_THAT(write(-d::denorm_min()), Eq(std::string("\200\0\0\0\0\0\0\1", 8)));
-    EXPECT_THAT(write(-0.0), Eq(std::string("\200\0\0\0\0\0\0\0", 8)));
-    EXPECT_THAT(write(0.0), Eq(std::string("\0\0\0\0\0\0\0\0", 8)));
-    EXPECT_THAT(write(d::denorm_min()), Eq(std::string("\0\0\0\0\0\0\0\1", 8)));
-    EXPECT_THAT(write(d::min()), Eq(std::string("\0\020\0\0\0\0\0\0", 8)));
-    EXPECT_THAT(write(d::max()), Eq(std::string("\177\357\377\377\377\377\377\377", 8)));
-    EXPECT_THAT(write(d::infinity()), Eq(std::string("\177\360\0\0\0\0\0\0", 8)));
-    EXPECT_THAT(write(d::quiet_NaN()), Eq(std::string("\177\370\0\0\0\0\0\0", 8)));
+    EXPECT_THAT(this->write(-d::infinity()), Eq(std::string("\377\360\0\0\0\0\0\0", 8)));
+    EXPECT_THAT(this->write(-d::max()), Eq(std::string("\377\357\377\377\377\377\377\377", 8)));
+    EXPECT_THAT(this->write(-d::min()), Eq(std::string("\200\020\0\0\0\0\0\0", 8)));
+    EXPECT_THAT(this->write(-d::denorm_min()), Eq(std::string("\200\0\0\0\0\0\0\1", 8)));
+    EXPECT_THAT(this->write(-0.0), Eq(std::string("\200\0\0\0\0\0\0\0", 8)));
+    EXPECT_THAT(this->write(0.0), Eq(std::string("\0\0\0\0\0\0\0\0", 8)));
+    EXPECT_THAT(this->write(d::denorm_min()), Eq(std::string("\0\0\0\0\0\0\0\1", 8)));
+    EXPECT_THAT(this->write(d::min()), Eq(std::string("\0\020\0\0\0\0\0\0", 8)));
+    EXPECT_THAT(this->write(d::max()), Eq(std::string("\177\357\377\377\377\377\377\377", 8)));
+    EXPECT_THAT(this->write(d::infinity()), Eq(std::string("\177\360\0\0\0\0\0\0", 8)));
+    EXPECT_THAT(this->write(d::quiet_NaN()), Eq(std::string("\177\370\0\0\0\0\0\0", 8)));
 }
 
-TEST_F(IoTest, ReadData) {
-    pn::string_view data{"\001\002\003\004\005\006"};
-    pn::input       in = data.input();
+TYPED_TEST(IoTest, ReadData) {
+    pn::input in = this->input("\001\002\003\004\005\006");
 
     char d[2];
     EXPECT_THAT(pn_read(in.c_obj(), "$", (void*)d, (size_t)2), Eq(true));
@@ -339,25 +366,89 @@ TEST_F(IoTest, ReadData) {
     EXPECT_THAT(d2, Eq(pn::string_view{"\003\004"}.as_data()));
 }
 
-TEST_F(IoTest, WriteData) {
-    pn::data   data;
-    pn::output out = data.output();
+TYPED_TEST(IoTest, WriteData) {
+    pn::output out = this->output();
 
     EXPECT_THAT(pn_write(out.c_obj(), "$", "\001\002", (size_t)2), Eq(true));
     EXPECT_THAT(out.write(pn::string{"\003\004"}.as_data()), Eq(true));
 
-    EXPECT_THAT(data, Eq(pn::string_view{"\001\002\003\004"}.as_data()));
+    EXPECT_THAT(this->output_result(), Eq("\001\002\003\004"));
 }
 
-TEST_F(IoTest, WriteString) {
-    pn::string data;
-    pn::output out = data.output();
+TYPED_TEST(IoTest, WriteString) {
+    pn::output out = this->output();
 
     EXPECT_THAT(pn_write(out.c_obj(), "S", "\001\002", (size_t)2), Eq(true));
     EXPECT_THAT(pn_write(out.c_obj(), "s", "\003\004"), Eq(true));
     EXPECT_THAT(out.write(pn::string_view{"\005\006"}), Eq(true));
 
-    EXPECT_THAT(data, Eq(pn::string_view{"\001\002\003\004\005\006"}));
+    EXPECT_THAT(this->output_result(), Eq("\001\002\003\004\005\006"));
+}
+
+TYPED_TEST(IoTest, ReadAllDataC) {
+    pn::data  d;
+    uint8_t   b;
+    pn::input in = this->input("\1\2\3");
+    EXPECT_THAT(pn_read(in.c_obj(), "B*", &b, d.c_obj()), Eq(true));
+    EXPECT_THAT(pn_input_eof(in.c_obj()), Eq(true));
+    EXPECT_THAT(b, Eq(1));
+    EXPECT_THAT(d.as_string(), Eq("\2\3"));
+}
+
+TYPED_TEST(IoTest, ReadAllDataCpp) {
+    pn::data  result;
+    pn::input in = this->input("");
+    in.read(all(result));
+    EXPECT_THAT(in.operator bool(), Eq(false));
+    EXPECT_THAT(in.eof(), Eq(true));
+    EXPECT_THAT(in.error(), Eq(false));
+    EXPECT_THAT(result.as_string(), Eq(""));
+
+    pn::string s;
+    for (int i = 0; i < 2000; ++i) {
+        s += "\1\2\3\4\5\6\7";
+    }
+    result.resize(0);
+    in = this->input(s);
+    in.read(all(result));
+    EXPECT_THAT(in.operator bool(), Eq(false));
+    EXPECT_THAT(in.eof(), Eq(true));
+    EXPECT_THAT(in.error(), Eq(false));
+    perror("ReadAllDataCpp");
+    EXPECT_THAT(result.as_string(), Eq(pn::string_view{s}));
+}
+
+TYPED_TEST(IoTest, ReadAllStringC) {
+    pn::string s;
+    uint8_t    b;
+    pn::input  in = this->input("\1\2\3");
+    EXPECT_THAT(pn_read(in.c_obj(), "B+", &b, s.c_obj()), Eq(true));
+    EXPECT_THAT(pn_input_eof(in.c_obj()), Eq(true));
+    EXPECT_THAT(b, Eq(1));
+    EXPECT_THAT(s, Eq("\2\3"));
+}
+
+TYPED_TEST(IoTest, ReadAllStringCpp) {
+    pn::string result;
+    pn::input  in = this->input("");
+    in.read(all(result));
+    EXPECT_THAT(in.operator bool(), Eq(false));
+    EXPECT_THAT(in.eof(), Eq(true));
+    EXPECT_THAT(in.error(), Eq(false));
+    perror("ReadAllStringCpp");
+    EXPECT_THAT(result, Eq(""));
+
+    pn::string s;
+    for (int i = 0; i < 2000; ++i) {
+        s += "\1\2\3\4\5\6\7";
+    }
+    result = "";
+    in     = this->input(s);
+    in.read(all(result));
+    EXPECT_THAT(in.operator bool(), Eq(false));
+    EXPECT_THAT(in.eof(), Eq(true));
+    EXPECT_THAT(in.error(), Eq(false));
+    EXPECT_THAT(result, Eq(pn::string_view{s}));
 }
 
 }  // namespace pntest
