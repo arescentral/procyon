@@ -127,7 +127,7 @@ static void set_arg(char format, struct format_arg* dst, va_list* vl) {
 static bool print_u(pn_output_t* out, uint64_t u) {
     char      buf[32];
     ptrdiff_t len;
-    return ((len = sprintf(buf, "%" PRIu64, u)) > 0) && pn_write(out, "S", buf, (size_t)len);
+    return ((len = snprintf(buf, 32, "%" PRIu64, u)) > 0) && pn_write(out, "S", buf, (size_t)len);
 }
 
 static bool print_s16(pn_output_t* out, const uint16_t* data, size_t len) {
