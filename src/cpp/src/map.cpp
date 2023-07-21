@@ -28,7 +28,7 @@ void map_set(pn_map_t** m, string key, value x) {
 }
 
 value_ref map_force(pn_map_t** m, string key) {
-    pn_value_t* x = pn_mapget(*m, 'S', key.data(), key.size());
+    pn_value_t* x = pn_mapget(*m, 'S', key.data(), (size_t)key.size());
     if (!x) {
         pn_value_t k = {PN_STRING, {.s = nullptr}};
         std::swap(k.s, *key.c_obj());
@@ -70,7 +70,7 @@ map::map(std::initializer_list<std::pair<string, value>> m)
     pn_kv_pair_t* out = _c_obj->values;
     for (const std::pair<string, value>& in : m) {
         pn_value_t k;
-        pn_set(&k, 'S', in.first.data(), in.first.size());
+        pn_set(&k, 'S', in.first.data(), (size_t)in.first.size());
         out->key = k.s;
         pn_set(&out++->value, 'x', in.second.c_obj());
     }

@@ -48,16 +48,16 @@ class key_value {
     explicit constexpr key_value(pn_kv_pair_t kv) : _c_obj{kv} {}
 
     key_value(key_value&& kv) : _c_obj{} { swap(kv); }
-    key_value& operator            =(key_value&& kv) { return swap(kv), *this; }
-    key_value(const key_value& kv) = delete;
+    key_value& operator=(key_value&& kv) { return swap(kv), *this; }
+    key_value(const key_value& kv)            = delete;
     key_value& operator=(const key_value& kv) = delete;
 
     ~key_value();
 
     key_reference       key() { return key_reference{&c_obj()->key}; }
     key_const_reference key() const {
-        return key_const_reference{c_obj()->key->values,
-                                   static_cast<int>(c_obj()->key->count) - 1};
+        return key_const_reference{
+                c_obj()->key->values, static_cast<int>(c_obj()->key->count) - 1};
     }
     value_reference       value() { return value_reference{&c_obj()->value}; }
     value_const_reference value() const { return value_const_reference{&c_obj()->value}; }
@@ -87,10 +87,10 @@ class key_value_ref {
     explicit key_value_ref(c_obj_type* x) : _c_obj{x} {}
     key_value_ref(key_value& x) : key_value_ref{x.c_obj()} {}
 
-    key_value_ref(const key_value_ref&) = default;
-    key_value_ref(key_value_ref&&)      = default;
+    key_value_ref(const key_value_ref&)            = default;
+    key_value_ref(key_value_ref&&)                 = default;
     key_value_ref& operator=(const key_value_ref&) = delete;
-    key_value_ref& operator=(key_value_ref&&) = delete;
+    key_value_ref& operator=(key_value_ref&&)      = delete;
 
     const key_value_ref& operator=(key_value x) const {
         return std::swap(*c_obj(), *x.c_obj()), *this;
@@ -123,10 +123,10 @@ class key_value_cref {
     key_value_cref(const key_value& x) : key_value_cref{x.c_obj()} {}
     key_value_cref(key_value_ref x) : key_value_cref{x.c_obj()} {}
 
-    key_value_cref(const key_value_cref&) = default;
-    key_value_cref(key_value_cref&&)      = default;
+    key_value_cref(const key_value_cref&)            = default;
+    key_value_cref(key_value_cref&&)                 = default;
     key_value_cref& operator=(const key_value_cref&) = delete;
-    key_value_cref& operator=(key_value_cref&&) = delete;
+    key_value_cref& operator=(key_value_cref&&)      = delete;
     key_reference   key() const {
         return key_reference{c_obj()->key->values, static_cast<int>(c_obj()->key->count) - 1};
     }
@@ -162,8 +162,8 @@ class map {
     explicit map(pn_map_t* m) : _c_obj{m} {}
 
     map(map&& m) : _c_obj{} { swap(m); }
-    map& operator     =(map&& m) { return swap(m), *this; }
-    map(const map& m) = delete;
+    map& operator=(map&& m) { return swap(m), *this; }
+    map(const map& m)            = delete;
     map& operator=(const map& m) = delete;
 
     ~map();
@@ -178,14 +178,16 @@ class map {
     value_ref operator[](string_view k) {
         return internal::map_force(c_obj(), k.data(), k.size());
     }
-    bool has(string_view k) const { return pn_mapget_const(*c_obj(), 'S', k.data(), k.size()); }
+    bool has(string_view k) const {
+        return pn_mapget_const(*c_obj(), 'S', k.data(), (size_t)k.size());
+    }
     value_cref get(string_view k) const { return internal::map_get(*c_obj(), k.data(), k.size()); }
     void       set(string_view k, value x) {
-        pn_mapset(c_obj(), 'S', 'X', k.data(), k.size(), x.c_obj());
+        pn_mapset(c_obj(), 'S', 'X', k.data(), (size_t)k.size(), x.c_obj());
     }
-    void del(string_view k) { pn_mapdel(c_obj(), 'S', k.data(), k.size()); }
+    void del(string_view k) { pn_mapdel(c_obj(), 'S', k.data(), (size_t)k.size()); }
     bool pop(string_view k, value_ptr x) {
-        return pn_mappop(c_obj(), x->c_obj(), 'S', k.data(), k.size());
+        return pn_mappop(c_obj(), x->c_obj(), 'S', k.data(), (size_t)k.size());
     }
 
     void clear() { internal::map_clear(*c_obj()); }
@@ -230,10 +232,10 @@ class map_ref {
     explicit map_ref(c_obj_type* x) : _c_obj{x} {}
     map_ref(map& x) : _c_obj{x.c_obj()} {}
 
-    map_ref(const map_ref&) = default;
-    map_ref(map_ref&&)      = default;
+    map_ref(const map_ref&)            = default;
+    map_ref(map_ref&&)                 = default;
     map_ref& operator=(const map_ref&) = delete;
-    map_ref& operator=(map_ref&&) = delete;
+    map_ref& operator=(map_ref&&)      = delete;
 
     const map_ref& operator=(map x) const { return std::swap(*c_obj(), *x.c_obj()), *this; }
 
@@ -246,14 +248,16 @@ class map_ref {
     value_ref operator[](string_view k) const {
         return internal::map_force(c_obj(), k.data(), k.size());
     }
-    bool has(string_view k) const { return pn_mapget_const(*c_obj(), 'S', k.data(), k.size()); }
+    bool has(string_view k) const {
+        return pn_mapget_const(*c_obj(), 'S', k.data(), (size_t)k.size());
+    }
     value_cref get(string_view k) const { return internal::map_get(*c_obj(), k.data(), k.size()); }
     void       set(string_view k, value x) const {
-        pn_mapset(c_obj(), 'S', 'X', k.data(), k.size(), x.c_obj());
+        pn_mapset(c_obj(), 'S', 'X', k.data(), (size_t)k.size(), x.c_obj());
     }
-    void del(string_view k) const { pn_mapdel(c_obj(), 'S', k.data(), k.size()); }
+    void del(string_view k) const { pn_mapdel(c_obj(), 'S', k.data(), (size_t)k.size()); }
     bool pop(string_view k, value_ptr x) const {
-        return pn_mappop(c_obj(), x->c_obj(), 'S', k.data(), k.size());
+        return pn_mappop(c_obj(), x->c_obj(), 'S', k.data(), (size_t)k.size());
     }
 
     void clear() const { internal::map_clear(*c_obj()); }
@@ -292,10 +296,10 @@ class map_cref {
     map_cref(const map& x) : _c_obj{x.c_obj()} {}
     map_cref(map_ref x) : _c_obj{x.c_obj()} {}
 
-    map_cref(const map_cref&) = default;
-    map_cref(map_cref&&)      = default;
+    map_cref(const map_cref&)            = default;
+    map_cref(map_cref&&)                 = default;
     map_cref& operator=(const map_cref&) = delete;
-    map_cref& operator=(map_cref&&) = delete;
+    map_cref& operator=(map_cref&&)      = delete;
 
     bool                            empty() const { return size() == 0; }
     size_type                       size() const { return (*c_obj())->count; }
@@ -303,7 +307,9 @@ class map_cref {
     map                             copy() const { return map(pn_mapdup(*c_obj())); }
     int                             compare(map_cref other) const;
 
-    bool has(string_view k) const { return pn_mapget_const(*c_obj(), 'S', k.data(), k.size()); }
+    bool has(string_view k) const {
+        return pn_mapget_const(*c_obj(), 'S', k.data(), (size_t)k.size());
+    }
     value_cref get(string_view k) const { return internal::map_get(*c_obj(), k.data(), k.size()); }
 
     size_type capacity() const;
