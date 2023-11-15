@@ -2319,7 +2319,7 @@ static bool pn_strtod2(const char* data, size_t size, double* f, pn_error_code_t
     if (save_control_word != use_double_precision) {
         fpu_set_control_word(save_control_word);
     }
-#elif defined(__arm__) || defined(__arm64__)
+#elif defined(__arm__) || defined(__arm64__) || defined(__aarch64__)
     *f = pn_strtod3(s, error);
 #else
 #error "Unknown architecture"
