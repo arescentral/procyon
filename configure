@@ -14,14 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import division, print_function, unicode_literals
-
 import argparse
-import collections
-import glob
 import os
-import platform
-import subprocess
 import sys
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "build", "lib", "scripts"))
@@ -30,44 +24,92 @@ try:
 except ImportError:
     pass
 
-str = type("")  # For Python2
+
+DEBIAN = cfg.Distro(
+    name="debian",
+    packages={
+        "clang": "clang",
+        "clang++": "clang",
+        "gn": "gn",
+        "ninja": "ninja-build",
+    },
+    sources=[
+        ("arescentral", "http://apt.arescentral.org", "contrib",
+         "5A4F5210FF46CEE4B799098BAC879AADD5B51AE9"),
+    ],
+    install="apt-get install".split(),
+    update="apt-get update".split(),
+    add_key="apt-key adv --keyserver keyserver.ubuntu.com --recv".split(),
+)
+
+MAC = cfg.Distro(
+    name="mac",
+    packages={
+        "ninja": "ninja",
+        "gn": "sfiera/gn/gn",
+    },
+    sources=[],
+    install="brew install".split(),
+    update=None,
+    add_key=None,
+)
+
+WIN = cfg.Distro(
+    name="win",
+    packages={
+        "ninja":
+        "https://github.com/ninja-build/ninja/releases/download/v1.10.2/ninja-win.zip:ninja.exe",
+        "gn": "https://chrome-infra-packages.appspot.com/dl/gn/gn/windows-amd64/+/latest:gn.exe",
+    },
+    sources=[],
+    install="[download from]".split(),
+    update=None,
+    add_key=None,
+)
+
+DISTROS = {d.name: d for d in [DEBIAN, MAC, WIN]}
 
 
 def main():
+    check_submodules()
+
     config_dir = os.path.dirname(sys.argv[0])
     if config_dir != "":
         os.chdir(config_dir)
-    progname = sys.argv[0]
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
-    parser.add_argument("-m", "--mode", metavar="MODE",
-                        type=str, choices="dbg dev opt".split(), default="opt",
+    parser.add_argument("-m",
+                        "--mode",
+                        metavar="MODE",
+                        type=str,
+                        choices="dbg dev opt".split(),
+                        default="opt",
                         help="set build configuration:\n"
                         "  - opt: compile for fast binaries (default)\n"
                         "  - dev: compile for fast builds\n"
                         "  - dbg: add debugging symbols")
-    parser.add_argument("-o", "--target-os", metavar="OS",
+    parser.add_argument("-o",
+                        "--target-os",
+                        metavar="OS",
                         type=str,
                         help="target os (default: host os)")
-    parser.add_argument("--prefix", type=str, default="/usr/local",
+    parser.add_argument("--prefix",
+                        type=str,
+                        default="/usr/local",
                         help="installation prefix (default: /usr/local)")
-    parser.add_argument("--sanitizer", choices="memory address undefined".split(), default="",
+    parser.add_argument("--sanitizer",
+                        choices="memory address undefined".split(),
+                        default="",
                         help="run sanitizer (memory, address, or undefined)")
     args = parser.parse_args()
 
-    check_submodules()
-    check_host()
-    check_target(args)
+    config = {
+        "mode": args.mode,
+        "target_os": args.target_os,
+        "prefix": args.prefix,
+        "sanitizer": args.sanitizer,
+    }
 
-    with cfg.step("configure mode") as msg:
-        msg(args.mode, color="green")
-    cfg.gn(gn="gn",
-           ninja="ninja",
-           mode=args.mode,
-           target_os=args.target_os,
-           prefix=args.prefix,
-           sanitizer=args.sanitizer)
-
-    print("make(1) it so!")
+    cfg.configure("procyon", DISTROS, config)
 
 
 def check_submodules():
@@ -85,152 +127,6 @@ def check_submodules():
         print("Some submodules are missing. Run:")
         print("  $ git submodule update --init")
         sys.exit(1)
-
-
-def check_host():
-    with cfg.step("checking host os") as msg:
-        if cfg.host_os() in ["mac", "linux", "win"]:
-            msg(cfg.host_os(), color="green")
-        else:
-            msg(cfg.host_os(), color="red")
-            print("\nSorry! procyon requires Mac OS X, Linux, or Windows")
-            sys.exit(1)
-
-
-def check_target(args):
-    with cfg.step("checking target os") as msg:
-        if args.target_os is None:
-            args.target_os = cfg.host_os()
-        checker = {
-            ("mac", "mac"): check_mac,
-            ("linux", "linux"): check_linux_native,
-            ("linux", "mac"): check_mac_on_linux,
-            ("linux", "win"): check_win_on_linux,
-            ("win", "win"): check_win_native,
-        }.get((cfg.host_os(), args.target_os))
-        if checker is None:
-            msg(args.target_os, color="red")
-            sys.exit(1)
-        msg(args.target_os, color="green")
-    checker(args)
-
-
-def check_mac(args):
-    with cfg.step("checking Mac OS X version") as msg:
-        ver = platform.mac_ver()[0]
-        ver = tuple(int(x) for x in ver.split(".")[:2])
-        if ver < (10, 9):
-            msg("%d.%d" % ver, color="red")
-            print("\nSorry! Antares requires Mac OS X 10.9+")
-            sys.exit(1)
-        msg("%d.%d" % ver, color="green")
-
-    missing = collections.OrderedDict()
-    if not (cfg.check_clang() and cfg.check_libcxx()):
-        missing["xcode"] = (
-                "* Xcode can be installed via the App Store:\n"
-                "    https://itunes.apple.com/en/app/xcode/id497799835\n"
-                "  After installing, open it and accept the license agreement\n")
-
-    if missing:
-        print("\nmissing dependencies: %s\n" % " ".join(missing.keys()))
-        for step in missing.values():
-            sys.stdout.write(step)
-        if any("Homebrew" in v for v in missing.values()):
-            print("* Homebrew can be installed like so:")
-            print('    $ ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"')
-        sys.exit(1)
-
-
-def linux_distribution():
-    """Replacement for deprecated platform.linux_distribution()
-
-    Only tested on Ubuntu so far.
-    """
-    try:
-        with open("/etc/lsb-release") as f:
-            lines = f.readlines()
-    except (OSError, IOError):
-        return ("", "", "")
-    distrib = dict(line.split("=", 1) for line in lines)
-    return (
-        distrib.get("DISTRIB_ID", "").strip(),
-        distrib.get("DISTRIB_RELEASE", "").strip(),
-        distrib.get("DISTRIB_CODENAME", "").strip(),
-    )
-
-
-def check_linux_native(args):
-    with cfg.step("checking Linux distro") as msg:
-        distro = linux_distribution()
-        if distro[0] == "Ubuntu":
-            msg(" ".join(distro), color="green")
-        else:
-            msg(" ".join(distro) + " (untested)", color="yellow")
-
-    missing = collections.OrderedDict()
-    if not cfg.check_clang("clang++"):
-        missing["clang"] = "clang"
-
-    if missing:
-        print("\nmissing dependencies: %s" % " ".join(missing.keys()))
-        if len(missing) == 1:
-            print("\nOn Ubuntu, you can install it with:\n")
-        else:
-            print("\nOn Ubuntu, you can install them with:\n")
-        print("    $ sudo apt-get install %s" % (" ".join(missing.values())))
-        sys.exit(1)
-
-
-def check_mac_on_linux(args):
-    missing = collections.OrderedDict()
-    if not (cfg.check_clang("x86_64-apple-darwin15-clang++") and
-            cfg.check_libcxx("x86_64-apple-darwin15-clang++")):
-        missing["osxcross"] = (
-                "* OSXCross can be found here:\n"
-                "    https://github.com/tpoechtrager/osxcross\n"
-                "  Download and build it, and ensure target/bin is in your $PATH\n")
-
-    if missing:
-        print("\nmissing dependencies: %s\n" % " ".join(missing.keys()))
-        for step in missing.values():
-            sys.stdout.write(step)
-        sys.exit(1)
-
-
-def check_win_on_linux(args):
-    with cfg.step("checking Linux distro") as msg:
-        distro = linux_distribution()
-        if distro == ("Ubuntu", "20.04", "focal"):
-            msg(" ".join(distro), color="green")
-        else:
-            msg(" ".join(distro), color="red")
-            print("\nSorry! Cross-compilation currently requires Ubuntu 20.04 focal")
-            sys.exit(1)
-
-    missing = collections.OrderedDict()
-    if not cfg.check_clang("clang++"):
-        missing["clang"] = "clang"
-
-    with cfg.step("checking for mingw") as msg:
-        if os.path.exists("/usr/x86_64-w64-mingw32/include/windows.h"):
-            msg("ok", color="green")
-        else:
-            msg("missing", color="red")
-            missing["mingw"] = "mingw-w64"
-
-    if missing:
-        print("\nmissing dependencies: %s" % " ".join(missing.keys()))
-        if len(missing) == 1:
-            print("\nYou can install it with:\n")
-        else:
-            print("\nYou can install them with:\n")
-        print("    $ sudo apt-get install %s" % (" ".join(missing.values())))
-        sys.exit(1)
-
-
-def check_win_native(args):
-    pass
 
 
 if __name__ == "__main__":
