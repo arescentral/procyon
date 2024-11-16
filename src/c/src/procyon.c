@@ -29,9 +29,9 @@
 const pn_value_t pn_null    = {.type = PN_NULL};
 const pn_value_t pn_true    = {.type = PN_BOOL, .b = true};
 const pn_value_t pn_false   = {.type = PN_BOOL, .b = false};
-const pn_value_t pn_inf     = {.type = PN_FLOAT, .f = INFINITY};
-const pn_value_t pn_neg_inf = {.type = PN_FLOAT, .f = -INFINITY};
-const pn_value_t pn_nan     = {.type = PN_FLOAT, .f = NAN};
+const pn_value_t pn_inf     = {.type = PN_FLOAT, .f = 1.0 / 0.0};
+const pn_value_t pn_neg_inf = {.type = PN_FLOAT, .f = -1.0 / 0.0};
+const pn_value_t pn_nan     = {.type = PN_FLOAT, .f = 0.0 / 0.0};
 const pn_value_t pn_zero    = {.type = PN_INT, .i = 0};
 const pn_value_t pn_zerof   = {.type = PN_FLOAT, .f = 0.0};
 
