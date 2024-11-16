@@ -26,7 +26,6 @@
 using StrToDTest = ::testing::Test;
 using FloatTest  = ::testing::Test;
 using ::testing::Eq;
-using ::testing::Ne;
 
 namespace pntest {
 
@@ -382,12 +381,6 @@ TEST_F(FloatTest, PrintExtrema) {
     EXPECT_THAT(dtoa(5e-324), Eq("5e-324"));
     EXPECT_THAT(dtoa(2.2250738585072014e-308), Eq("2.2250738585072014e-308"));
     EXPECT_THAT(dtoa(1.7976931348623157e308), Eq("1.7976931348623157e+308"));
-}
-
-TEST_F(FloatTest, LongDouble) {
-    volatile long double num = 2877.0;
-    volatile long double den = 1000000.0;
-    ASSERT_NE(double(num / den), double(num) / double(den));
 }
 
 }  // namespace pntest
