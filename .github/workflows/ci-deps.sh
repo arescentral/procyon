@@ -7,7 +7,7 @@ case $1 in
     macos-*)
         brew update
         brew install ninja sfiera/gn/gn
-        pip3 install --user pytest pygments
+        pip3 install --user --break-system-packages pytest pygments
         ;;
 
     ubuntu-*)
